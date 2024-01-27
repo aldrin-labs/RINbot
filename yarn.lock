@@ -143,6 +143,11 @@
   resolved "https://registry.yarnpkg.com/@grammyjs/router/-/router-2.0.0.tgz#da3a9191d5997d438f7e1cadc2d570d755cd3fc5"
   integrity sha512-xJ3HRNj3mVojLtkFmV+GvKpOWOnS0CGdAIdvpaq+j+8dic1wM1OhOukaotkKzAWZ6bb9QyzUUgVFN6xfZDO5VA==
 
+"@grammyjs/storage-redis@^2.4.1":
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/@grammyjs/storage-redis/-/storage-redis-2.4.1.tgz#d27585841df42b8906abc22643007f4130090599"
+  integrity sha512-NjkcFun3w8XNuxam8Ez+85t2K3gKSBJexFctVU536gP5jmUuNOsvJh/eZOHdDe383XOVqMha3Ado3zcp+ehy7w==
+
 "@grammyjs/types@^3.4.6":
   version "3.4.6"
   resolved "https://registry.yarnpkg.com/@grammyjs/types/-/types-3.4.6.tgz#a79a97695b7c96fb84a0113c75495a1e3c9589b8"
@@ -726,6 +731,13 @@
   dependencies:
     "@types/node" "*"
 
+"@upstash/redis@1.25.1":
+  version "1.25.1"
+  resolved "https://registry.yarnpkg.com/@upstash/redis/-/redis-1.25.1.tgz#361656a326b40d5816640ae4335a8b1bbbb0d238"
+  integrity sha512-ACj0GhJ4qrQyBshwFgPod6XufVEfKX2wcaihsEvSdLYnY+m+pa13kGt1RXm/yTHKf4TQi/Dy2A8z/y6WUEOmlg==
+  dependencies:
+    crypto-js "^4.2.0"
+
 "@vercel/build-utils@7.5.1":
   version "7.5.1"
   resolved "https://registry.yarnpkg.com/@vercel/build-utils/-/build-utils-7.5.1.tgz#89ad1cc1cebdef1cd15f4c31483e45e3c9837ec7"
@@ -735,6 +747,13 @@
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/@vercel/error-utils/-/error-utils-2.0.2.tgz#d75ccce100dbdfc9cb85700767b59d4257a91113"
   integrity sha512-Sj0LFafGpYr6pfCqrQ82X6ukRl5qpmVrHM/191kNYFqkkB9YkjlMAj6QcEsvCG259x4QZ7Tya++0AB85NDPbKQ==
+
+"@vercel/kv@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@vercel/kv/-/kv-1.0.1.tgz#2311e9d62eaed360eba99603c20eeb77a10a0749"
+  integrity sha512-uTKddsqVYS2GRAM/QMNNXCTuw9N742mLoGRXoNDcyECaxEXvIHG0dEY+ZnYISV4Vz534VwJO+64fd9XeSggSKw==
+  dependencies:
+    "@upstash/redis" "1.25.1"
 
 "@vercel/ncc@^0.38.1":
   version "0.38.1"
@@ -1260,6 +1279,11 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.3:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+crypto-js@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
+  integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 cssesc@^3.0.0:
   version "3.0.0"
