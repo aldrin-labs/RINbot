@@ -7,15 +7,32 @@ import { BotContext, SessionData } from './types';
 import initRouter from './routers';
 
 import menu from './menu/main';
+import { SuiApi } from "./chains/sui";
+import { conversations, createConversation } from "@grammyjs/conversations";
+import { RedisAdapter } from '@grammyjs/storage-redis';
+import IORedis from 'ioredis';
+
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
+const redisInstance = new IORedis(process.env.REDIS);
+const storage = new RedisAdapter({ instance: redisInstance, ttl: 10 });
 
 const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
 // Make it interactive.
-bot.use(session({ initial: (): SessionData => ({ step: "main" }) }));
+bot.use(session({ initial: (): SessionData => {
+  const {privateKey, publicKey} = SuiApi.generateWallet();
+  return ({ step: "main", privateKey, publicKey })},
+  storage
+}));
+
+
+bot.use(conversations());
+
+bot.use(createConversation(SuiApi.buy));
+
 bot.use(menu);
 bot.use(router);
 

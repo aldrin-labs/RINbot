@@ -2,6 +2,8 @@
 import { Router } from "@grammyjs/router";
 import { BotContext, SessionData } from '../types';
 
+import { SuiApi } from "../chains/sui";
+
 import add_positions_route from './positions';
 
 const buy_text = "Buy Token: \n\nTo buy a token enter a token address";
