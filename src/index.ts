@@ -23,11 +23,20 @@ const storage = new UpstashRedisAdapter({ redis: instance, ttl: 10 });
 
 const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
+// Stores data per user.
+function getSessionKey(ctx: Context): string | undefined {
+  // Give every user their personal session storage
+  // (will be shared across groups and in their private chat)
+  return ctx.from?.id.toString();
+}
 
 // Make it interactive.
-bot.use(session({ initial: (): SessionData => {
-  const {privateKey, publicKey} = SuiApi.generateWallet();
-  return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })},
+bot.use(session({ 
+  getSessionKey,
+  initial: (): SessionData => {
+    const {privateKey, publicKey} = SuiApi.generateWallet();
+    return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
+  },
   storage
 }));
 
@@ -44,7 +53,8 @@ bot.use(router);
 
 bot.command("start", async (ctx) => {
   // Send the menu.
-  await ctx.reply("Check out this menu:", { reply_markup: menu });
+  const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n Your SUI balance: ${0}\n Total amount of assets: ${0}\n Total wallet net worth: $${0}`;
+  await ctx.reply(welcome_text, { reply_markup: menu });
 });
 
 

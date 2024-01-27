@@ -8,12 +8,13 @@ const wallet_menu = new Menu<BotContext>("wallet-menu")
   })    
   .back("Close", (ctx) => {ctx.session.step = "main"}).row()
   .text("Deposit", (ctx) => {
-    ctx.session.step = "wallet-deposit";
-    ctx.menu.nav("wallet-deposit-menu");
+    ctx.reply(`Your public key is: <code>${ctx.session.publicKey}</code>`, { parse_mode: "HTML" });
   })
   .text("Withdraw X amount", async (ctx: any) => {
-
-    ctx.reply("withdraw x amount")
+    ctx.session.step = "wallet-withdraw";
+    ctx.menu.nav("wallet-withdraw-menu");
+    ctx.conversation.enter("withdraw");
+    //ctx.reply("withdraw x amount")
   }).row()
   .text("Reset wallet", async (ctx: any) => {
 
