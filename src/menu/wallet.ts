@@ -1,21 +1,15 @@
 import {BotContext} from '../types';
 import { Menu } from "@grammyjs/menu";
-
+import { SuiApi } from '../chains/sui';
 
 const wallet_menu = new Menu<BotContext>("wallet-menu")
-  .text("View in explorer", async (ctx: any) => {
-    // open link
-
-    ctx.reply("open link")
-  })
+  .dynamic((ctx, range) => {
+      range.url("View in explorer", SuiApi.getExplorerLink(ctx))
+  })    
   .back("Close", (ctx) => {ctx.session.step = "main"}).row()
   .text("Deposit", (ctx) => {
     ctx.session.step = "wallet-deposit";
     ctx.menu.nav("wallet-deposit-menu");
-  })
-  .text("Withdraw all", async (ctx: any) => {
-
-    ctx.reply("withdraw all")
   })
   .text("Withdraw X amount", async (ctx: any) => {
 

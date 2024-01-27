@@ -32,14 +32,16 @@ interface ISuiAPI {
     availableBalance(ctx: any): void,
     balance(ctx: any): void,
     assets(ctx: any): void,
-    generateWallet(): {privateKey: string, publicKey: string}
+    generateWallet(): {privateKey: string, publicKey: string},
+    getExplorerLink(ctx: BotContext): string,
+
 }
 export var SuiApi: ISuiAPI;
 
 const init = async () => {
     if (SuiApi != null) return;
     SuiApi = {} as ISuiAPI;
-    const SUI_PROVIDER_URL = "https://sui-rpc.publicnode.com";
+    const SUI_PROVIDER_URL = "https://sui-mainnet.blockvision.org/v1/2bYB32LD0S06isRTaxATLv1mTt6";
     const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
     // SDK instances init
     const cacheOptions = { updateIntervalInMs: 1000 * 60 * 30 };
@@ -439,6 +441,10 @@ const init = async () => {
         return WalletManagerSingleton.generateWallet();
     }
 
+    const getExplorerLink = (ctx: BotContext): string => {
+        return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`
+    }
+
     SuiApi = {
         buy,
         sell,
@@ -447,7 +453,8 @@ const init = async () => {
         availableBalance,
         balance,
         assets,
-        generateWallet
+        generateWallet,
+        getExplorerLink
     }
 }
 await init();
