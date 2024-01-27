@@ -19,11 +19,11 @@ export default () => {
         console.log("BUY THIS TOKEN ---- ", message);
         await ctx.reply(buy_text);
     });
-    buy_route.use(async (ctx) => 
-    {
-        console.log('USE BUY ROUTER!@!@!@!@!');
-        await ctx.reply(buy_text);
-    });
+    // buy_route.use(async (ctx) => 
+    // {
+    //     console.log('USE BUY ROUTER!@!@!@!@!');
+    //     await ctx.reply(buy_text);
+    // });
 
     router = add_positions_route(router);
 

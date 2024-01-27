@@ -15,9 +15,9 @@ const buy_text = "Buy Token: \n\nTo buy a token enter a token address";
 // Create a simple menu.
 const menu = new Menu<BotContext>("main")
   .text("Buy", async (ctx: any) => {
-    await ctx.conversation.enter("buy");
-    // ctx.session.step = "buy";
-    // ctx.menu.nav("buy-menu");
+    ctx.session.step = "buy";
+    ctx.menu.nav("buy-menu");
+    ctx.conversation.enter("buy");
   })
   .text("Sell & Manage", async (ctx: any) => {
     ctx.session.step = "positions";
