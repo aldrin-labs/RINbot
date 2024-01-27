@@ -15,6 +15,15 @@ const buy_text = 'Buy Token: \n\nTo buy a token enter a token address';
 //Mock data
 import { walletData } from '../mock/wallet';
 
+const getOverview = () => {
+  let overview = `Position Overview:\n\n`;
+  for (let i = 0; i < walletData.tokens.length; i++) {
+    overview += `/${i + 1} *[${walletData.tokens[i].coinTicker}](https://dexscreener.com/sui/${walletData.tokens[i].coinAddress})*\nValue: *${walletData.tokens[i].balance}*\nMcap:\n\n`;
+  }
+  overview += `Balance: *${walletData.balance}*`;
+  return overview;
+};
+
 // Create a simple menu.
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx: any) => {
@@ -24,13 +33,11 @@ const menu = new Menu<BotContext>('main')
   })
   .text('Sell & Manage', async (ctx: any) => {
     ctx.session.step = 'positions';
-    ctx.reply(
-      `${walletData.tokens[0].coinName} | ${walletData.tokens[0].coinTicker} | 
-    ${walletData.tokens[0].coinAddress}
-    `,
-
-      { reply_markup: positions_menu },
-    );
+    await ctx.reply(getOverview(), {
+      parse_mode: 'MarkdownV2',
+      reply_markup: positions_menu,
+      disable_web_page_preview: true,
+    });
     //ctx.menu.nav('positions-menu');
   })
   .row()
