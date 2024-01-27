@@ -10,13 +10,15 @@ import menu from './menu/main';
 import { SuiApi } from "./chains/sui";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { RedisAdapter } from '@grammyjs/storage-redis';
-import IORedis from 'ioredis';
+import { kv as instance } from "@vercel/kv";
 
+// if (instance && instance.opts) {
+//   instance.opts.automaticDeserialization = false;
+// }
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
-const redisInstance = new IORedis(process.env.REDIS);
-const storage = new RedisAdapter({ instance: redisInstance, ttl: 10 });
+const storage = new RedisAdapter({ instance: instance, ttl: 10 });
 
 const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
