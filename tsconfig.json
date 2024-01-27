@@ -3,7 +3,7 @@
     "strict": true,
     "target": "esnext",
     "moduleResolution": "node",
-    "module": "commonjs",
+    "module": "esnext",
     "skipLibCheck": true,
     "sourceMap": true,
     "outDir": "public",
