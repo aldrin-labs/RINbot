@@ -1,18 +1,42 @@
-import { Telegraf } from 'telegraf';
+import { Bot, session, GrammyError, HttpError } from "grammy";
 
-import { about } from './commands';
-import { greeting } from './text';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
+
+import { BotContext, SessionData } from './types';
+import initRouter from './routers';
+
+import menu from './menu/main';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
 
-const bot = new Telegraf(BOT_TOKEN);
+const router = initRouter();
+const bot = new Bot<BotContext>(BOT_TOKEN);
 
-bot.command('about', about());
-bot.on('message', greeting());
+// Make it interactive.
+bot.use(session({ initial: (): SessionData => ({ step: "main" }) }));
+bot.use(menu);
+bot.use(router);
 
+bot.command("start", async (ctx) => {
+  // Send the menu.
+  await ctx.reply("Check out this menu:", { reply_markup: menu });
+});
+
+
+bot.catch((err) => {
+  const ctx = err.ctx;
+  console.error(`Error while handling update ${ctx.update.update_id}:`);
+  const e = err.error;
+  if (e instanceof GrammyError) {
+    console.error("Error in request:", e.description);
+  } else if (e instanceof HttpError) {
+    console.error("Could not contact Telegram:", e);
+  } else {
+    console.error("Unknown error:", e);
+  }
+});
 //prod mode (Vercel)
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
   await production(req, res, bot);

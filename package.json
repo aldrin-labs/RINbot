@@ -1,14 +1,15 @@
 {
-  "name": "telegram-bot-vercel-boilerplate",
-  "version": "1.1.0",
-  "description": "Telegram Bot Vercel Boilerplate",
+  "name": "rinbot",
+  "version": "0.4.20",
+  "description": "rinbot for degens",
   "main": "src/index.ts",
-  "author": "Mark Pavlov (https://github.com/sollidy)",
-  "homepage": "https://github.com/sollidy/telegram-bot-vercel-boilerplate",
+  "author": "rincels",
   "dependencies": {
+    "@grammyjs/menu": "^1.2.1",
+    "@grammyjs/router": "^2.0.0",
     "@vercel/node": "^3.0.13",
     "dotenv-cli": "^7.3.0",
-    "telegraf": "^4.15.3"
+    "grammy": "^1.20.3"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
