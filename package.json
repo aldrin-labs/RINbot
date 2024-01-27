@@ -14,7 +14,8 @@
     "@vercel/kv": "^1.0.1",
     "@vercel/node": "^3.0.13",
     "dotenv-cli": "^7.3.0",
-    "grammy": "^1.20.3"
+    "grammy": "^1.20.3",
+    "ioredis": "^5.3.2"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
@@ -27,8 +28,8 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "dev": "DEBUG=bot* dotenv -- nodemon -e ts -x ts-node src/index.ts",
-    "devWindows": "@powershell -Command $env:DEBUG='bot*';dotenv -- -- nodemon -e ts -x ts-node src/index.ts",
+    "dev": "DEBUG=bot* dotenv -- nodemon -e ts -x tsc -p tsconfig.json --noEmit",
+    "devWindows": "@powershell -Command $env:DEBUG='bot*';dotenv -- -- nodemon -e ts -x tsc -p tsconfig.json --noEmit",
     "build": "ncc build src/index.ts -o public -m",
     "prettier": "prettier --write 'src/**/*.ts'"
   }
