@@ -42,7 +42,7 @@ const init = async () => {
     const SUI_PROVIDER_URL = "https://sui-rpc.publicnode.com";
     const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
     // SDK instances init
-    const cacheOptions = { updateIntervalInMs: 30_000 };
+    const cacheOptions = { updateIntervalInMs: 1000 * 60 * 30 };
     const turbos: TurbosSingleton = await TurbosSingleton.getInstance({ suiProviderUrl: SUI_PROVIDER_URL, cacheOptions });
     const cetus: CetusSingleton = await CetusSingleton.getInstance({
       suiProviderUrl: SUI_PROVIDER_URL,

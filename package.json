@@ -28,11 +28,11 @@
     "nodemon": "^3.0.2",
     "prettier": "^3.1.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "dev": "DEBUG=bot* dotenv -- nodemon -e ts -x tsc -p tsconfig.json --noEmit",
-    "devWindows": "@powershell -Command $env:DEBUG='bot*';dotenv -- -- nodemon -e ts -x tsc -p tsconfig.json --noEmit",
+    "dev": "DEBUG=bot* dotenv -- tsx watch src/index.ts",
     "build": "ncc build src/index.ts -o public -m",
     "prettier": "prettier --write 'src/**/*.ts'"
   }
