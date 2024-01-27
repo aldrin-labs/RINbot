@@ -10,8 +10,6 @@ import wallet_menu from './wallet';
 import settings_menu from './settings';
 import deposit_menu from './wallet_deposit';
 
-const buy_text = "Buy Token: \n\nTo buy a token enter a token address";
-
 // Create a simple menu.
 const menu = new Menu<BotContext>("main")
   .text("Buy", async (ctx: any) => {
