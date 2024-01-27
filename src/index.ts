@@ -11,6 +11,7 @@ import { SuiApi } from "./chains/sui";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from "@vercel/kv";
+import { UpstashRedisAdapter } from "./adapters/UpstashRedisAdapter";
 
 // if (instance && instance.opts) {
 //   instance.opts.automaticDeserialization = false;
@@ -18,7 +19,7 @@ import { kv as instance } from "@vercel/kv";
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
-const storage = new RedisAdapter({ instance: instance, ttl: 10 });
+const storage = new UpstashRedisAdapter({ redis: instance, ttl: 10 });
 
 const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
