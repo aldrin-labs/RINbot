@@ -34,6 +34,9 @@ bot.use(session({ initial: (): SessionData => {
 bot.use(conversations());
 
 bot.use(createConversation(SuiApi.buy));
+bot.use(createConversation(SuiApi.sell));
+bot.use(createConversation(SuiApi.exportPrivateKey));
+bot.use(createConversation(SuiApi.withdraw));
 
 bot.use(menu);
 bot.use(router);

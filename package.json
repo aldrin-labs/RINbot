@@ -4,6 +4,7 @@
   "description": "rinbot for degens",
   "main": "src/index.ts",
   "author": "rincels",
+  "type": "module",
   "dependencies": {
     "@avernikoz/rinbot-sui-sdk": "^2.0.11",
     "@grammyjs/conversations": "^1.2.0",

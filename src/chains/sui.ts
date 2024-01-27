@@ -26,9 +26,9 @@ export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
 };
 interface ISuiAPI {
     buy(conversation: MyConversation, ctx: BotContext): void,
-    sell(ctx: any, possibleCoinType: string, possibleAmount: string): void,
-    exportPrivateKey(ctx: any): void,
-    withdraw(ctx: any, destinationSuiAddress: string, possibleAmount: string): void,
+    sell(conversation: MyConversation, ctx: BotContext): void,
+    exportPrivateKey(conversation: MyConversation, ctx: BotContext): void,
+    withdraw(conversation: MyConversation, ctx: BotContext): void,
     availableBalance(ctx: any): void,
     balance(ctx: any): void,
     assets(ctx: any): void,
@@ -168,9 +168,10 @@ const init = async () => {
         }
       }
 
-    const sell = async function (ctx: any, possibleCoinType: string, possibleAmount: string) {
-        // await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
-
+    const sell =  async function (conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
+        const cointTypeData = await conversation.waitFor(":text");
+        const possibleCoinType = cointTypeData.msg.text;
     
         const isCoinTypeIsValid = isValidTokenAddress(possibleCoinType);
     
@@ -225,7 +226,9 @@ const init = async () => {
         await ctx.reply(
           `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
         );
-
+    
+        const amountData = await conversation.waitFor(":text");
+        const possibleAmount = amountData.msg.text;
     
         // TODO: Re-check this
         // const isAmountIsValid = isValidTokenAmount(+possibleAmount, coin.balance);
@@ -302,28 +305,31 @@ const init = async () => {
     
           return;
         }
-    }
+      }
 
-    const exportPrivateKey = async function (ctx: any) {
-        // await ctx.reply(`Are you sure want to export private key? Please type CONFIRM if yes.`);
+    const exportPrivateKey = async function (conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply(`Are you sure want to export private key? Please type CONFIRM if yes.`);
     
-        // const messageData = await conversation.waitFor(":text");
-        // const isExportConfirmed = messageData.msg.text === "CONFIRM";
+        const messageData = await conversation.waitFor(":text");
+        const isExportConfirmed = messageData.msg.text === "CONFIRM";
     
-        // if (!isExportConfirmed) {
-        //   await ctx.reply(`You've not typed CONFIRM. Ignoring your request of exporting private key`);
+        if (!isExportConfirmed) {
+          await ctx.reply(`You've not typed CONFIRM. Ignoring your request of exporting private key`);
     
-        //   return;
-        // }
+          return;
+        }
     
         await ctx.reply(
           `Your private key is: <code>${ctx.session.privateKey}</code>\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
           { parse_mode: "HTML" },
         );
-      }
+    }
 
-    const withdraw = async function (ctx: any, destinationSuiAddress: string, possibleAmount: string) {
-        // await ctx.reply(`Please type the address you'd like to withdraw ALL you SUI coin`);
+    const withdraw = async function(conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply(`Please type the address you'd like to withdraw ALL you SUI coin`);
+    
+        const messageData = await conversation.waitFor(":text");
+        const destinationSuiAddress = messageData.msg.text;
     
         const isAddressIsValid = isValidSuiAddress(destinationSuiAddress);
     
@@ -336,10 +342,10 @@ const init = async () => {
         }
     
         const availableBalance = await walletManager.getSuiBalance(ctx.session.publicKey);
-        // await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`);
+        await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`);
     
-        // const amountData = await conversation.waitFor(":text");
-        // const possibleAmount = amountData.msg.text;
+        const amountData = await conversation.waitFor(":text");
+        const possibleAmount = amountData.msg.text;
     
         const isAmountIsValid = isValidTokenAmount({
           amount: possibleAmount,
@@ -398,7 +404,7 @@ const init = async () => {
     
           return;
         }
-    }
+      }
 
     const availableBalance = async (ctx: any) => {
         const availableBalance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
