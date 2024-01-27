@@ -7,6 +7,7 @@ export interface SessionData {
     step: "main" | "buy" | "positions" | "wallet" | "wallet-deposit"; // which step of the form we are on
     privateKey: string,
     publicKey: string
+    settings: { slippagePercentage: number }
 }
 
 export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;

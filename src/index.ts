@@ -26,7 +26,7 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 // Make it interactive.
 bot.use(session({ initial: (): SessionData => {
   const {privateKey, publicKey} = SuiApi.generateWallet();
-  return ({ step: "main", privateKey, publicKey })},
+  return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })},
   storage
 }));
 
