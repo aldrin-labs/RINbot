@@ -5,6 +5,10 @@
   "main": "src/index.ts",
   "author": "rincels",
   "type": "module",
+  "node": "v20",
+  "engines": {
+    "node": "20"
+  },
   "dependencies": {
     "@avernikoz/rinbot-sui-sdk": "^2.0.11",
     "@grammyjs/conversations": "^1.2.0",
