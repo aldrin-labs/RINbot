@@ -21,6 +21,37 @@ import {
 
 import { MyConversation, BotContext } from "../types";
 
+/**
+ * Checks if the given string is a valid suiscan link.
+ *
+ * @param {string} link - The string to be checked.
+ * @returns {boolean} - True if the link is valid, false otherwise.
+ */
+export function isValidCoinLink(link: string): boolean {
+  // Regular expression to match valid suiscan links
+  const suiscanLinkRegex = /^https:\/\/suiscan\.xyz\/mainnet\/coin\/(0x|0X)?[0-9a-fA-F]+::[0-9a-zA-Z]+::[0-9a-zA-Z]+(\/txs|\/|)$/;
+
+  return suiscanLinkRegex.test(link);
+}
+
+/**
+* Extracts the coin type from a valid suiscan link.
+*
+* @param {string} link - The valid suiscan link.
+* @returns {string | null} - The extracted coin type or null if extraction fails.
+*/
+export function extractCoinTypeFromLink(link: string): string | null {
+  const suiscanLinkRegex = /^https:\/\/suiscan\.xyz\/mainnet\/coin\/0x([0-9a-fA-F]+)::([0-9a-zA-Z]+)::([0-9a-zA-Z]+)(\/txs|\/)?$/;
+  const match = link.match(suiscanLinkRegex);
+
+  if (match && match[2]) {
+      const coinType = `0x${match[1]}::${match[2]}::${match[3]}`;
+      return coinType;
+  }
+
+  return null;
+}
+
 export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
     return tokenTo === tokenFrom;
 };
@@ -59,30 +90,42 @@ const init = async () => {
 
     const buy = async function (conversation: MyConversation, ctx: BotContext) {
         await ctx.reply("Which token do you want to buy? Please send a coin type or a link to suiscan.");
-        const cointTypeData = await conversation.waitFor(":text");
-        const possibleCoinType = cointTypeData.msg.text;
+        const cointTypeData = await conversation.waitFor([":text", "::url"]);
+        const possibleCoin = (cointTypeData.msg.text || "").trim();
     
-        const isCoinTypeIsValid = isValidTokenAddress(possibleCoinType);
+        const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
+        const isValidSuiScanLink = isValidCoinLink(possibleCoin);
     
-        if (!isCoinTypeIsValid) {
+        if (!isCoinTypeIsValid && !isValidSuiScanLink) {
+          const replyText = isCoinTypeIsValid ?
+          `Token address is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.` :
+          `Suiscan link is not correct. Make sure your link is correct is correct.\nExample:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD`
+
+          await ctx.reply(replyText);
+
+          return;
+        }
+
+        const coinType = isCoinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin)
+        // ts check
+        if (coinType === null) {
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address is not correct. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Coin type is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
-    
-          return;
+          return
         }
     
         let coinToBuy: CommonCoinData | null = null;
         try {
-          coinToBuy = coinManager.getCoinByType(possibleCoinType);
+          coinToBuy = coinManager.getCoinByType(coinType);
         } catch (e) {
-          console.error(`Token ${possibleCoinType} not found in coinManager`);
+          console.error(`Token ${coinType} not found in coinManager`);
     
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address not found. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Token address not found. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
     
@@ -171,29 +214,41 @@ const init = async () => {
     const sell =  async function (conversation: MyConversation, ctx: BotContext) {
         await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
         const cointTypeData = await conversation.waitFor(":text");
-        const possibleCoinType = cointTypeData.msg.text;
+        const possibleCoin = (cointTypeData.msg.text || "").trim();
     
-        const isCoinTypeIsValid = isValidTokenAddress(possibleCoinType);
-    
-        if (!isCoinTypeIsValid) {
-          await ctx.reply(
-            // eslint-disable-next-line max-len
-            `Token address is not correct. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
-            `,
-          );
+        const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
+        const isValidSuiScanLink = isValidCoinLink(possibleCoin);
+
+        if (!isCoinTypeIsValid && !isValidSuiScanLink) {
+          const replyText = isCoinTypeIsValid ?
+          `Token address is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.` :
+          `Suiscan link is not correct. Make sure your link is correct is correct.\nExample:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD`
+
+          await ctx.reply(replyText);
     
           return;
+        }
+
+        const coinType = isCoinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin)
+        // ts check
+        if (coinType === null) {
+          await ctx.reply(
+            // eslint-disable-next-line max-len
+            `Coin type is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
+            `,
+          );
+          return
         }
     
         let coinToSell: CommonCoinData | null = null;
         try {
-          coinToSell = coinManager.getCoinByType(possibleCoinType);
+          coinToSell = coinManager.getCoinByType(coinType);
         } catch (e) {
-          console.error(`Token ${possibleCoinType} not found in coinManager`);
+          console.error(`Token ${coinType} not found in coinManager`);
     
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address not found. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Token address not found. Make sure address ${coinType} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
     
