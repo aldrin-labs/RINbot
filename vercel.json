@@ -1,5 +1,11 @@
 {
-  "outputDirectory": ".",
-  "installCommand": "npm i --omit=dev",
-  "buildCommand": "npx ts-node scripts/build.ts"
+  "version": 2,
+  "public": true,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "api/webhook.ts"
+    }
+  ],
+  "redirects": [{ "source": "/", "destination": "/api", "permanent": false }]
 }
