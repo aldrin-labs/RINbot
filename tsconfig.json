@@ -8,9 +8,9 @@
     "moduleResolution": "Node",
     "skipLibCheck": true,
     "sourceMap": true,
-    "outDir": "public",
+    "outDir": "./public",
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "scripts"],
   "exclude": ["node_modules"]
 }

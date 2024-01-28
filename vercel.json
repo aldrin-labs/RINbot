@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "api/index.ts"
+      "destination": "api/webhook.ts"
     }
   ],
   "redirects": [{ "source": "/", "destination": "/api", "permanent": false }]

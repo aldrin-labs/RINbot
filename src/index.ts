@@ -81,7 +81,10 @@ async function startBot(): Promise<void> {
 startBot(); // Call the function to start the bot
 
 
-  //prod mode (Vercel)
-  export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-    await production(req, res, bot);
-  };
+//prod mode (Vercel)
+export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
+  await production(req, res, bot);
+};
+
+
+export { bot }

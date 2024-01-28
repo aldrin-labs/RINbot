@@ -27,7 +27,9 @@ const production = async (
   //   await bot.telegram.setWebhook(`${VERCEL_URL}/api`);
   // }
 
-  bot.start();
+  const webhook = `https://${VERCEL_URL}/api/webhook`
+
+  void bot.api.setWebhook(webhook)
 
   process.once('SIGINT', () => bot.stop('SIGINT'));
   process.once('SIGTERM', () => bot.stop('SIGTERM'));
