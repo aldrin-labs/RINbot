@@ -1,12 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { startVercel } from '../src/index';
-import { webhookCallback } from "grammy";
-import { bot } from '../src/index'
-import { production } from '../src/core';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    await production(req, res, bot)
+    await startVercel(req, res);
   } catch (e: any) {
     res.statusCode = 500;
     res.setHeader('Content-Type', 'text/html');
