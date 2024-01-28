@@ -398,15 +398,15 @@ const init = async () => {
           return;
         }
     
-        const availableBalance = await walletManager.getSuiBalance(ctx.session.publicKey);
-        await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`);
+        const { availableAmount, totalGasFee } = await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+        await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableAmount} SUI, Example: 0.1):`);
     
         const amountData = await conversation.waitFor(":text");
         const possibleAmount = amountData.msg.text;
     
         const isAmountIsValid = isValidTokenAmount({
           amount: possibleAmount,
-          maxAvailableAmount: availableBalance,
+          maxAvailableAmount: availableAmount,
           decimals: SUI_DECIMALS,
         });
     
@@ -423,10 +423,13 @@ const init = async () => {
         let tx;
     
         try {
-          tx = await WalletManagerSingleton.getWithdrawSuiTransaction({
+          const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
             amount: possibleAmount,
             address: destinationSuiAddress,
           });
+
+          txBlock.setGasBudget(Number(totalGasFee))
+          tx = txBlock
         } catch (error) {
           console.error(error);
     
@@ -447,7 +450,16 @@ const init = async () => {
           const res = await provider.signAndExecuteTransactionBlock({
             transactionBlock: tx,
             signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
+            options: {
+              showEffects: true
+            }
           });
+
+          if (res.effects?.status.status === "failure") {
+            await ctx.reply(`Withdraw failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
+
+            return;
+          }
     
           await ctx.reply(`Withdraw successful \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
         } catch (error) {
