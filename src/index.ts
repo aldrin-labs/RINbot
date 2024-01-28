@@ -74,10 +74,8 @@ bot.catch((err) => {
   }
 });
 //prod mode (Vercel)
-// export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-//   await production(req, res, bot);
-// };
+export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
+  await production(req, res, bot);
+};
 //dev mode
-ENVIRONMENT === 'production' ? production(bot) : development(bot);
-
-export { bot }
+ENVIRONMENT !== 'production' && development(bot);
