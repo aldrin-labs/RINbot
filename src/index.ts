@@ -4,7 +4,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 
 import { BotContext, SessionData } from './types';
-import initRouter from './routers';
 
 import menu from './menu/main';
 import { SuiApi } from './chains/sui';
@@ -23,7 +22,6 @@ const ENVIRONMENT = process.env.NODE_ENV || '';
 // @ts-ignore
 const storage = new RedisAdapter({ instance });
 
-const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
 // Stores data per user.
 function getSessionKey(ctx: Context): string | undefined {
@@ -50,11 +48,16 @@ bot.use(createConversation(SuiApi.exportPrivateKey));
 bot.use(createConversation(SuiApi.withdraw));
 
 bot.use(menu);
-bot.use(router);
 
 bot.command('start', async (ctx) => {
   // Send the menu.
-  const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n Your SUI balance: ${0}\n Total amount of assets: ${0}\n Total wallet net worth: $${0}`;
+  const balance = await SuiApi.balance(ctx);
+  const avl_balance = await SuiApi.availableBalance(ctx);
+  const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
+  Your SUI balance: ${balance}\n
+  Your available SUI balance: ${avl_balance}\n
+  Total amount of assets: ${0}\n
+  Total wallet net worth: $${0}`;
   await ctx.reply(welcome_text, { reply_markup: menu });
 });
 

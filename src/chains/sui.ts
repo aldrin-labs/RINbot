@@ -60,8 +60,8 @@ interface ISuiAPI {
     sell(conversation: MyConversation, ctx: BotContext): void,
     exportPrivateKey(conversation: MyConversation, ctx: BotContext): void,
     withdraw(conversation: MyConversation, ctx: BotContext): void,
-    availableBalance(ctx: any): void,
-    balance(ctx: any): void,
+    availableBalance(ctx: any): Promise<string>,
+    balance(ctx: any): Promise<string>,
     assets(ctx: any): void,
     generateWallet(): {privateKey: string, publicKey: string},
     getExplorerLink(ctx: BotContext): string,
@@ -383,7 +383,7 @@ const init = async () => {
     }
 
     const withdraw = async function(conversation: MyConversation, ctx: BotContext) {
-        await ctx.reply(`Please type the address you'd like to withdraw ALL you SUI coin`);
+        await ctx.reply(`Please type the address you'd like to withdraw SUI`);
     
         const messageData = await conversation.waitFor(":text");
         const destinationSuiAddress = messageData.msg.text;
@@ -463,14 +463,14 @@ const init = async () => {
         }
       }
 
-    const availableBalance = async (ctx: any) => {
+    const availableBalance = async (ctx: any): Promise<string> => {
         const availableBalance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
-        ctx.reply(`Your SUI balance: ${availableBalance}`);
+        return availableBalance;
     }
 
-    const balance = async (ctx: any) => {
+    const balance = async (ctx: any): Promise<string> => {
         const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
-        ctx.reply(`Your SUI balance: ${balance}`);
+        return balance;
     };
 
     const assets = async (ctx: any) => {

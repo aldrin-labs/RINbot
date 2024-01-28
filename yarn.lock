@@ -253,11 +253,6 @@
   resolved "https://registry.yarnpkg.com/@grammyjs/menu/-/menu-1.2.1.tgz#4c29c10374ec2974ba9c158fda96f5129fb331fd"
   integrity sha512-0LV9A/UukfF46N0ceSqG1RbdCjhvB2u1MNHNkE7eRD3GVlffOBnR+MS2ESE9mSBleT9OjRV6imA7QZ57QBktOQ==
 
-"@grammyjs/router@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@grammyjs/router/-/router-2.0.0.tgz#da3a9191d5997d438f7e1cadc2d570d755cd3fc5"
-  integrity sha512-xJ3HRNj3mVojLtkFmV+GvKpOWOnS0CGdAIdvpaq+j+8dic1wM1OhOukaotkKzAWZ6bb9QyzUUgVFN6xfZDO5VA==
-
 "@grammyjs/storage-redis@^2.4.1":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@grammyjs/storage-redis/-/storage-redis-2.4.1.tgz#d27585841df42b8906abc22643007f4130090599"

@@ -16,13 +16,13 @@ const wallet_menu = new Menu<BotContext>("wallet-menu")
     ctx.conversation.enter("withdraw");
     //ctx.reply("withdraw x amount")
   }).row()
-  .text("Reset wallet", async (ctx: any) => {
+//   .text("Reset wallet", async (ctx: any) => {
 
-    ctx.reply("Reset wallet")
-  })
+//     ctx.reply("Reset wallet")
+//   })
   .text("Export private key", async (ctx: any) => {
 
-    ctx.reply("Export private key")
+    ctx.reply(`Your private key: ${ctx.session.privateKey} \n !!!Please delete message after you save it!!!`)
   }).row();
 
 
