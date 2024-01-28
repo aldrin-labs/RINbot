@@ -217,7 +217,16 @@ buy = async (conversation: MyConversation, ctx: BotContext) => {
         const res = await this.provider.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
+          options: {
+            showEffects: true
+          }
         });
+
+        if (res.effects?.status.status === "failure") {
+          await ctx.reply(`Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
+
+          return;
+        }
   
         await ctx.reply(`Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
       } catch (error) {
@@ -368,7 +377,16 @@ buy = async (conversation: MyConversation, ctx: BotContext) => {
         const res = await this.provider.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
+          options: {
+            showEffects: true
+          }
         });
+
+        if (res.effects?.status.status === "failure") {
+          await ctx.reply(`Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
+
+          return;
+        }
   
         await ctx.reply(`Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}`);
       } catch (error) {
