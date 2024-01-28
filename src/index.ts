@@ -7,8 +7,8 @@ import { BotContext, SessionData } from './types';
 import initRouter from './routers';
 
 import menu from './menu/main';
-import { SuiApi } from "./chains/sui";
-import { conversations, createConversation } from "@grammyjs/conversations";
+import { SuiApi } from './chains/sui';
+import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from "@vercel/kv";
 //import { UpstashRedisAdapter } from "./adapters/UpstashRedisAdapter";
@@ -52,23 +52,22 @@ bot.use(createConversation(SuiApi.withdraw));
 bot.use(menu);
 bot.use(router);
 
-bot.command("start", async (ctx) => {
+bot.command('start', async (ctx) => {
   // Send the menu.
   const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n Your SUI balance: ${0}\n Total amount of assets: ${0}\n Total wallet net worth: $${0}`;
   await ctx.reply(welcome_text, { reply_markup: menu });
 });
-
 
 bot.catch((err) => {
   const ctx = err.ctx;
   console.error(`Error while handling update ${ctx.update.update_id}:`);
   const e = err.error;
   if (e instanceof GrammyError) {
-    console.error("Error in request:", e.description);
+    console.error('Error in request:', e.description);
   } else if (e instanceof HttpError) {
-    console.error("Could not contact Telegram:", e);
+    console.error('Could not contact Telegram:', e);
   } else {
-    console.error("Unknown error:", e);
+    console.error('Unknown error:', e);
   }
 });
 //prod mode (Vercel)

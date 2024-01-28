@@ -919,6 +919,18 @@
     json-schema-to-ts "1.6.4"
     ts-morph "12.0.0"
 
+"@vlad-yakovlev/grammy-reply-with-markdown@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@vlad-yakovlev/grammy-reply-with-markdown/-/grammy-reply-with-markdown-2.0.1.tgz#7141fa44cc0ffd750235605306668797a52cfc48"
+  integrity sha512-MERPSWwbQHG4wYudxy9naRmZIpvPdFkQASXuyvRgFjcH9TLEYvskqiGrSLtYZoGk/DnQbC3AsccRBdL0XuDFqg==
+  dependencies:
+    "@vlad-yakovlev/telegram-md" "^2.0.0"
+
+"@vlad-yakovlev/telegram-md@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@vlad-yakovlev/telegram-md/-/telegram-md-2.0.0.tgz#2385d17919bcf33a20c6f0c4be6d33f5f1465c0c"
+  integrity sha512-qdJYD2N1I7CN0uRboTE2PDvHL9/w519RjIA0bnsOllr8BYIZOzBnjmPqTvg1laZk+dqmcchrHSmEhLGAZBSSfA==
+
 abbrev@1, abbrev@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -3369,6 +3381,11 @@ tar@^6.1.11, tar@^6.1.13, tar@^6.1.15, tar@^6.1.2:
     minizlib "^2.1.1"
     mkdirp "^1.0.3"
     yallist "^4.0.0"
+
+telegram-md@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/telegram-md/-/telegram-md-1.3.1.tgz#8efbf7431d591ab8f1a14b9d887c23e9f7f1713d"
+  integrity sha512-uIQcwIKZ9+LcAd+eXwuAg7+KtqVYf1Lzd1Ijm58JaPuORkvjSLMZk3wKqpSF2sQ9E9ZYaQ1jJcoPBjbyMRUPzw==
 
 text-table@~0.2.0:
   version "0.2.0"
