@@ -8,8 +8,6 @@ const PORT = (process.env.PORT && parseInt(process.env.PORT, 10)) || 3000;
 const VERCEL_URL = `${process.env.VERCEL_URL}`;
 
 const production = async (
-  req: VercelRequest,
-  res: VercelResponse,
   bot: any
 ) => {
   debug('Bot runs in production mode');
