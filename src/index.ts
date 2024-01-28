@@ -22,6 +22,14 @@ const ENVIRONMENT = process.env.NODE_ENV || '';
 
 // @ts-ignore
 const storage = new RedisAdapter({ instance });
+let suiApi: SuiApi; //trycatch probably for test only
+try {
+  suiApi = new SuiApi()
+  
+} catch (error) {
+  console.log(`Could not create SuiApi instance ${error}`);
+  
+}
 
 const router = initRouter();
 const bot = new Bot<BotContext>(BOT_TOKEN);
@@ -36,7 +44,7 @@ function getSessionKey(ctx: Context): string | undefined {
 bot.use(session({ 
   getSessionKey,
   initial: (): SessionData => {
-    const {privateKey, publicKey} = SuiApi.generateWallet();
+    const {privateKey, publicKey} = suiApi.generateWallet();
     return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
   },
   storage
@@ -44,10 +52,10 @@ bot.use(session({
 
 bot.use(conversations());
 
-bot.use(createConversation(SuiApi.buy));
-bot.use(createConversation(SuiApi.sell));
-bot.use(createConversation(SuiApi.exportPrivateKey));
-bot.use(createConversation(SuiApi.withdraw));
+bot.use(createConversation(suiApi!.buy));
+bot.use(createConversation(suiApi!.sell));
+bot.use(createConversation(suiApi!.exportPrivateKey));
+bot.use(createConversation(suiApi!.withdraw));
 
 bot.use(menu);
 bot.use(router);
@@ -74,5 +82,8 @@ bot.catch((err) => {
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
   await production(req, res, bot);
 };
+
+//Need to add termination of SuiAPI instance 
+
 //dev mode
 ENVIRONMENT !== 'production' && development(bot);
