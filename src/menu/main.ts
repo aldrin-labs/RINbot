@@ -9,6 +9,7 @@ import alerts_menu from './alerts';
 import wallet_menu from './wallet';
 import settings_menu from './settings';
 import deposit_menu from './wallet_deposit';
+import withdraw_menu from './wallet_withdraw';
 
 const buy_text = 'Buy Token: \n\nTo buy a token enter a token address';
 
@@ -57,6 +58,7 @@ menu.register(refer_menu);
 menu.register(alerts_menu);
 menu.register(wallet_menu);
 menu.register(settings_menu);
-menu.register(deposit_menu, 'wallet-menu');
+menu.register(deposit_menu, "wallet-menu");
+menu.register(withdraw_menu, "wallet-menu");
 
 export default menu;
