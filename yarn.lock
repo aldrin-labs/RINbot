@@ -4,7 +4,7 @@
 
 "@avernikoz/rinbot-sui-sdk@^2.0.14":
   version "2.0.14"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.0.14.tgz#322da8b6044217cec808088a3526704dffc26bf6"
+  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.0.14.tgz#322da8b6044217cec808088a3526704dffc26bf6"
   integrity sha512-jILufDnevHJvQK7U0Dzn9dUAiumSebNZovJtkTcTQ90UNpTTOBSNx3sQNrSzszlmCtkDr1nfJ7W3CLqBU3P6gg==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.3"

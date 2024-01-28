@@ -1,9 +1,10 @@
 import {BotContext} from '../types';
 import { Menu } from "@grammyjs/menu";
-import { SuiApi } from '../chains/sui';
+import SuiApiSingleton from '../chains/sui';
 
 const wallet_menu = new Menu<BotContext>("wallet-menu")
-  .dynamic((ctx, range) => {
+  .dynamic(async (ctx, range) => {
+      const SuiApi = (await SuiApiSingleton.getInstance()).getApi();
       range.url("View in explorer", SuiApi.getExplorerLink(ctx))
   })    
   .back("Close", (ctx) => {ctx.session.step = "main"}).row()
