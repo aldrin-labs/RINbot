@@ -1,57 +1,76 @@
-import { Bot, session, GrammyError, HttpError } from "grammy";
+import { Bot, session, GrammyError, HttpError, Context } from "grammy";
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 
 import { BotContext, SessionData } from './types';
-import initRouter from './routers';
 
 import menu from './menu/main';
-import { SuiApi } from "./chains/sui";
-import { conversations, createConversation } from "@grammyjs/conversations";
+import { SuiApi } from './chains/sui';
+import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
-import IORedis from 'ioredis';
+import { kv as instance } from "@vercel/kv";
+//import { UpstashRedisAdapter } from "./adapters/UpstashRedisAdapter";
 
+if (instance && instance['opts']) {
+  instance['opts'].automaticDeserialization = false
+}
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
-const redisInstance = new IORedis(process.env.REDIS);
-const storage = new RedisAdapter({ instance: redisInstance, ttl: 10 });
 
-const router = initRouter();
+// @ts-ignore
+const storage = new RedisAdapter({ instance });
+
 const bot = new Bot<BotContext>(BOT_TOKEN);
+// Stores data per user.
+function getSessionKey(ctx: Context): string | undefined {
+  // Give every user their personal session storage
+  // (will be shared across groups and in their private chat)
+  return ctx.from?.id.toString();
+}
 
 // Make it interactive.
-bot.use(session({ initial: (): SessionData => {
-  const {privateKey, publicKey} = SuiApi.generateWallet();
-  return ({ step: "main", privateKey, publicKey })},
+bot.use(session({ 
+  getSessionKey,
+  initial: (): SessionData => {
+    const {privateKey, publicKey} = SuiApi.generateWallet();
+    return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
+  },
   storage
 }));
-
 
 bot.use(conversations());
 
 bot.use(createConversation(SuiApi.buy));
+bot.use(createConversation(SuiApi.sell));
+bot.use(createConversation(SuiApi.exportPrivateKey));
+bot.use(createConversation(SuiApi.withdraw));
 
 bot.use(menu);
-bot.use(router);
 
-bot.command("start", async (ctx) => {
+bot.command('start', async (ctx) => {
   // Send the menu.
-  await ctx.reply("Check out this menu:", { reply_markup: menu });
+  const balance = await SuiApi.balance(ctx);
+  const avl_balance = await SuiApi.availableBalance(ctx);
+  const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
+  Your SUI balance: ${balance}\n
+  Your available SUI balance: ${avl_balance}\n
+  Total amount of assets: ${0}\n
+  Total wallet net worth: $${0}`;
+  await ctx.reply(welcome_text, { reply_markup: menu });
 });
-
 
 bot.catch((err) => {
   const ctx = err.ctx;
   console.error(`Error while handling update ${ctx.update.update_id}:`);
   const e = err.error;
   if (e instanceof GrammyError) {
-    console.error("Error in request:", e.description);
+    console.error('Error in request:', e.description);
   } else if (e instanceof HttpError) {
-    console.error("Could not contact Telegram:", e);
+    console.error('Could not contact Telegram:', e);
   } else {
-    console.error("Unknown error:", e);
+    console.error('Unknown error:', e);
   }
 });
 //prod mode (Vercel)

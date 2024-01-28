@@ -2,14 +2,16 @@ import {BotContext} from '../types';
 import { Menu } from "@grammyjs/menu";
 import menu from './main';
 
-const buy_menu = new Menu<BotContext>("buy-menu")
+
+const withdraw_menu = new Menu<BotContext>("wallet-withdraw-menu")
 .back("Close", async (ctx) => {
-    await ctx.conversation.exit()
+    ctx.conversation.exit();
     const last_msg = ctx.msg?.message_id as number;
     await ctx.deleteMessages([last_msg])
     ctx.session.step = "main";
     ctx.menu.close();
     ctx.reply("Check out this menu:", { reply_markup: menu })
+
 });
 
-export default buy_menu;
+export default withdraw_menu;

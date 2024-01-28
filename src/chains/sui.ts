@@ -21,28 +21,61 @@ import {
 
 import { MyConversation, BotContext } from "../types";
 
+/**
+ * Checks if the given string is a valid suiscan link.
+ *
+ * @param {string} link - The string to be checked.
+ * @returns {boolean} - True if the link is valid, false otherwise.
+ */
+export function isValidCoinLink(link: string): boolean {
+  // Regular expression to match valid suiscan links
+  const suiscanLinkRegex = /^https:\/\/suiscan\.xyz\/mainnet\/coin\/(0x|0X)?[0-9a-fA-F]+::[0-9a-zA-Z]+::[0-9a-zA-Z]+(\/txs|\/|)$/;
+
+  return suiscanLinkRegex.test(link);
+}
+
+/**
+* Extracts the coin type from a valid suiscan link.
+*
+* @param {string} link - The valid suiscan link.
+* @returns {string | null} - The extracted coin type or null if extraction fails.
+*/
+export function extractCoinTypeFromLink(link: string): string | null {
+  const suiscanLinkRegex = /^https:\/\/suiscan\.xyz\/mainnet\/coin\/0x([0-9a-fA-F]+)::([0-9a-zA-Z]+)::([0-9a-zA-Z]+)(\/txs|\/)?$/;
+  const match = link.match(suiscanLinkRegex);
+
+  if (match && match[2]) {
+      const coinType = `0x${match[1]}::${match[2]}::${match[3]}`;
+      return coinType;
+  }
+
+  return null;
+}
+
 export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
     return tokenTo === tokenFrom;
 };
 interface ISuiAPI {
     buy(conversation: MyConversation, ctx: BotContext): void,
-    sell(ctx: any, possibleCoinType: string, possibleAmount: string): void,
-    exportPrivateKey(ctx: any): void,
-    withdraw(ctx: any, destinationSuiAddress: string, possibleAmount: string): void,
-    availableBalance(ctx: any): void,
-    balance(ctx: any): void,
+    sell(conversation: MyConversation, ctx: BotContext): void,
+    exportPrivateKey(conversation: MyConversation, ctx: BotContext): void,
+    withdraw(conversation: MyConversation, ctx: BotContext): void,
+    availableBalance(ctx: any): Promise<string>,
+    balance(ctx: any): Promise<string>,
     assets(ctx: any): void,
-    generateWallet(): {privateKey: string, publicKey: string}
+    generateWallet(): {privateKey: string, publicKey: string},
+    getExplorerLink(ctx: BotContext): string,
+
 }
 export var SuiApi: ISuiAPI;
 
 const init = async () => {
     if (SuiApi != null) return;
     SuiApi = {} as ISuiAPI;
-    const SUI_PROVIDER_URL = "https://sui-rpc.publicnode.com";
+    const SUI_PROVIDER_URL = "https://sui-mainnet.blockvision.org/v1/2bYB32LD0S06isRTaxATLv1mTt6";
     const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
     // SDK instances init
-    const cacheOptions = { updateIntervalInMs: 30_000 };
+    const cacheOptions = { updateIntervalInMs: 1000 * 60 * 30 };
     const turbos: TurbosSingleton = await TurbosSingleton.getInstance({ suiProviderUrl: SUI_PROVIDER_URL, cacheOptions });
     const cetus: CetusSingleton = await CetusSingleton.getInstance({
       suiProviderUrl: SUI_PROVIDER_URL,
@@ -59,30 +92,42 @@ const init = async () => {
 
     const buy = async function (conversation: MyConversation, ctx: BotContext) {
         await ctx.reply("Which token do you want to buy? Please send a coin type or a link to suiscan.");
-        const cointTypeData = await conversation.waitFor(":text");
-        const possibleCoinType = cointTypeData.msg.text;
+        const cointTypeData = await conversation.waitFor([":text", "::url"]);
+        const possibleCoin = (cointTypeData.msg.text || "").trim();
     
-        const isCoinTypeIsValid = isValidTokenAddress(possibleCoinType);
+        const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
+        const isValidSuiScanLink = isValidCoinLink(possibleCoin);
     
-        if (!isCoinTypeIsValid) {
+        if (!isCoinTypeIsValid && !isValidSuiScanLink) {
+          const replyText = isCoinTypeIsValid ?
+          `Token address is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.` :
+          `Suiscan link is not correct. Make sure your link is correct is correct.\nExample:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD`
+
+          await ctx.reply(replyText);
+
+          return;
+        }
+
+        const coinType = isCoinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin)
+        // ts check
+        if (coinType === null) {
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address is not correct. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Coin type is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
-    
-          return;
+          return
         }
     
         let coinToBuy: CommonCoinData | null = null;
         try {
-          coinToBuy = coinManager.getCoinByType(possibleCoinType);
+          coinToBuy = coinManager.getCoinByType(coinType);
         } catch (e) {
-          console.error(`Token ${possibleCoinType} not found in coinManager`);
+          console.error(`Token ${coinType} not found in coinManager`);
     
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address not found. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Token address not found. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
     
@@ -168,31 +213,44 @@ const init = async () => {
         }
       }
 
-    const sell = async function (ctx: any, possibleCoinType: string, possibleAmount: string) {
-        // await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
+    const sell =  async function (conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
+        const cointTypeData = await conversation.waitFor(":text");
+        const possibleCoin = (cointTypeData.msg.text || "").trim();
+    
+        const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
+        const isValidSuiScanLink = isValidCoinLink(possibleCoin);
 
-    
-        const isCoinTypeIsValid = isValidTokenAddress(possibleCoinType);
-    
-        if (!isCoinTypeIsValid) {
-          await ctx.reply(
-            // eslint-disable-next-line max-len
-            `Token address is not correct. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
-            `,
-          );
+        if (!isCoinTypeIsValid && !isValidSuiScanLink) {
+          const replyText = isCoinTypeIsValid ?
+          `Token address is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.` :
+          `Suiscan link is not correct. Make sure your link is correct is correct.\nExample:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD`
+
+          await ctx.reply(replyText);
     
           return;
+        }
+
+        const coinType = isCoinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin)
+        // ts check
+        if (coinType === null) {
+          await ctx.reply(
+            // eslint-disable-next-line max-len
+            `Coin type is not correct. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
+            `,
+          );
+          return
         }
     
         let coinToSell: CommonCoinData | null = null;
         try {
-          coinToSell = coinManager.getCoinByType(possibleCoinType);
+          coinToSell = coinManager.getCoinByType(coinType);
         } catch (e) {
-          console.error(`Token ${possibleCoinType} not found in coinManager`);
+          console.error(`Token ${coinType} not found in coinManager`);
     
           await ctx.reply(
             // eslint-disable-next-line max-len
-            `Token address not found. Make sure address ${possibleCoinType} is correct. \n You can enter a token address or a Suiscan/Birdeye link.
+            `Token address not found. Make sure address ${coinType} is correct. \n You can enter a token address or a Suiscan link.
             `,
           );
     
@@ -225,7 +283,9 @@ const init = async () => {
         await ctx.reply(
           `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
         );
-
+    
+        const amountData = await conversation.waitFor(":text");
+        const possibleAmount = amountData.msg.text;
     
         // TODO: Re-check this
         // const isAmountIsValid = isValidTokenAmount(+possibleAmount, coin.balance);
@@ -302,28 +362,31 @@ const init = async () => {
     
           return;
         }
-    }
+      }
 
-    const exportPrivateKey = async function (ctx: any) {
-        // await ctx.reply(`Are you sure want to export private key? Please type CONFIRM if yes.`);
+    const exportPrivateKey = async function (conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply(`Are you sure want to export private key? Please type CONFIRM if yes.`);
     
-        // const messageData = await conversation.waitFor(":text");
-        // const isExportConfirmed = messageData.msg.text === "CONFIRM";
+        const messageData = await conversation.waitFor(":text");
+        const isExportConfirmed = messageData.msg.text === "CONFIRM";
     
-        // if (!isExportConfirmed) {
-        //   await ctx.reply(`You've not typed CONFIRM. Ignoring your request of exporting private key`);
+        if (!isExportConfirmed) {
+          await ctx.reply(`You've not typed CONFIRM. Ignoring your request of exporting private key`);
     
-        //   return;
-        // }
+          return;
+        }
     
         await ctx.reply(
           `Your private key is: <code>${ctx.session.privateKey}</code>\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
           { parse_mode: "HTML" },
         );
-      }
+    }
 
-    const withdraw = async function (ctx: any, destinationSuiAddress: string, possibleAmount: string) {
-        // await ctx.reply(`Please type the address you'd like to withdraw ALL you SUI coin`);
+    const withdraw = async function(conversation: MyConversation, ctx: BotContext) {
+        await ctx.reply(`Please type the address you'd like to withdraw SUI`);
+    
+        const messageData = await conversation.waitFor(":text");
+        const destinationSuiAddress = messageData.msg.text;
     
         const isAddressIsValid = isValidSuiAddress(destinationSuiAddress);
     
@@ -336,10 +399,10 @@ const init = async () => {
         }
     
         const availableBalance = await walletManager.getSuiBalance(ctx.session.publicKey);
-        // await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`);
+        await ctx.reply(`Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`);
     
-        // const amountData = await conversation.waitFor(":text");
-        // const possibleAmount = amountData.msg.text;
+        const amountData = await conversation.waitFor(":text");
+        const possibleAmount = amountData.msg.text;
     
         const isAmountIsValid = isValidTokenAmount({
           amount: possibleAmount,
@@ -398,16 +461,16 @@ const init = async () => {
     
           return;
         }
-    }
+      }
 
-    const availableBalance = async (ctx: any) => {
+    const availableBalance = async (ctx: any): Promise<string> => {
         const availableBalance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
-        ctx.reply(`Your SUI balance: ${availableBalance}`);
+        return availableBalance;
     }
 
-    const balance = async (ctx: any) => {
+    const balance = async (ctx: any): Promise<string> => {
         const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
-        ctx.reply(`Your SUI balance: ${balance}`);
+        return balance;
     };
 
     const assets = async (ctx: any) => {
@@ -433,6 +496,10 @@ const init = async () => {
         return WalletManagerSingleton.generateWallet();
     }
 
+    const getExplorerLink = (ctx: BotContext): string => {
+        return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`
+    }
+
     SuiApi = {
         buy,
         sell,
@@ -441,7 +508,8 @@ const init = async () => {
         availableBalance,
         balance,
         assets,
-        generateWallet
+        generateWallet,
+        getExplorerLink
     }
 }
 await init();
