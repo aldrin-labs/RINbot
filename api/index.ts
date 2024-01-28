@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { startVercel } from '../src';
+import { startVercel } from '../src/index';
 
 export default async function handle(req: VercelRequest, res: VercelResponse) {
   try {
