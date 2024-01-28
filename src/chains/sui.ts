@@ -111,7 +111,7 @@ export class SuiApi implements ISuiAPI {
 
     
   
-  async buy(conversation: MyConversation, ctx: BotContext) {
+  buy = async (conversation: MyConversation, ctx: BotContext) => {
         await ctx.reply("Which token do you want to buy? Please send a coin type or a link to suiscan.");
         const cointTypeData = await conversation.waitFor([":text", "::url"]);
         const possibleCoin = (cointTypeData.msg.text || "").trim();
@@ -234,7 +234,7 @@ export class SuiApi implements ISuiAPI {
         }
       }
 
-     async sell (conversation: MyConversation, ctx: BotContext) {
+     sell = async (conversation: MyConversation, ctx: BotContext) => {
         await ctx.reply("Which token do you want to sell? Please send a coin type or a link to suiscan.");
         const cointTypeData = await conversation.waitFor(":text");
         const possibleCoin = (cointTypeData.msg.text || "").trim();
@@ -385,7 +385,7 @@ export class SuiApi implements ISuiAPI {
         }
       }
 
-    async exportPrivateKey (conversation: MyConversation, ctx: BotContext) {
+    exportPrivateKey = async (conversation: MyConversation, ctx: BotContext) => {
         await ctx.reply(`Are you sure want to export private key? Please type CONFIRM if yes.`);
     
         const messageData = await conversation.waitFor(":text");
@@ -403,7 +403,7 @@ export class SuiApi implements ISuiAPI {
         );
     }
 
-    async withdraw(conversation: MyConversation, ctx: BotContext) {
+    withdraw = async (conversation: MyConversation, ctx: BotContext) => {
         await ctx.reply(`Please type the address you'd like to withdraw ALL you SUI coin`);
     
         const messageData = await conversation.waitFor(":text");
