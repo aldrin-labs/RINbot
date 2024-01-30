@@ -1,16 +1,14 @@
 {
   "compilerOptions": {
     "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "lib": ["es2020"],
-    "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "module": "commonjs",
     "skipLibCheck": true,
     "sourceMap": true,
-    "outDir": "./public",
+    "outDir": "public",
+    "lib": ["esnext", "dom"],
     "resolveJsonModule": true
   },
-  "include": ["src/**/*", "scripts"],
   "exclude": ["node_modules"]
 }

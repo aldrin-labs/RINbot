@@ -2,9 +2,8 @@
   "name": "rinbot",
   "version": "0.4.20",
   "description": "rinbot for degens",
-  "main": "api/index.ts",
+  "main": "src/index.ts",
   "author": "rincels",
-  "type": "module",
   "node": "v20",
   "engines": {
     "node": "20"
