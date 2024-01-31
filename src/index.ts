@@ -26,7 +26,7 @@ if(ENVIRONMENT !== 'local')
 
 async function startBot(): Promise<void> {
   console.debug("[startBot] triggered")
-  const suiApi = await (await SuiApiSingleton.getInstance().catch((e) => console.debug(e)))?.getApi(); // Get SuiApiSingleton instance
+  const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
@@ -39,7 +39,7 @@ async function startBot(): Promise<void> {
   bot.use(session({ 
     getSessionKey,
     initial: (): SessionData => {
-      const {privateKey, publicKey} = suiApi!.generateWallet();
+      const {privateKey, publicKey} = suiApi.generateWallet();
       return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
     },
     storage
@@ -47,17 +47,17 @@ async function startBot(): Promise<void> {
 
   bot.use(conversations());
 
-  bot.use(createConversation(suiApi!.buy));
-  bot.use(createConversation(suiApi!.sell));
-  bot.use(createConversation(suiApi!.exportPrivateKey));
-  bot.use(createConversation(suiApi!.withdraw));
+  bot.use(createConversation(suiApi.buy));
+  bot.use(createConversation(suiApi.sell));
+  bot.use(createConversation(suiApi.exportPrivateKey));
+  bot.use(createConversation(suiApi.withdraw));
 
   bot.use(menu);
 
   bot.command('start', async (ctx) => {
     // Send the menu.
-    const balance = await suiApi!.balance(ctx);
-    const avl_balance = await suiApi!.availableBalance(ctx);
+    const balance = await suiApi.balance(ctx);
+    const avl_balance = await suiApi.availableBalance(ctx);
     const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
     Your SUI balance: ${balance}\n
     Your available SUI balance: ${avl_balance}\n
@@ -82,7 +82,7 @@ async function startBot(): Promise<void> {
   ENVIRONMENT === 'local' && bot.start()
 }
 
-startBot() // Call the function to start the bot
+startBot().catch((e) => console.log(e)) // Call the function to start the bot
 
 
 //prod mode (Vercel)
