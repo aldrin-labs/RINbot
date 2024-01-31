@@ -25,6 +25,7 @@ if(ENVIRONMENT !== 'local')
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 
 async function startBot(): Promise<void> {
+  console.debug("[startBot] triggered")
   const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
   // Stores data per user.
