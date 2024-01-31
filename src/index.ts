@@ -19,6 +19,7 @@ const VERCEL_URL = process.env.VERCEL_URL || '';
 // @ts-ignore
 const storage = new RedisAdapter({ instance });
 
+
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
 if(ENVIRONMENT !== 'local')
