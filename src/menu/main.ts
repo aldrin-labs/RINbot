@@ -10,35 +10,29 @@ import wallet_menu from './wallet';
 import settings_menu from './settings';
 import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
+import SuiApiSingleton from '../chains/sui';
 
-const buy_text = 'Buy Token: \n\nTo buy a token enter a token address';
-
-//Mock data
-import { walletData } from '../mock/wallet';
-
-const getOverview = () => {
-  let overview = `Position Overview:\n\n`;
-  for (let i = 0; i < walletData.tokens.length; i++) {
-    overview += `/${i + 1} *[${walletData.tokens[i].coinTicker}](https://dexscreener.com/sui/${walletData.tokens[i].coinAddress})*\nValue: *${walletData.tokens[i].balance}*\nMcap:\n\n`;
-  }
-  overview += `Balance: *${walletData.balance}*`;
-  return overview;
-};
+// const getOverview = async () => {
+//   let overview = `Position Overview:\n\n`;
+//   const sdk = await SuiApiSingleton.getInstance();
+//   const assets = sdk.
+//   // for (let i = 0; i < walletData.tokens.length; i++) {
+//   //   overview += `/${i + 1} *[${walletData.tokens[i].coinTicker}](https://dexscreener.com/sui/${walletData.tokens[i].coinAddress})*\nValue: *${walletData.tokens[i].balance}*\nMcap:\n\n`;
+//   // }
+//   // return overview;
+// };
 
 // Create a simple menu.
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx: any) => {
     ctx.session.step = 'buy';
     ctx.menu.nav('buy-menu');
-    ctx.conversation.enter('buy');
+    ctx.conversation.enter('bound buy');
   })
   .text('Sell & Manage', async (ctx: any) => {
     ctx.session.step = 'positions';
-    await ctx.reply(getOverview(), {
-      parse_mode: 'MarkdownV2',
-      reply_markup: positions_menu,
-      disable_web_page_preview: true,
-    });
+    const sdk = (await SuiApiSingleton.getInstance()).getApi();
+    sdk.assets(ctx);
     //ctx.menu.nav('positions-menu');
   })
   .row()
@@ -58,7 +52,7 @@ menu.register(refer_menu);
 menu.register(alerts_menu);
 menu.register(wallet_menu);
 menu.register(settings_menu);
-menu.register(deposit_menu, "wallet-menu");
-menu.register(withdraw_menu, "wallet-menu");
+menu.register(deposit_menu, 'wallet-menu');
+menu.register(withdraw_menu, 'wallet-menu');
 
 export default menu;
