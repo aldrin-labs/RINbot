@@ -22,7 +22,7 @@ const storage = new RedisAdapter({ instance });
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
 if(ENVIRONMENT !== 'local')
-void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
+  void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 
 async function startBot(): Promise<void> {
   const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
