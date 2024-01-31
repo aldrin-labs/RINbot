@@ -50,7 +50,7 @@ async function startBot(): Promise<void> {
   //   storage
   // }));
 
-  bot.use(conversations());
+  //bot.use(conversations());
 
   // bot.use(createConversation(suiApi.buy));
   // bot.use(createConversation(suiApi.sell));
@@ -87,7 +87,7 @@ async function startBot(): Promise<void> {
   //ENVIRONMENT === 'local' && bot.start()
 }
 
-startBot().catch((e) => console.log(e)) // Call the function to start the bot
+startBot()// Call the function to start the bot
 
 
 //prod mode (Vercel)
