@@ -24,33 +24,33 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 
 async function startBot(): Promise<void> {
-  // const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
+  const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
-  // // Stores data per user.
-  // function getSessionKey(ctx: Context): string | undefined {
-  //   // Give every user their personal session storage
-  //   // (will be shared across groups and in their private chat)
-  //   return ctx.from?.id.toString();
-  // }
+  // Stores data per user.
+  function getSessionKey(ctx: Context): string | undefined {
+    // Give every user their personal session storage
+    // (will be shared across groups and in their private chat)
+    return ctx.from?.id.toString();
+  }
 
-  // // Make it interactive.
-  // bot.use(session({ 
-  //   getSessionKey,
-  //   initial: (): SessionData => {
-  //     const {privateKey, publicKey} = suiApi.generateWallet();
-  //     return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
-  //   },
-  //   storage
-  // }));
+  // Make it interactive.
+  bot.use(session({ 
+    getSessionKey,
+    initial: (): SessionData => {
+      const {privateKey, publicKey} = suiApi.generateWallet();
+      return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
+    },
+    storage
+  }));
 
-  // bot.use(conversations());
+  bot.use(conversations());
 
-  // bot.use(createConversation(suiApi.buy));
-  // bot.use(createConversation(suiApi.sell));
-  // bot.use(createConversation(suiApi.exportPrivateKey));
-  // bot.use(createConversation(suiApi.withdraw));
+  bot.use(createConversation(suiApi.buy));
+  bot.use(createConversation(suiApi.sell));
+  bot.use(createConversation(suiApi.exportPrivateKey));
+  bot.use(createConversation(suiApi.withdraw));
 
-  // bot.use(menu);
+  bot.use(menu);
 
   bot.command('start', async (ctx) => {
     // Send the menu.
