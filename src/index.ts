@@ -23,6 +23,7 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 if(ENVIRONMENT === 'production'){
   console.debug(`${VERCEL_URL}`)
+  console.debug(`${BOT_TOKEN}`)
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 }
 
