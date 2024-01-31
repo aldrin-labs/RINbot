@@ -28,7 +28,7 @@ if(ENVIRONMENT === 'production'){
 
 async function startBot(): Promise<void> {
   console.debug("[startBot] triggered")
-  const suiApi = await (await SuiApiSingleton.getInstance().catch()).getApi(); // Get SuiApiSingleton instance
+  //const suiApi = await (await SuiApiSingleton.getInstance().catch()).getApi(); // Get SuiApiSingleton instance
 
   console.debug("after suiapi")
 
@@ -40,14 +40,14 @@ async function startBot(): Promise<void> {
   }
 
   // Make it interactive.
-  bot.use(session({ 
-    getSessionKey,
-    initial: (): SessionData => {
-      const {privateKey, publicKey} = suiApi.generateWallet();
-      return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
-    },
-    storage
-  }));
+  // bot.use(session({ 
+  //   getSessionKey,
+  //   initial: (): SessionData => {
+  //     const {privateKey, publicKey} = suiApi.generateWallet();
+  //     return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
+  //   },
+  //   storage
+  // }));
 
   bot.use(conversations());
 
