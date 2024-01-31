@@ -14,11 +14,14 @@ if (instance && instance['opts']) {
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const ENVIRONMENT = process.env.NODE_ENV || '';
+const VERCEL_URL = process.env.VERCEL_URL || '';
 
 // @ts-ignore
 const storage = new RedisAdapter({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
+
+void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 
 async function startBot(): Promise<void> {
   const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
@@ -51,14 +54,12 @@ async function startBot(): Promise<void> {
 
   bot.command('start', async (ctx) => {
     // Send the menu.
-    const balance = await suiApi.balance(ctx);
-    const avl_balance = await suiApi.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
-    Your SUI balance: ${balance}\n
-    Your available SUI balance: ${avl_balance}\n
+    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address:\n
+    Your SUI balance:\n
+    Your available SUI balance: \n
     Total amount of assets: ${0}\n
     Total wallet net worth: $${0}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
+    await ctx.reply(welcome_text);
   });
 
   bot.catch((err) => {
@@ -75,16 +76,16 @@ async function startBot(): Promise<void> {
   });
 
   //dev mode
-  ENVIRONMENT !== 'production' && development(bot);
+  //ENVIRONMENT !== 'production' && development(bot);
 }
 
 startBot(); // Call the function to start the bot
 
 
 //prod mode (Vercel)
-export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-  await production(req, res, bot);
-};
+// export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
+//   await production(req, res, bot);
+// };
 
 
 export { bot }
