@@ -1,4 +1,4 @@
-import { Bot, session, GrammyError, HttpError, Context } from "grammy";
+import { Bot, session, GrammyError, HttpError, Context } from 'grammy';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 import { BotContext, SessionData } from './types';
@@ -6,10 +6,10 @@ import menu from './menu/main';
 import SuiApiSingleton from './chains/sui';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
-import { kv as instance } from "@vercel/kv";
+import { kv as instance } from '@vercel/kv';
 
 if (instance && instance['opts']) {
-  instance['opts'].automaticDeserialization = false
+  instance['opts'].automaticDeserialization = false;
 }
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
@@ -21,12 +21,12 @@ const storage = new RedisAdapter({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-if(ENVIRONMENT !== 'local'){
-  void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
-}
+if (ENVIRONMENT !== 'local')
+  void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`);
 
 async function startBot(): Promise<void> {
-  const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
+  console.debug('[startBot] triggered');
+  const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
@@ -36,14 +36,22 @@ async function startBot(): Promise<void> {
   }
 
   // Make it interactive.
-  bot.use(session({ 
-    getSessionKey,
-    initial: (): SessionData => {
-      const {privateKey, publicKey} = suiApi.generateWallet();
-      return ({ step: "main", privateKey, publicKey, settings: { slippagePercentage: 10 } })
-    },
-    storage
-  }));
+  bot.use(
+    session({
+      getSessionKey,
+      initial: (): SessionData => {
+        const { privateKey, publicKey } = suiApi.generateWallet();
+        return {
+          step: 'main',
+          privateKey,
+          publicKey,
+          settings: { slippagePercentage: 10 },
+          assets: [],
+        };
+      },
+      storage
+    }),
+  );
 
   bot.use(conversations());
 
@@ -54,22 +62,13 @@ async function startBot(): Promise<void> {
 
   bot.use(menu);
 
-  bot.command('start', async (ctx) => {
-    // Send the menu.
-    const balance = await suiApi.balance(ctx);
-    const avl_balance = await suiApi.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
-    Your SUI balance: ${balance}\n
-    Your available SUI balance: ${avl_balance}\n
-    Total amount of assets: ${0}\n
-    Total wallet net worth: $${0}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
-  });
+  bot.command('start', async (ctx) => suiApi.home(ctx));
 
   bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Error while handling update ${ctx.update.update_id}:`);
     const e = err.error;
+    ctx.session.step = 'main';
     if (e instanceof GrammyError) {
       console.error('Error in request:', e.description);
     } else if (e instanceof HttpError) {
@@ -79,16 +78,14 @@ async function startBot(): Promise<void> {
     }
   });
 
-  ENVIRONMENT === 'local' && bot.start()
+  ENVIRONMENT === 'local' && bot.start();
 }
 
-startBot() // Call the function to start the bot
-
+startBot(); // Call the function to start the bot
 
 //prod mode (Vercel)
 // export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
 //   await production(req, res, bot);
 // };
 
-
-export { bot }
+export { bot };

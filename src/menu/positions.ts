@@ -1,63 +1,70 @@
 import { BotContext } from '../types';
 import { Menu } from '@grammyjs/menu';
+import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
-//Mock data
-import { walletData } from '../mock/wallet';
+let currentTokenIndex: number = 0;
+let currentToken: CoinAssetData;
 
-let currentTokenIndex = 0;
-let currentToken = walletData.tokens[currentTokenIndex];
-
-function nextToken() {
+function nextToken(assets: CoinAssetData[]) {
   currentTokenIndex++;
-  if (currentTokenIndex === walletData.tokens.length) {
+  if (currentTokenIndex === assets.length) {
     currentTokenIndex = 0;
-    currentToken = walletData.tokens[currentTokenIndex];
+    currentToken = assets[currentTokenIndex];
   }
-  currentToken = walletData.tokens[currentTokenIndex];
+  currentToken = assets[currentTokenIndex];
 }
 
-function prevToken() {
+function prevToken(assets: CoinAssetData[]) {
   currentTokenIndex--;
   if (currentTokenIndex < 0) {
-    currentTokenIndex = walletData.tokens.length - 1;
-    currentToken = walletData.tokens[currentTokenIndex];
+    currentTokenIndex = assets.length - 1;
+    currentToken = assets[currentTokenIndex];
   }
-  currentToken = walletData.tokens[currentTokenIndex];
+  currentToken = assets[currentTokenIndex];
 }
 
 const positions_menu = new Menu<BotContext>('positions-menu')
   .back('Close', (ctx) => {
     ctx.session.step = 'main';
   })
-  .row()
-  .text('buy X amount', (ctx) => ctx.reply('buy X'))
+  // .row()
+  // .text('buy X amount', (ctx) => ctx.reply('buy X'))
   .row()
   .text('<', (ctx) => {
-    prevToken();
-    ctx.editMessageText(`${currentToken.coinName} | ${currentToken.coinTicker} | 
-    ${currentToken.coinAddress}
-    `);
+    const assets = ctx.session.assets;
+    prevToken(assets);
+    ctx.editMessageText(
+      `${currentToken.symbol} | ${currentToken.type} | ${currentToken.balance}`,
+    );
   })
-  .text(() => {
-    return currentToken.coinTicker;
+  .text((ctx) => {
+    const assets = ctx.session.assets;
+    return currentToken
+      ? currentToken.symbol!
+      : assets[currentTokenIndex].symbol!;
   })
   .text(
     '>',
     (ctx) => {
-      nextToken();
-      ctx.editMessageText(`${currentToken.coinName} | ${currentToken.coinTicker} | 
-    ${currentToken.coinAddress}
-    `);
+      const assets = ctx.session.assets;
+      nextToken(assets);
+      ctx.editMessageText(
+        `${currentToken.symbol} | ${currentToken.type} | ${currentToken.balance}`,
+      );
     },
     (ctx) => ctx.menu.update(),
   )
-  .row()
+  // .row()
 
-  .text('sell 25%', (ctx) => ctx.reply('sell 25%'))
-  .text('sell 100%', (ctx) => ctx.reply('sell 100%'))
-  .text('sell X%', (ctx) => ctx.reply('sell X%'))
-  .row()
-  //.url('explorer', "https://suiscan.io").url('dexscreener', "https://dexscreener.io").url('scan', '@ttfbotbot').url('chart', '@ttfbotbot').row()
-  .text('refresh', (ctx) => ctx.reply('refresh'));
+  // .text('sell 25%', (ctx) => ctx.reply('sell 25%'))
+  // .text('sell 100%', (ctx) => ctx.reply('sell 100%'))
+  // .text('sell X%', (ctx) => ctx.reply('sell X%'))
+  .text('sell X', async (ctx) => {
+    ctx.session.step = 'sell';
+    await ctx.conversation.enter('bound sell');
+  })
+  .row();
+//.url('explorer', "https://suiscan.io").url('dexscreener', "https://dexscreener.io").url('scan', '@ttfbotbot').url('chart', '@ttfbotbot').row()
+// .text('Refresh', (ctx) => ctx.reply('refresh'));
 
 export default positions_menu;
