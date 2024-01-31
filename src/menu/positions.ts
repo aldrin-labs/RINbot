@@ -59,6 +59,10 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   // .text('sell 25%', (ctx) => ctx.reply('sell 25%'))
   // .text('sell 100%', (ctx) => ctx.reply('sell 100%'))
   // .text('sell X%', (ctx) => ctx.reply('sell X%'))
+  .text('sell X', async (ctx) => {
+    ctx.session.step = 'sell';
+    await ctx.conversation.enter('bound sell');
+  })
   .row();
 //.url('explorer', "https://suiscan.io").url('dexscreener', "https://dexscreener.io").url('scan', '@ttfbotbot').url('chart', '@ttfbotbot').row()
 // .text('Refresh', (ctx) => ctx.reply('refresh'));
