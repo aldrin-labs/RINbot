@@ -26,7 +26,7 @@ if(ENVIRONMENT !== 'local')
 
 async function startBot(): Promise<void> {
   console.debug("[startBot] triggered")
-  const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
+  const suiApi = await (await SuiApiSingleton.getInstance().catch()).getApi(); // Get SuiApiSingleton instance
 
   console.debug("after suiapi")
 
@@ -81,7 +81,7 @@ async function startBot(): Promise<void> {
     }
   });
 
-  ENVIRONMENT === 'local' && bot.start()
+  //ENVIRONMENT === 'local' && bot.start()
 }
 
 startBot().catch((e) => console.log(e)) // Call the function to start the bot
