@@ -23,7 +23,6 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 if(ENVIRONMENT !== 'local'){
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
-  console.debug(bot)
 }
 
 
