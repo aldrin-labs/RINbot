@@ -28,6 +28,8 @@ async function startBot(): Promise<void> {
   console.debug("[startBot] triggered")
   const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
+  console.debug("after suiapi")
+
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
     // Give every user their personal session storage
