@@ -32,7 +32,7 @@ const menu = new Menu<BotContext>('main')
   .text('Sell & Manage', async (ctx: any) => {
     ctx.session.step = 'positions';
     const sdk = (await SuiApiSingleton.getInstance()).getApi();
-    sdk.assets(ctx);
+    await sdk.assets(ctx);
     //ctx.menu.nav('positions-menu');
   })
   .row()

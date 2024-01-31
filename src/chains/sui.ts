@@ -66,7 +66,7 @@ interface ISuiAPI {
   withdraw(conversation: MyConversation, ctx: BotContext): void;
   availableBalance(ctx: any): Promise<string>;
   balance(ctx: any): Promise<string>;
-  assets(ctx: any): void;
+  assets(ctx: any): Promise<void>;
   generateWallet(): { privateKey: string; publicKey: string };
   getExplorerLink(ctx: BotContext): string;
 }
