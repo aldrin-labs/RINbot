@@ -1,5 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import createDebug from 'debug';
+
+
 import { Bot } from 'grammy';
 import { BotContext } from '../types';
 import { Update } from 'grammy/types';
@@ -37,9 +39,7 @@ const production = async (
     res.status(200).json('Listening to bot events...');
   }
   debug(`starting webhook on port: ${PORT}`);
-
-  // if (req.method === 'POST') {
-  //   await bot.handleUpdate(req.body as unknown as any, res);
+q.body as unknown as any, res);
   // } else {
   //   res.status(200).json('Listening to bot events...');
   // }
