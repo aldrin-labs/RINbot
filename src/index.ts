@@ -22,7 +22,7 @@ const storage = new RedisAdapter({ instance });
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
 if(ENVIRONMENT !== 'local'){
-  await bot.api.deleteWebhook();
+  bot.api.deleteWebhook();
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
 }
 
