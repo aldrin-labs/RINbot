@@ -55,12 +55,14 @@ async function startBot(): Promise<void> {
 
   bot.command('start', async (ctx) => {
     // Send the menu.
-    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address:\n
-    Your SUI balance:\n
-    Your available SUI balance: \n
+    const balance = await suiApi.balance(ctx);
+    const avl_balance = await suiApi.availableBalance(ctx);
+    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
+    Your SUI balance: ${balance}\n
+    Your available SUI balance: ${avl_balance}\n
     Total amount of assets: ${0}\n
     Total wallet net worth: $${0}`;
-    await ctx.reply(welcome_text);
+    await ctx.reply(welcome_text, { reply_markup: menu });
   });
 
   bot.catch((err) => {
@@ -80,7 +82,7 @@ async function startBot(): Promise<void> {
   //ENVIRONMENT !== 'production' && development(bot);
 }
 
-startBot(); // Call the function to start the bot
+startBot() // Call the function to start the bot
 
 
 //prod mode (Vercel)
