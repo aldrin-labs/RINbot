@@ -560,7 +560,7 @@ Your available SUI balance: ${avl_balance}`;
         ctx.session.publicKey,
       );
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${availableAmount} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to withdraw (0 - ${availableAmount} SUI, Example: 0.1):`,
     );
 
     const amountData = await conversation.waitFor(':text');
