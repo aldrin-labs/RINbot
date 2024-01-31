@@ -8,7 +8,7 @@ import {
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
 export interface SessionData {
-  step: 'main' | 'buy' | 'positions' | 'wallet' | 'wallet-deposit'; // which step of the form we are on
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
