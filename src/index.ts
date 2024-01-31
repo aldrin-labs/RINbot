@@ -51,20 +51,20 @@ async function startBot(): Promise<void> {
 
   bot.use(conversations());
 
-  bot.use(createConversation(suiApi.buy));
-  bot.use(createConversation(suiApi.sell));
-  bot.use(createConversation(suiApi.exportPrivateKey));
-  bot.use(createConversation(suiApi.withdraw));
+  // bot.use(createConversation(suiApi.buy));
+  // bot.use(createConversation(suiApi.sell));
+  // bot.use(createConversation(suiApi.exportPrivateKey));
+  // bot.use(createConversation(suiApi.withdraw));
 
   bot.use(menu);
 
   bot.command('start', async (ctx) => {
     // Send the menu.
-    const balance = await suiApi.balance(ctx);
-    const avl_balance = await suiApi.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: ${ctx.session.publicKey} \n
-    Your SUI balance: ${balance}\n
-    Your available SUI balance: ${avl_balance}\n
+    // const balance = await suiApi.balance(ctx);
+    // const avl_balance = await suiApi.availableBalance(ctx);
+    const welcome_text = `Welcome to RINbot on Sui Network\n Your wallet address: \n
+    Your SUI balance:\n
+    Your available SUI balance: \n
     Total amount of assets: ${0}\n
     Total wallet net worth: $${0}`;
     await ctx.reply(welcome_text, { reply_markup: menu });
