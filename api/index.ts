@@ -1,9 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { startVercel } from '../src';
 
 export default async function handle(req: VercelRequest, res: VercelResponse) {
   try {
-    await startVercel(req, res);
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/html');
+    res.end('<h1>Serverless Function is running</h1>');
   } catch (e: any) {
     res.statusCode = 500;
     res.setHeader('Content-Type', 'text/html');
