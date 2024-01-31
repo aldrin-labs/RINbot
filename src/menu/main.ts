@@ -27,7 +27,7 @@ const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx: any) => {
     ctx.session.step = 'buy';
     ctx.menu.nav('buy-menu');
-    ctx.conversation.enter('bound buy');
+    await ctx.conversation.enter('bound buy');
   })
   .text('Sell & Manage', async (ctx: any) => {
     ctx.session.step = 'positions';

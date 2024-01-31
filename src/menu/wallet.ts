@@ -19,7 +19,7 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   .text('Withdraw X amount', async (ctx: any) => {
     ctx.session.step = 'wallet-withdraw';
     ctx.menu.nav('wallet-withdraw-menu');
-    ctx.conversation.enter('bound withdraw');
+    await ctx.conversation.enter('bound withdraw');
     //ctx.reply("withdraw x amount")
   })
   .row()
