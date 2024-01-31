@@ -161,6 +161,11 @@ Your available SUI balance: ${avl_balance}`;
     await ctx.reply(
       'Which token do you want to buy? Please send a coin type or a link to suiscan.',
     );
+
+    await ctx.reply(
+      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ',
+    );
+
     const cointTypeData = await conversation.waitFor([':text', '::url']);
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
@@ -237,7 +242,7 @@ Your available SUI balance: ${avl_balance}`;
     if (!isAmountIsValid.isValid) {
       await ctx.reply(
         // eslint-disable-next-line max-len
-        `Invalid amount. Reason: ${isAmountIsValid.reason} Press button and try again.`,
+        `Invalid amount. Reason: ${isAmountIsValid.reason} Press cancel button and try again.`,
       );
 
       return;
@@ -319,6 +324,10 @@ Your available SUI balance: ${avl_balance}`;
   ): Promise<void> {
     await ctx.reply(
       'Which token do you want to sell? Please send a coin type or a link to suiscan.',
+    );
+
+    await ctx.reply(
+      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ',
     );
     const cointTypeData = await conversation.waitFor(':text');
     const possibleCoin = (cointTypeData.msg.text || '').trim();
@@ -409,7 +418,7 @@ Your available SUI balance: ${avl_balance}`;
     if (!isAmountIsValid.isValid) {
       await ctx.reply(
         // eslint-disable-next-line max-len
-        `Invalid amount. Reason: ${isAmountIsValid.reason} Press button and try again.`,
+        `Invalid amount. Reason: ${isAmountIsValid.reason} Press cancel button and try again.`,
       );
 
       return;
@@ -566,7 +575,7 @@ Your available SUI balance: ${avl_balance}`;
     if (!isAmountIsValid.isValid) {
       await ctx.reply(
         // eslint-disable-next-line max-len
-        `Invalid amount. Reason: ${isAmountIsValid.reason} Press button and try again.`,
+        `Invalid amount. Reason: ${isAmountIsValid.reason} Press cancel button and try again.`,
       );
 
       return;
