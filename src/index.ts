@@ -21,16 +21,14 @@ const storage = new RedisAdapter({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-if(ENVIRONMENT === 'production'){
-  console.debug(`${VERCEL_URL}`)
+if(ENVIRONMENT !== 'local'){
+  console.debug(ENVIRONMENT)
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`)
+
 }
 
 async function startBot(): Promise<void> {
-  console.debug("[startBot] triggered")
-  const suiApi = await (await SuiApiSingleton.getInstance().catch()).getApi(); // Get SuiApiSingleton instance
-
-  console.debug("after suiapi")
+  const suiApi = await (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
@@ -83,10 +81,10 @@ async function startBot(): Promise<void> {
     }
   });
 
-  //ENVIRONMENT === 'local' && bot.start()
+  ENVIRONMENT === 'local' && bot.start()
 }
 
-startBot().catch((e) => console.log(e)) // Call the function to start the bot
+startBot() // Call the function to start the bot
 
 
 //prod mode (Vercel)
