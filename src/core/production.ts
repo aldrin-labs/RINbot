@@ -10,8 +10,8 @@ import { Update } from 'grammy/types';
 const debug = createDebug('bot:dev');
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT, 10)) || 3000;
-// const VERCEL_URL = `${process.env.VERCEL_URL}`;
-const VERCEL_URL = 'https://rinbot-dev.vercel.app'
+const VERCEL_URL = `${process.env.VERCEL_URL}`;
+//const VERCEL_URL = 'https://rinbot-dev.vercel.app'
 
 const production = async (
   req: VercelRequest,
@@ -39,7 +39,7 @@ const production = async (
     res.status(200).json('Listening to bot events...');
   }
   debug(`starting webhook on port: ${PORT}`);
-q.body as unknown as any, res);
+// q.body as unknown as any, res);
   // } else {
   //   res.status(200).json('Listening to bot events...');
   // }
