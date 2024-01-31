@@ -78,8 +78,7 @@ async function startBot(): Promise<void> {
     }
   });
 
-  //dev mode
-  //ENVIRONMENT !== 'production' && development(bot);
+  ENVIRONMENT === 'local' && bot.start()
 }
 
 startBot() // Call the function to start the bot
