@@ -23,13 +23,8 @@ const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-async function setWebhook() {
-  const res = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${VERCEL_URL}/api/webhook`)
-}
 
 async function startBot(): Promise<void> {
-  if (ENVIRONMENT !== 'local')
-    await setWebhook()
   
   console.debug('[startBot] triggered');
   // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
