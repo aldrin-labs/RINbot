@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.0.16":
-  version "2.0.16"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.0.16.tgz#8656b4729cb13e45ca8d5252dfa64243f2ea4013"
-  integrity sha512-hcII06v429Vg7gpoYFTz/kD1aaTmNwhgmzpPEDYBCpg1CNvA4IV+ffGUagM0AKgJKtrT/Y6iWw0rZC9C3HSpJw==
+"@avernikoz/rinbot-sui-sdk@^2.0.17":
+  version "2.0.17"
+  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.0.17.tgz#8ffc953f3c3ff12b92cc52037080fee504adc5fd"
+  integrity sha512-sO7W+jYacsw55YAVEKnCREJ5FYzxMG8C912wiGbAsGjWApVI4ywT0rZT7vsX86PpSCcKyFYH3JkBRxAMAP6CPQ==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.3"
     "@flowx-pkg/ts-sdk" "^0.0.8"
@@ -1086,7 +1086,7 @@ axios-retry@^3.8.0:
     "@babel/runtime" "^7.15.4"
     is-retry-allowed "^2.2.0"
 
-axios@^1.4.0, axios@^1.5.1:
+axios@^1.4.0, axios@^1.5.1, axios@^1.6.7:
   version "1.6.7"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.7.tgz#7b48c2e27c96f9c68a2f8f31e2ab19f59b06b0a7"
   integrity sha512-/hDJGff6/c7u0hDkvkGxR/oy6CbCs8ziCsC7SqmhjfozqiJGc8Z11wrv9z9lYfY4K8l+H9TpjcMDX0xOZmx+RA==

@@ -1,128 +1,76 @@
-import {
-  AftermathSingleton,
-  CetusSingleton,
-  CoinManagerSingleton,
-  CommonCoinData,
-  LONG_SUI_COIN_TYPE,
-  Providers,
-  RouteManager,
-  SHORT_SUI_COIN_TYPE,
-  SUI_DECIMALS,
-  TurbosSingleton,
-  WalletManagerSingleton,
-  clmmMainnet,
-  getSuiProvider,
-  isValidSuiAddress,
-  isValidTokenAddress,
-  isValidTokenAmount,
-} from '@avernikoz/rinbot-sui-sdk';
+import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinData, FlowxSingleton, LONG_SUI_COIN_TYPE, RouteManager, SHORT_SUI_COIN_TYPE, SUI_DECIMALS, TurbosSingleton, WalletManagerSingleton, clmmMainnet, getSuiProvider, isValidSuiAddress, isValidTokenAddress, isValidTokenAmount } from "@avernikoz/rinbot-sui-sdk";
+import { BotContext, MyConversation } from "../types";
+import positions_menu from "../menu/positions";
 
-import { MyConversation, BotContext } from '../types';
-import positions_menu from '../menu/positions';
-import menu from '../menu/main';
 import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
+import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
+import menu from "../menu/main";
+
+const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 
-interface ISuiAPI {
-  home(ctx: any): void;
-  buy(conversation: MyConversation, ctx: BotContext): void;
-  sell(conversation: MyConversation, ctx: BotContext): void;
-  exportPrivateKey(conversation: MyConversation, ctx: BotContext): void;
-  withdraw(conversation: MyConversation, ctx: BotContext): void;
-  availableBalance(ctx: any): Promise<string>;
-  balance(ctx: any): Promise<string>;
-  assets(ctx: any): Promise<void>;
-  generateWallet(): { privateKey: string; publicKey: string };
-  getExplorerLink(ctx: BotContext): string;
+export const getTurbos = async () => {
+   const turbos = await TurbosSingleton.getInstance({
+        suiProviderUrl: SUI_PROVIDER_URL,
+        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+      });
+
+    return turbos
 }
 
-class SuiApiSingleton {
-  private static instance: SuiApiSingleton | null = null;
-  private initialized: boolean = false;
-  private suiApi: ISuiAPI | null = null;
-  private coinManager: CoinManagerSingleton | null = null;
-  private walletManager: WalletManagerSingleton | null = null;
-  private routerManager: RouteManager | null = null;
-  private provider: any | null = null;
+export const getFlowx = async () => {
+    const flowx =  await FlowxSingleton.getInstance({
+        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+       });
+ 
+    return flowx
+}
 
-  private constructor() {}
+export const getCetus = async () => {
+    const cetus = await CetusSingleton.getInstance({
+        suiProviderUrl: SUI_PROVIDER_URL,
+        sdkOptions: clmmMainnet,
+        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+      });
 
-  public static async getInstance(): Promise<SuiApiSingleton> {
-    if (!SuiApiSingleton.instance) {
-      SuiApiSingleton.instance = new SuiApiSingleton();
-      await SuiApiSingleton.instance.initialize();
-    }
-    return SuiApiSingleton.instance;
-  }
+    return cetus
+}
 
-  private async initialize(): Promise<void> {
-    if (this.initialized) return;
-    const SUI_PROVIDER_URL =
-      'https://sui-mainnet.blockvision.org/v1/2bYB32LD0S06isRTaxATLv1mTt6';
-    const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
-    this.provider = provider;
-    // SDK instances init
-    const cacheOptions = { updateIntervalInMs: 1000 * 60 * 30 };
-    const turbos: TurbosSingleton = await TurbosSingleton.getInstance({
-      suiProviderUrl: SUI_PROVIDER_URL,
-      cacheOptions,
-    });
-    const cetus: CetusSingleton = await CetusSingleton.getInstance({
-      suiProviderUrl: SUI_PROVIDER_URL,
-      sdkOptions: clmmMainnet,
-      cacheOptions: cacheOptions,
-    });
-    const aftermath: AftermathSingleton = await AftermathSingleton.getInstance({
-      cacheOptions,
-    });
-    // const flowx: FlowxSingleton = await FlowxSingleton.getInstance({
-    //   cacheOptions,
-    // });
+export const getAftermath = async () => {
+    const aftermath = await AftermathSingleton.getInstance({
+        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+      });
 
-    const providers: Providers = [turbos, cetus, aftermath /*, flowx*/];
-    const coinManager: CoinManagerSingleton =
-      CoinManagerSingleton.getInstance(providers);
-    const walletManager: WalletManagerSingleton =
-      WalletManagerSingleton.getInstance(provider, coinManager);
+    return aftermath
+}
+
+export const getCoinManager = async () => {
+    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
+
+    const coinManager = CoinManagerSingleton.getInstance(providers);
+
+    return coinManager
+}
+
+export const getWalletManager = async () => {
+    const coinManager = await getCoinManager()
+
+    const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
+
+    return walletManager
+}
+
+export const getRouteManager = async () => {
+    const coinManager = await getCoinManager()
+    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
+
     const routerManager = RouteManager.getInstance(providers, coinManager);
 
-    this.coinManager = coinManager;
-    this.walletManager = walletManager;
-    this.routerManager = routerManager;
+    return routerManager
+}
 
-    this.suiApi = {
-      home: this.home.bind(this),
-      buy: this.buy.bind(this),
-      sell: this.sell.bind(this),
-      exportPrivateKey: this.exportPrivateKey.bind(this),
-      withdraw: this.withdraw.bind(this),
-      availableBalance: this.availableBalance.bind(this),
-      balance: this.balance.bind(this),
-      assets: this.assets.bind(this),
-      generateWallet: this.generateWallet.bind(this),
-      getExplorerLink: this.getExplorerLink.bind(this),
-    };
-    this.initialized = true;
-  }
 
-  public getApi(): ISuiAPI {
-    if (!this.initialized || !this.suiApi) {
-      throw new Error('SuiApiSingleton not initialized properly.');
-    }
-    return this.suiApi;
-  }
-
-  public async home(ctx: any) {
-    // Send the menu.
-    const balance = await this.balance(ctx);
-    const avl_balance = await this.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \n
-Your SUI balance: ${balance}\n
-Your available SUI balance: ${avl_balance}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
-  }
-
-  private async buy(conversation: MyConversation, ctx: BotContext) {
+export async function buy(conversation: MyConversation, ctx: BotContext) {
     await ctx.reply(
       'Which token do you want to buy? Please send a coin type or a link to suiscan.',
     );
@@ -162,7 +110,8 @@ Your available SUI balance: ${avl_balance}`;
 
     let coinToBuy: CommonCoinData | null = null;
     try {
-      coinToBuy = this.coinManager!.getCoinByType(coinType);
+      const coinManager = await getCoinManager()
+      coinToBuy = coinManager.getCoinByType(coinType);
     } catch (e) {
       console.error(`Token ${coinType} not found in coinManager`);
 
@@ -187,7 +136,8 @@ Your available SUI balance: ${avl_balance}`;
       return;
     }
 
-    const availableBalance = await this.walletManager!.getAvailableSuiBalance(
+    const walletManager = await getWalletManager()
+    const availableBalance = await walletManager!.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
     await ctx.reply(
@@ -217,7 +167,8 @@ Your available SUI balance: ${avl_balance}`;
     let tx;
 
     try {
-      tx = await this.routerManager!.getBestRouteTransaction({
+      const routerManager = await getRouteManager()
+      tx = await routerManager!.getBestRouteTransaction({
         tokenFrom: LONG_SUI_COIN_TYPE,
         tokenTo: coinToBuy.type,
         amount: possibleAmount,
@@ -245,7 +196,7 @@ Your available SUI balance: ${avl_balance}`;
     await ctx.reply('Route for swap found, sending transaction...');
 
     try {
-      const res = await this.provider.signAndExecuteTransactionBlock({
+      const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
           ctx.session.privateKey,
@@ -283,7 +234,8 @@ Your available SUI balance: ${avl_balance}`;
     }
   }
 
-  private async sell(
+
+export async function sell(
     conversation: MyConversation,
     ctx: BotContext,
   ): Promise<void> {
@@ -325,7 +277,8 @@ Your available SUI balance: ${avl_balance}`;
 
     let coinToSell: CommonCoinData | null = null;
     try {
-      coinToSell = this.coinManager!.getCoinByType(coinType);
+      const coinManager = await getCoinManager()
+      coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
       console.error(`Token ${coinType} not found in coinManager`);
 
@@ -350,7 +303,8 @@ Your available SUI balance: ${avl_balance}`;
       return;
     }
 
-    const allCoinsAssets = await this.walletManager!.getAllCoinAssets(
+    const walletManager = await getWalletManager()
+    const allCoinsAssets = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
     const coin = allCoinsAssets.find((el) => el.type === coinToSell?.type);
@@ -389,7 +343,7 @@ Your available SUI balance: ${avl_balance}`;
       return;
     }
 
-    const availableBalance = await this.walletManager!.getAvailableSuiBalance(
+    const availableBalance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
     const isAmountSuiAmountIsValid = +availableBalance > 0;
@@ -408,7 +362,8 @@ Your available SUI balance: ${avl_balance}`;
     let tx;
 
     try {
-      tx = await this.routerManager!.getBestRouteTransaction({
+      const routerManager = await getRouteManager()
+      tx = await routerManager.getBestRouteTransaction({
         tokenFrom: coin.type,
         tokenTo: LONG_SUI_COIN_TYPE,
         amount: possibleAmount,
@@ -436,7 +391,7 @@ Your available SUI balance: ${avl_balance}`;
     await ctx.reply('Route for swap found, sending transaction...');
 
     try {
-      const res = await this.provider.signAndExecuteTransactionBlock({
+      const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
           ctx.session.privateKey,
@@ -474,7 +429,7 @@ Your available SUI balance: ${avl_balance}`;
     }
   }
 
-  private async exportPrivateKey(
+export async function exportPrivateKey(
     conversation: MyConversation,
     ctx: BotContext,
   ): Promise<void> {
@@ -499,7 +454,7 @@ Your available SUI balance: ${avl_balance}`;
     );
   }
 
-  private async withdraw(
+export async function withdraw(
     conversation: MyConversation,
     ctx: BotContext,
   ): Promise<void> {
@@ -520,8 +475,9 @@ Your available SUI balance: ${avl_balance}`;
       return;
     }
 
+    const walletManager = await getWalletManager()
     const { availableAmount, totalGasFee } =
-      await this.walletManager!.getAvailableWithdrawSuiAmount(
+      await walletManager.getAvailableWithdrawSuiAmount(
         ctx.session.publicKey,
       );
     await ctx.reply(
@@ -577,7 +533,7 @@ Your available SUI balance: ${avl_balance}`;
     await ctx.reply('Sending withdraw transaction...');
 
     try {
-      const res = await this.provider.signAndExecuteTransactionBlock({
+      const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
           ctx.session.privateKey,
@@ -615,23 +571,27 @@ Your available SUI balance: ${avl_balance}`;
     }
   }
 
-  private async availableBalance(ctx: any): Promise<string> {
-    const availableBalance = await this.walletManager?.getAvailableSuiBalance(
+export async function availableBalance(ctx: any): Promise<string> {
+  const walletManager = await getWalletManager()
+    const availableBalance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
     return availableBalance as string;
   }
 
-  private async balance(ctx: any): Promise<string> {
-    const balance = await this.walletManager?.getSuiBalance(
+export async function balance(ctx: BotContext): Promise<string> {
+  const walletManager = await getWalletManager()
+    const balance = await walletManager.getSuiBalance(
       ctx.session.publicKey,
     );
-    return balance as string;
+    return balance;
   }
+  
 
-  private async assets(ctx: any): Promise<void> {
+export async function assets(ctx: BotContext): Promise<void> {
     try {
-      const allCoinsAssets = await this.walletManager!.getAllCoinAssets(
+      const walletManager = await getWalletManager()
+      const allCoinsAssets = await walletManager.getAllCoinAssets(
         ctx.session.publicKey,
       );
 
@@ -651,20 +611,27 @@ Your available SUI balance: ${avl_balance}`;
       ctx.reply(`Your tokens: \n\n${assetsString}`, {
         // parse_mode: 'MarkdownV2',
         reply_markup: positions_menu,
-        disable_web_page_preview: true,
+        // disable_web_page_preview: true,
       });
     } catch (e) {
       ctx.reply('Failed to fetch assets, please try again');
     }
   }
 
-  private generateWallet(): any {
-    return WalletManagerSingleton.generateWallet();
-  }
 
-  private getExplorerLink(ctx: BotContext): string {
-    return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
-  }
+export function generateWallet(): any {
+    return WalletManagerSingleton.generateWallet();
 }
 
-export default SuiApiSingleton;
+export function getExplorerLink(ctx: BotContext): string {
+    return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
+}
+
+
+export async function home(ctx: BotContext) {
+    // Send the menu.
+    const userBalance = await balance(ctx);
+    const avl_balance = await availableBalance(ctx);
+    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \nYour SUI balance: ${userBalance}\nYour available SUI balance: ${avl_balance}`;
+    await ctx.reply(welcome_text, { reply_markup: menu });
+}
