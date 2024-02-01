@@ -1,11 +1,17 @@
+import { getExplorerLink } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { Menu } from '@grammyjs/menu';
-import SuiApiSingleton from '../chains/sui';
+// import SuiApiSingleton from '../chains/sui';
 
 const wallet_menu = new Menu<BotContext>('wallet-menu')
   .dynamic(async (ctx, range) => {
-    const SuiApi = (await SuiApiSingleton.getInstance()).getApi();
-    range.url('View in explorer', SuiApi.getExplorerLink(ctx));
+    // const SuiApi = (await SuiApiSingleton.getInstance()).getApi();
+
+    
+    // range.url('View in explorer', SuiApi.getExplorerLink(ctx));
+
+    range.url('View in explorer', getExplorerLink(ctx));
+
   })
   .back('Close', (ctx) => {
     ctx.session.step = 'main';
@@ -19,7 +25,7 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   .text('Withdraw X amount', async (ctx: any) => {
     ctx.session.step = 'wallet-withdraw';
     ctx.menu.nav('wallet-withdraw-menu');
-    await ctx.conversation.enter('bound withdraw');
+    await ctx.conversation.enter('withdraw');
     //ctx.reply("withdraw x amount")
   })
   .row()

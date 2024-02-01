@@ -11,6 +11,7 @@ import settings_menu from './settings';
 import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
 import SuiApiSingleton from '../chains/sui';
+import { assets } from '../chains/sui.functions';
 
 // const getOverview = async () => {
 //   let overview = `Position Overview:\n\n`;
@@ -27,12 +28,14 @@ const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx: any) => {
     ctx.session.step = 'buy';
     ctx.menu.nav('buy-menu');
-    await ctx.conversation.enter('bound buy');
+    await ctx.conversation.enter('buy');
   })
   .text('Sell & Manage', async (ctx: any) => {
     ctx.session.step = 'positions';
-    const sdk = (await SuiApiSingleton.getInstance()).getApi();
-    await sdk.assets(ctx);
+    // const sdk = (await SuiApiSingleton.getInstance()).getApi();
+    // await sdk.assets(ctx);
+
+    await assets(ctx)
     //ctx.menu.nav('positions-menu');
   })
   .row()

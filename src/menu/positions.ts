@@ -61,7 +61,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   // .text('sell X%', (ctx) => ctx.reply('sell X%'))
   .text('sell X', async (ctx) => {
     ctx.session.step = 'sell';
-    await ctx.conversation.enter('bound sell');
+    await ctx.conversation.enter('sell');
   })
   .row();
 //.url('explorer', "https://suiscan.io").url('dexscreener', "https://dexscreener.io").url('scan', '@ttfbotbot').url('chart', '@ttfbotbot').row()
