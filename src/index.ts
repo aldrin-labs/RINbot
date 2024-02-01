@@ -21,8 +21,10 @@ const storage = new RedisAdapter({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-if (ENVIRONMENT !== 'local')
+if (ENVIRONMENT !== 'local'){
+  void bot.api.deleteWebhook()
   void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`);
+  }
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
