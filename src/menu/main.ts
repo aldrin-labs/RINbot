@@ -42,7 +42,11 @@ const menu = new Menu<BotContext>('main')
   .text('Wallet', async (ctx: any) => {
     ctx.session.step = 'wallet';
     ctx.menu.nav('wallet-menu');
-  });
+  })
+  .row()
+  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN');
+
+
 //.text("Settings", (ctx) => ctx.menu.nav("settings-menu")).row();
 
 menu.register(buy_menu);
