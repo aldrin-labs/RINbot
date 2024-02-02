@@ -8,33 +8,22 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
-import axios, { AxiosResponse } from 'axios'
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '';
-const ENVIRONMENT = process.env.NODE_ENV || '';
-const VERCEL_URL = process.env.WEBHOOK_URL || '';
+export const BOT_TOKEN = process.env.BOT_TOKEN || '';
+export const ENVIRONMENT = process.env.NODE_ENV || '';
+export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 
 // @ts-ignore
 const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-const setWebhook = async () => {
-  let response: AxiosResponse = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`)
-  if(response.data['result']['url'] === ''){
-    response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${VERCEL_URL}/api/webhook`)
-    console.debug(response.data['ok']);
-  }
-
-}
 
 async function startBot(): Promise<void> {
-  if(ENVIRONMENT !== 'local')
-    await setWebhook()
   console.debug('[startBot] triggered');
   // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
