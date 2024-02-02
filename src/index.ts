@@ -34,7 +34,7 @@ const setWebhook = async () => {
 
 async function startBot(): Promise<void> {
   if(ENVIRONMENT !== 'local')
-    setWebhook()
+    await setWebhook()
   console.debug('[startBot] triggered');
   // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
