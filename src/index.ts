@@ -25,7 +25,7 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 const setWebhook = async () => {
   let response: AxiosResponse = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`)
-  if(response.data['url'] === ''){
+  if(response.data['result']['url'] === ''){
     response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${VERCEL_URL}/api/webhook`)
     console.debug(response.data['ok']);
   }
