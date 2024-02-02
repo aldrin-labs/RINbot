@@ -32,9 +32,8 @@ const setWebhook = async () => {
 
 }
 
-if(ENVIRONMENT === 'production')
+if(ENVIRONMENT !== 'local')
   setWebhook()
-
 
 async function startBot(): Promise<void> {
   
