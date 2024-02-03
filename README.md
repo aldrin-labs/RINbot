@@ -14,7 +14,6 @@ First rename `.env-sample` file to `.env` and fill in all necessary values.
 BOT_TOKEN="<YOUR_BOT_API_TOKEN>"
 ```
 
-
 ## Start your local server
 
 ```
@@ -33,6 +32,3 @@ Feel free to create PR!
 ## Demo
 
 You can see a working version of the bot at [@Node_api_m_bot](https://t.me/Node_api_m_bot)
-
-
-
