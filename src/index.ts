@@ -40,7 +40,7 @@ async function startBot(): Promise<void> {
   // Make it interactive.
   bot.use(
     session({
-      getSessionKey,
+      // getSessionKey,
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
         return {
