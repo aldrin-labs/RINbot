@@ -10,6 +10,8 @@ import { kv as instance } from '@vercel/kv';
 import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 
+const APP_VERSION = "1.0.0"
+
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
@@ -65,6 +67,7 @@ async function startBot(): Promise<void> {
   bot.use(menu);
 
   bot.command('start', async (ctx) => {await home(ctx)});
+  bot.command('version', async (ctx) => { await ctx.reply(`Version ${APP_VERSION}`) }))
 
   bot.catch((err) => {
     const ctx = err.ctx;
