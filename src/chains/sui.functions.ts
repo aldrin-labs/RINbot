@@ -6,6 +6,8 @@ import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
 
+const DATE_NOW = Date.now()
+
 const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 
@@ -241,7 +243,7 @@ export async function sell(
     ctx: BotContext,
   ): Promise<void> {
     await ctx.reply(
-      'Which token do you want to sell? Please send a coin type or a link to suiscan.',
+      'Which token do you want to sell? Please send a coin type or a link to suiscan.' + DATE_NOW,
     );
 
     await ctx.reply(
@@ -281,7 +283,7 @@ export async function sell(
       const coinManager = await getCoinManager()
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
-      console.error("Finding token error: ", e)
+      console.error("Finding token error: " + DATE_NOW, e)
       console.error(`Token ${coinType} not found in coinManager`);
 
       await ctx.reply(
@@ -322,7 +324,7 @@ export async function sell(
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
+      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`+ DATE_NOW,
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -359,7 +361,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Initiating swap');
+    await ctx.reply('Initiating swap' + DATE_NOW);
 
     let tx;
 
@@ -390,7 +392,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Route for swap found, sending transaction...');
+    await ctx.reply('Route for swap found, sending transaction...' + DATE_NOW);
 
     try {
       const res = await provider.signAndExecuteTransactionBlock({
@@ -412,7 +414,7 @@ export async function sell(
       }
 
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${DATE_NOW}`,
       );
     } catch (error) {
       if (error instanceof Error) {
