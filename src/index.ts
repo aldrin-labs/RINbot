@@ -67,7 +67,7 @@ async function startBot(): Promise<void> {
   bot.use(menu);
 
   bot.command('start', async (ctx) => {await home(ctx)});
-  bot.command('version', async (ctx) => { await ctx.reply(`Version ${APP_VERSION}`) }))
+  bot.command('version', async (ctx) => { await ctx.reply(`Version ${APP_VERSION}`) })
 
   bot.catch((err) => {
     const ctx = err.ctx;
