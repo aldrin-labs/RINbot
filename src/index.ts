@@ -8,6 +8,7 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
+import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -35,6 +36,7 @@ async function startBot(): Promise<void> {
     return ctx.from?.id.toString();
   }
 
+  bot.use(timeoutMiddleware)
   // Make it interactive.
   bot.use(
     session({

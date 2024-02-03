@@ -1,4 +1,10 @@
 {
+  "functions": {
+    "api/webhook.ts": {
+        "memory": 1024,
+        "maxDuration": 10
+    }
+  },
   "version": 2,
   "public": true,
   "rewrites": [
