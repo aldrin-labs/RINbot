@@ -113,6 +113,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       const coinManager = await getCoinManager()
       coinToBuy = coinManager.getCoinByType(coinType);
     } catch (e) {
+      console.error("Finding token error: ", e)
       console.error(`Token ${coinType} not found in coinManager`);
 
       await ctx.reply(
@@ -280,6 +281,7 @@ export async function sell(
       const coinManager = await getCoinManager()
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
+      console.error("Finding token error: ", e)
       console.error(`Token ${coinType} not found in coinManager`);
 
       await ctx.reply(
