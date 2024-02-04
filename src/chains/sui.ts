@@ -191,7 +191,8 @@ Your available SUI balance: ${avl_balance}`;
       ctx.session.publicKey,
     );
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to buy (<b>0</b> - <b>${availableBalance} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -366,7 +367,8 @@ Your available SUI balance: ${avl_balance}`;
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
+      `Reply with the amount you wish to sell (<b>0</b> - <b>${coin.balance} ${coin.symbol || coin.type}</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -525,7 +527,8 @@ Your available SUI balance: ${avl_balance}`;
         ctx.session.publicKey,
       );
     await ctx.reply(
-      `Reply with the amount you wish to withdraw (0 - ${availableAmount} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to withdraw (<b>0</b> - <b>${availableAmount} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');

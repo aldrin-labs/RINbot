@@ -75,6 +75,7 @@ export const getRouteManager = async () => {
 export async function buy(conversation: MyConversation, ctx: BotContext) {
     await ctx.reply(
       'Which token do you want to buy? Please send a coin type or a link to suiscan.',
+      {}
     );
 
     await ctx.reply(
@@ -328,7 +329,8 @@ export async function sell(
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (<b>0</b> - <b>${coin.balance} ${coin.symbol || coin.type}</b>, Example: <b>0.1</b>):`+ DATE_NOW,
+      `Reply with the amount you wish to sell (<b>0</b> - <b>${coin.balance} ${coin.symbol || coin.type}</b>, Example: <b>0.1</b>):`+ DATE_NOW,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -489,7 +491,8 @@ export async function withdraw(
         ctx.session.publicKey,
       );
     await ctx.reply(
-      `Reply with the amount you wish to withdraw (0 - ${availableAmount} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to withdraw (<b>0</b> - <b>${availableAmount} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
