@@ -116,10 +116,10 @@ class SuiApiSingleton {
     // Send the menu.
     const balance = await this.balance(ctx);
     const avl_balance = await this.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \n
+    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n
 Your SUI balance: ${balance}\n
 Your available SUI balance: ${avl_balance}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
+    await ctx.reply(welcome_text, { parse_mode: "HTML" , reply_markup: menu });
   }
 
   private async buy(conversation: MyConversation, ctx: BotContext) {
