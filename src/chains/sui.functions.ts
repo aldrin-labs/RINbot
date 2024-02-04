@@ -636,6 +636,6 @@ export async function home(ctx: BotContext) {
     // Send the menu.
     const userBalance = await balance(ctx);
     const avl_balance = await availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <bold>${userBalance} SUI</bold>\nYour available SUI balance: <bold>${avl_balance} SUI</bold>`;
+    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <b>${userBalance} SUI</b>\nYour available SUI balance: <b>${avl_balance} SUI</b>`;
     await ctx.reply(welcome_text, { parse_mode: "HTML", reply_markup: menu });
 }
