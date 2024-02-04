@@ -116,10 +116,10 @@ class SuiApiSingleton {
     // Send the menu.
     const balance = await this.balance(ctx);
     const avl_balance = await this.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \n
+    const welcome_text = `Welcome to RINbot on Suiiii Network\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n
 Your SUI balance: ${balance}\n
 Your available SUI balance: ${avl_balance}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
+    await ctx.reply(welcome_text, { parse_mode: "HTML" , reply_markup: menu });
   }
 
   private async buy(conversation: MyConversation, ctx: BotContext) {
@@ -191,7 +191,8 @@ Your available SUI balance: ${avl_balance}`;
       ctx.session.publicKey,
     );
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to buy (<b>0</b> - <b>${availableBalance} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -366,7 +367,8 @@ Your available SUI balance: ${avl_balance}`;
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
+      `Reply with the amount you wish to sell (<b>0</b> - <b>${coin.balance} ${coin.symbol || coin.type}</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -525,7 +527,8 @@ Your available SUI balance: ${avl_balance}`;
         ctx.session.publicKey,
       );
     await ctx.reply(
-      `Reply with the amount you wish to withdraw (0 - ${availableAmount} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to withdraw (<b>0</b> - <b>${availableAmount} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
