@@ -611,7 +611,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       }
       const assetsString = allCoinsAssets?.reduce((acc, el) => {
         acc = acc.concat(
-          `Token: ${el.symbol || el.type}\nType: ${el.type}\nAmount: ${el.balance}\n\n`,
+          `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <b>${el.balance}</b>\n\n`,
         );
 
         return acc;
