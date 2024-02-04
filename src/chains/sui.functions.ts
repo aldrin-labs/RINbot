@@ -253,6 +253,7 @@ export async function sell(
 
     await ctx.reply(
       'Example of coin type format:\n<code>0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD</code>\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ',
+      {parse_mode: "HTML"}
     );
     const cointTypeData = await conversation.waitFor(':text');
     const possibleCoin = (cointTypeData.msg.text || '').trim();
@@ -265,7 +266,7 @@ export async function sell(
         ? `Token address is not correct. Make sure address <code>${possibleCoin}</code> is correct. \n You can enter a token address or a Suiscan link.`
         : `Suiscan link is not correct. Make sure your link is correct is correct.\nExample:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD`;
 
-      await ctx.reply(replyText);
+      await ctx.reply(replyText, {parse_mode: 'HTML'});
 
       return;
     }
@@ -279,6 +280,7 @@ export async function sell(
         // eslint-disable-next-line max-len
         `Coin type is not correct. Make sure address <code>${possibleCoin}</code> is correct. \n You can enter a token address or a Suiscan link.
         `,
+        {parse_mode: "HTML"}
       );
       return;
     }
