@@ -617,7 +617,7 @@ export async function assets(ctx: BotContext): Promise<void> {
         return acc;
       }, '');
       ctx.reply(`Your tokens: \n\n${assetsString}`, {
-        // parse_mode: 'MarkdownV2',
+        parse_mode: 'HTML',
         reply_markup: positions_menu,
         // disable_web_page_preview: true,
       });
