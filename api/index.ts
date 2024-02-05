@@ -12,6 +12,7 @@ const setWebhook = async () => {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
+    console.debug("setWebhook")
     await setWebhook()
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html');
