@@ -5,6 +5,7 @@ import positions_menu from "../menu/positions";
 import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
+import { performance } from 'perf_hooks'
 
 const DATE_NOW = Date.now()
 
