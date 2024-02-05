@@ -1,4 +1,4 @@
-import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinData, FlowxSingleton, LONG_SUI_COIN_TYPE, RouteManager, SHORT_SUI_COIN_TYPE, SUI_DECIMALS, TurbosSingleton, WalletManagerSingleton, clmmMainnet, getSuiProvider, isValidSuiAddress, isValidTokenAddress, isValidTokenAmount } from "@avernikoz/rinbot-sui-sdk";
+import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinData, FlowxSingleton, LONG_SUI_COIN_TYPE, RedisStorageSingleton, RouteManager, SHORT_SUI_COIN_TYPE, SUI_DECIMALS, TurbosSingleton, WalletManagerSingleton, clmmMainnet, getSuiProvider, isValidSuiAddress, isValidTokenAddress, isValidTokenAmount } from "@avernikoz/rinbot-sui-sdk";
 import { BotContext, MyConversation } from "../types";
 import positions_menu from "../menu/positions";
 
@@ -6,6 +6,7 @@ import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
+import { getRedisClient } from "../config/redis.config";
 
 const DATE_NOW = Date.now()
 const today = new Date(DATE_NOW)
@@ -16,35 +17,51 @@ const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 
 export const getTurbos = async () => {
-   const turbos = await TurbosSingleton.getInstance({
+  const { redisClient } = await getRedisClient()
+  const storage = RedisStorageSingleton.getInstance(redisClient);
+
+    const turbos = await TurbosSingleton.getInstance({
         suiProviderUrl: SUI_PROVIDER_URL,
-        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+        lazyLoading: false,
       });
 
     return turbos
 }
 
 export const getFlowx = async () => {
+    const { redisClient } = await getRedisClient()
+    const storage = RedisStorageSingleton.getInstance(redisClient);
+
     const flowx =  await FlowxSingleton.getInstance({
-        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+        lazyLoading: false,
        });
  
     return flowx
 }
 
 export const getCetus = async () => {
+    const { redisClient } = await getRedisClient()
+    const storage = RedisStorageSingleton.getInstance(redisClient);
+
     const cetus = await CetusSingleton.getInstance({
         suiProviderUrl: SUI_PROVIDER_URL,
         sdkOptions: clmmMainnet,
-        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+        lazyLoading: false,
       });
 
     return cetus
 }
 
 export const getAftermath = async () => {
+    const { redisClient } = await getRedisClient()
+    const storage = RedisStorageSingleton.getInstance(redisClient);
+
     const aftermath = await AftermathSingleton.getInstance({
-        cacheOptions: SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
+        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+        lazyLoading: false,
       });
 
     return aftermath
