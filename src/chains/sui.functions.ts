@@ -95,11 +95,11 @@ export const getRouteManager = async () => {
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
     await ctx.reply(
-      'Which token do you want to buy? Please send a coin type or a link to suiscan.',
+      'Which token do you want to buy? Please send a coin type or a link to suiscan.' + random_uuid,
     );
 
     await ctx.reply(
-      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ',
+      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ' + random_uuid,
     );
 
     const cointTypeData = await conversation.waitFor([':text', '::url']);
@@ -137,7 +137,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       coinToBuy = coinManager.getCoinByType(coinType);
     } catch (e) {
       console.error("Finding token error: ", e)
-      console.error(`Token ${coinType} not found in coinManager`);
+      console.error(`Token ${coinType} not found in coinManager` + random_uuid);
 
       await ctx.reply(
         // eslint-disable-next-line max-len
@@ -165,7 +165,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       ctx.session.publicKey,
     );
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):` + random_uuid,
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -187,7 +187,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
-    await ctx.reply('Initiating swap');
+    await ctx.reply('Initiating swap' + random_uuid);
     let tx;
 
     try {
@@ -217,7 +217,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
-    await ctx.reply('Route for swap found, sending transaction...');
+    await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
 
     try {
       const res = await provider.signAndExecuteTransactionBlock({
@@ -239,7 +239,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       }
 
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}` + random_uuid,
       );
     } catch (error) {
       if (error instanceof Error) {
@@ -268,7 +268,7 @@ export async function sell(
     );
 
     await ctx.reply(
-      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ',
+      'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ' + random_uuid,
     );
     const cointTypeData = await conversation.waitFor(':text');
     const possibleCoin = (cointTypeData.msg.text || '').trim();
