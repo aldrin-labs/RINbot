@@ -40,7 +40,7 @@ export const getFlowx = async () => {
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.time("FlowxSingleton.getInstance")
+    console.timeEnd("FlowxSingleton.getInstance")
 
     return flowx
 }
@@ -56,7 +56,7 @@ export const getCetus = async () => {
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.time("CetusSingleton.getInstance")
+    console.timeEnd("CetusSingleton.getInstance")
 
     return cetus
 }
@@ -70,7 +70,7 @@ export const getAftermath = async () => {
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.time("AftermathSingleton.getInstance")
+    console.timeEnd("AftermathSingleton.getInstance")
 
     return aftermath
 }
