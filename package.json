@@ -9,7 +9,7 @@
     "node": "20"
   },
   "dependencies": {
-    "@avernikoz/rinbot-sui-sdk": "^2.0.19",
+    "@avernikoz/rinbot-sui-sdk": "^2.1.1",
     "@grammyjs/conversations": "^1.2.0",
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-redis": "^2.4.1",
@@ -18,6 +18,7 @@
     "axios": "^1.6.7",
     "dotenv-cli": "^7.3.0",
     "grammy": "^1.20.3",
+    "redis": "^4.6.13",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
