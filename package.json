@@ -17,11 +17,13 @@
     "@vercel/node": "^3.0.13",
     "axios": "^1.6.7",
     "dotenv-cli": "^7.3.0",
-    "grammy": "^1.20.3"
+    "grammy": "^1.20.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",
     "@types/node": "^20.10.5",
+    "@types/uuid": "^9.0.1",
     "@vercel/ncc": "^0.38.1",
     "debug": "^4.3.4",
     "nodemon": "^3.0.2",
