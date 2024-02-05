@@ -244,7 +244,7 @@ export async function sell(
     ctx: BotContext,
   ): Promise<void> {
     await ctx.reply(
-      'Which token do you want to sell? Please send a coin type or a link to suiscan.' + DATE_NOW,
+      'Which token do you want to sell? Please send a coin type or a link to suiscan.' + today.toUTCString()
     );
 
     await ctx.reply(
@@ -284,7 +284,7 @@ export async function sell(
       const coinManager = await getCoinManager()
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
-      console.error("Finding token error: " + DATE_NOW, e)
+      console.error("Finding token error: " + today.toUTCString(), e)
       console.error(`Token ${coinType} not found in coinManager`);
 
       await ctx.reply(
@@ -325,7 +325,7 @@ export async function sell(
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`+ DATE_NOW,
+      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`+ today.toUTCString(),
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -362,7 +362,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Initiating swap' + DATE_NOW);
+    await ctx.reply('Initiating swap' + today.toUTCString());
 
     let tx;
 
@@ -393,7 +393,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Route for swap found, sending transaction...' + DATE_NOW);
+    await ctx.reply('Route for swap found, sending transaction...' + today.toUTCString());
 
     try {
       const res = await provider.signAndExecuteTransactionBlock({
@@ -415,7 +415,7 @@ export async function sell(
       }
 
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${DATE_NOW}`,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${today.toUTCString()}`,
       );
     } catch (error) {
       if (error instanceof Error) {
