@@ -76,28 +76,33 @@ export const getAftermath = async () => {
 }
 
 export const getCoinManager = async () => {
-    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
+    console.time("CoinManagerSingleton.getInstance")
+    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
 
     const coinManager = CoinManagerSingleton.getInstance(providers);
+    console.timeEnd("CoinManagerSingleton.getInstance")
 
     return coinManager
 }
 
 export const getWalletManager = async () => {
-    const coinManager = await getCoinManager()
+  console.time("WalletManagerSingleton.getInstance")
+  const coinManager = await getCoinManager()
 
-    const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
+  const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
+  console.timeEnd("WalletManagerSingleton.getInstance")
 
-    return walletManager
+  return walletManager
 }
 
 export const getRouteManager = async () => {
-    const coinManager = await getCoinManager()
-    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
+  console.time("RouteManager.getInstance")
+  const coinManager = await getCoinManager()
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
 
-    const routerManager = RouteManager.getInstance(providers, coinManager);
-
-    return routerManager
+  const routerManager = RouteManager.getInstance(providers, coinManager);
+  console.timeEnd("RouteManager.getInstance")
+  return routerManager
 }
 
 
