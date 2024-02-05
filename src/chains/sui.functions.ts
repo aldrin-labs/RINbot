@@ -20,13 +20,13 @@ export const getTurbos = async () => {
   const { redisClient } = await getRedisClient()
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-  console.time("TurbosSingleton.getInstance")
+  console.time(`TurbosSingleton.getInstance.${random_uuid}`)
   const turbos = await TurbosSingleton.getInstance({
     suiProviderUrl: SUI_PROVIDER_URL,
     cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
     lazyLoading: false,
   });
-  console.timeEnd("TurbosSingleton.getInstance")
+  console.timeEnd(`TurbosSingleton.getInstance.${random_uuid}`)
 
   return turbos
 }
@@ -35,12 +35,12 @@ export const getFlowx = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
-    console.time("FlowxSingleton.getInstance")
+    console.time(`FlowxSingleton.getInstance.${random_uuid}`)
     const flowx =  await FlowxSingleton.getInstance({
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.timeEnd("FlowxSingleton.getInstance")
+    console.timeEnd(`FlowxSingleton.getInstance.${random_uuid}`)
 
     return flowx
 }
@@ -49,14 +49,14 @@ export const getCetus = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
-    console.time("CetusSingleton.getInstance")
+    console.time(`CetusSingleton.getInstance.${random_uuid}`)
     const cetus = await CetusSingleton.getInstance({
       suiProviderUrl: SUI_PROVIDER_URL,
       sdkOptions: clmmMainnet,
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.timeEnd("CetusSingleton.getInstance")
+    console.timeEnd(`CetusSingleton.getInstance.${random_uuid}`)
 
     return cetus
 }
@@ -65,43 +65,43 @@ export const getAftermath = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
-    console.time("AftermathSingleton.getInstance")
+    console.time(`AftermathSingleton.getInstance.${random_uuid}`)
     const aftermath = await AftermathSingleton.getInstance({
       cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
       lazyLoading: false,
     });
-    console.timeEnd("AftermathSingleton.getInstance")
+    console.timeEnd(`AftermathSingleton.getInstance.${random_uuid}`)
 
     return aftermath
 }
 
 export const getCoinManager = async () => {
-    console.time("CoinManagerSingleton.getInstance")
+    console.time(`CoinManagerSingleton.getInstance.${random_uuid}`)
     const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
 
     const coinManager = CoinManagerSingleton.getInstance(providers);
-    console.timeEnd("CoinManagerSingleton.getInstance")
+    console.timeEnd(`CoinManagerSingleton.getInstance.${random_uuid}`)
 
     return coinManager
 }
 
 export const getWalletManager = async () => {
-  console.time("WalletManagerSingleton.getInstance")
+  console.time(`WalletManagerSingleton.getInstance.${random_uuid}`)
   const coinManager = await getCoinManager()
 
   const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
-  console.timeEnd("WalletManagerSingleton.getInstance")
+  console.timeEnd(`WalletManagerSingleton.getInstance.${random_uuid}`)
 
   return walletManager
 }
 
 export const getRouteManager = async () => {
-  console.time("RouteManager.getInstance")
+  console.time(`RouteManager.getInstance.${random_uuid}`)
   const coinManager = await getCoinManager()
   const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
-  console.timeEnd("RouteManager.getInstance")
+  console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
   return routerManager
 }
 
