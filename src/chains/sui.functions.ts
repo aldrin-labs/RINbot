@@ -5,9 +5,12 @@ import positions_menu from "../menu/positions";
 import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
+import { v4 as uuidv4 } from 'uuid';
 
 const DATE_NOW = Date.now()
 const today = new Date(DATE_NOW)
+
+const random_uuid = uuidv4()
 
 const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
@@ -244,7 +247,7 @@ export async function sell(
     ctx: BotContext,
   ): Promise<void> {
     await ctx.reply(
-      'Which token do you want to sell? Please send a coin type or a link to suiscan.' + today.toUTCString()
+      'Which token do you want to sell? Please send a coin type or a link to suiscan. ' + random_uuid
     );
 
     await ctx.reply(
@@ -284,7 +287,7 @@ export async function sell(
       const coinManager = await getCoinManager()
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
-      console.error("Finding token error: " + today.toUTCString(), e)
+      console.error("Finding token error: " + random_uuid, e)
       console.error(`Token ${coinType} not found in coinManager`);
 
       await ctx.reply(
@@ -325,7 +328,7 @@ export async function sell(
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`+ today.toUTCString(),
+      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1): `+ random_uuid,
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -362,7 +365,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Initiating swap' + today.toUTCString());
+    await ctx.reply('Initiating swap ' + random_uuid);
 
     let tx;
 
@@ -393,7 +396,7 @@ export async function sell(
       return;
     }
 
-    await ctx.reply('Route for swap found, sending transaction...' + today.toUTCString());
+    await ctx.reply('Route for swap found, sending transaction... ' + random_uuid);
 
     try {
       const res = await provider.signAndExecuteTransactionBlock({
@@ -415,7 +418,7 @@ export async function sell(
       }
 
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${today.toUTCString()}`,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${random_uuid}`,
       );
     } catch (error) {
       if (error instanceof Error) {
@@ -637,6 +640,6 @@ export async function home(ctx: BotContext) {
     // Send the menu.
     const userBalance = await balance(ctx);
     const avl_balance = await availableBalance(ctx);
-    const welcome_text = `${today.toUTCString()}\nWelcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \nYour SUI balance: ${userBalance}\nYour available SUI balance: ${avl_balance}`;
+    const welcome_text = `${random_uuid}\nWelcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \nYour SUI balance: ${userBalance}\nYour available SUI balance: ${avl_balance}`;
     await ctx.reply(welcome_text, { reply_markup: menu });
 }
