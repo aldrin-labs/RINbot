@@ -5,7 +5,6 @@ import positions_menu from "../menu/positions";
 import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
-import { performance } from 'perf_hooks'
 
 const DATE_NOW = Date.now()
 
@@ -637,6 +636,6 @@ export async function home(ctx: BotContext) {
     // Send the menu.
     const userBalance = await balance(ctx);
     const avl_balance = await availableBalance(ctx);
-    const welcome_text = `${console.debug(performance.now().toString())}\nWelcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \nYour SUI balance: ${userBalance}\nYour available SUI balance: ${avl_balance}`;
+    const welcome_text = `${DATE_NOW}\nWelcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \nYour SUI balance: ${userBalance}\nYour available SUI balance: ${avl_balance}`;
     await ctx.reply(welcome_text, { reply_markup: menu });
 }
