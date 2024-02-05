@@ -13,6 +13,7 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
     return { redisClient }
   }
 
+  console.time("[getRedisClient] init")
   redisClient = createClient({
     url: process.env.KV_URL,
     socket: { tls: true },
@@ -23,6 +24,7 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
   });
 
   await redisClient.connect();
+  console.timeEnd("[getRedisClient] init")
 
   return { redisClient }
 }

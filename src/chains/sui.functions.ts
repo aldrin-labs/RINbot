@@ -20,24 +20,28 @@ export const getTurbos = async () => {
   const { redisClient } = await getRedisClient()
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-    const turbos = await TurbosSingleton.getInstance({
-        suiProviderUrl: SUI_PROVIDER_URL,
-        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
-        lazyLoading: false,
-      });
+  console.time("TurbosSingleton.getInstance")
+  const turbos = await TurbosSingleton.getInstance({
+    suiProviderUrl: SUI_PROVIDER_URL,
+    cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+    lazyLoading: false,
+  });
+  console.timeEnd("TurbosSingleton.getInstance")
 
-    return turbos
+  return turbos
 }
 
 export const getFlowx = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
+    console.time("FlowxSingleton.getInstance")
     const flowx =  await FlowxSingleton.getInstance({
-        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
-        lazyLoading: false,
-       });
- 
+      cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+      lazyLoading: false,
+    });
+    console.time("FlowxSingleton.getInstance")
+
     return flowx
 }
 
@@ -45,12 +49,14 @@ export const getCetus = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
+    console.time("CetusSingleton.getInstance")
     const cetus = await CetusSingleton.getInstance({
-        suiProviderUrl: SUI_PROVIDER_URL,
-        sdkOptions: clmmMainnet,
-        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
-        lazyLoading: false,
-      });
+      suiProviderUrl: SUI_PROVIDER_URL,
+      sdkOptions: clmmMainnet,
+      cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+      lazyLoading: false,
+    });
+    console.time("CetusSingleton.getInstance")
 
     return cetus
 }
@@ -59,10 +65,12 @@ export const getAftermath = async () => {
     const { redisClient } = await getRedisClient()
     const storage = RedisStorageSingleton.getInstance(redisClient);
 
+    console.time("AftermathSingleton.getInstance")
     const aftermath = await AftermathSingleton.getInstance({
-        cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
-        lazyLoading: false,
-      });
+      cacheOptions: {...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
+      lazyLoading: false,
+    });
+    console.time("AftermathSingleton.getInstance")
 
     return aftermath
 }
