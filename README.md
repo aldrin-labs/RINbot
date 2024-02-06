@@ -21,6 +21,7 @@ yarn
 yarn dev
 ```
 
+
 ## Production
 
 You can fork this template and do the necessary changes you need. Then you when are done with your changes simply goto [vercel git import](https://vercel.com/import/git).
