@@ -8,9 +8,6 @@ import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
 import { getRedisClient } from "../config/redis.config";
 
-const DATE_NOW = Date.now()
-const today = new Date(DATE_NOW)
-
 const random_uuid = uuidv4()
 
 const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
@@ -115,6 +112,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ' + random_uuid,
     );
 
+    console.debug(`[buy] from ${ctx.msg?.from?.username} before cointTypeData waitFor ${random_uuid}`)
     const cointTypeData = await conversation.waitFor([':text', '::url']);
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
@@ -146,6 +144,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     let coinToBuy: CommonCoinData | null = null;
     try {
+      console.debug(`[buy] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       const coinManager = await getCoinManager()
       coinToBuy = coinManager.getCoinByType(coinType);
     } catch (e) {
@@ -173,7 +172,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
+    console.debug(`[buy] from ${ctx.msg?.from?.username} before getWalletManager() ${random_uuid}`)
     const walletManager = await getWalletManager()
+    console.debug(`[buy] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     const availableBalance = await walletManager!.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
@@ -204,7 +205,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     let tx;
 
     try {
+      console.debug(`[buy] from ${ctx.msg?.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
+      console.debug(`[buy] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       tx = await routerManager!.getBestRouteTransaction({
         tokenFrom: LONG_SUI_COIN_TYPE,
         tokenTo: coinToBuy.type,
@@ -233,6 +236,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
 
     try {
+      console.debug(`[buy] from ${ctx.msg?.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
@@ -242,7 +246,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           showEffects: true,
         },
       });
-
+      console.debug(`[buy] from ${ctx.msg?.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
       if (res.effects?.status.status === 'failure') {
         await ctx.reply(
           `Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
@@ -283,6 +287,7 @@ export async function sell(
     await ctx.reply(
       'Example of coin type format:\n0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD ' + random_uuid,
     );
+    console.debug(`[sell] from ${ctx.msg?.from?.username} before cointTypeData ${random_uuid}`)
     const cointTypeData = await conversation.waitFor(':text');
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
@@ -314,6 +319,7 @@ export async function sell(
 
     let coinToSell: CommonCoinData | null = null;
     try {
+      console.debug(`[sell] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       const coinManager = await getCoinManager()
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
@@ -341,7 +347,9 @@ export async function sell(
       return;
     }
 
+    console.debug(`[sell] from ${ctx.msg?.from?.username} before getWalletManager() ${random_uuid}`)
     const walletManager = await getWalletManager()
+    console.debug(`[sell] from ${ctx.msg?.from?.username} before getAllCoinAssets() ${random_uuid}`)
     const allCoinsAssets = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
@@ -381,6 +389,7 @@ export async function sell(
       return;
     }
 
+    console.debug(`[sell] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     const availableBalance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
@@ -400,7 +409,9 @@ export async function sell(
     let tx;
 
     try {
+      console.debug(`[sell] from ${ctx.msg?.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
+      console.debug(`[sell] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       tx = await routerManager.getBestRouteTransaction({
         tokenFrom: coin.type,
         tokenTo: LONG_SUI_COIN_TYPE,
@@ -429,6 +440,7 @@ export async function sell(
     await ctx.reply('Route for swap found, sending transaction... ' + random_uuid);
 
     try {
+      console.debug(`[sell] from ${ctx.msg?.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
@@ -438,7 +450,7 @@ export async function sell(
           showEffects: true,
         },
       });
-
+      console.debug(`[sell] from ${ctx.msg?.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
       if (res.effects?.status.status === 'failure') {
         await ctx.reply(
           `Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
