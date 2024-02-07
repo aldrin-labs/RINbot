@@ -1,4 +1,4 @@
-import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinData, FlowxSingleton, LONG_SUI_COIN_TYPE, RedisStorageSingleton, RouteManager, SHORT_SUI_COIN_TYPE, SUI_DECIMALS, TurbosSingleton, WalletManagerSingleton, clmmMainnet, getSuiProvider, isValidSuiAddress, isValidTokenAddress, isValidTokenAmount } from "@avernikoz/rinbot-sui-sdk";
+import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinData, FlowxSingleton, LONG_SUI_COIN_TYPE, RedisStorageSingleton, RouteManager, SHORT_SUI_COIN_TYPE, SUI_DECIMALS, TurbosSingleton, WalletManagerSingleton, clmmMainnet, getSuiProvider, isValidSuiAddress, isValidTokenAddress, isValidTokenAmount, transactionFromSerializedTransaction } from "@avernikoz/rinbot-sui-sdk";
 import { BotContext, MyConversation } from "../types";
 import positions_menu from "../menu/positions";
 
@@ -7,6 +7,11 @@ import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.c
 import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
 import { getRedisClient } from "../config/redis.config";
+
+enum TransactionResultStatus {
+  Success = 'success',
+  Failure = 'failure',
+}
 
 const random_uuid = uuidv4()
 
@@ -297,14 +302,6 @@ export async function sell(
     );
     console.debug(`[sell] from ${ctx.from?.username} before cointTypeData ${random_uuid}`)
     const cointTypeData = await conversation.waitFor(':text');
-
-    await conversation.external(() => 
-      fetch("https://simple-vercel-api-phi.vercel.app/")
-      .then(() => { console.debug(`${ctx.from?.username} debug fetch succeded ${random_uuid}`)})
-      .catch(() => {console.debug(`${ctx.from?.username} debug fetch failed ${random_uuid}`)})
-    )
-
-    await conversation.external(() => sleep(10_000))
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
     const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
@@ -333,17 +330,25 @@ export async function sell(
       return;
     }
 
-    let coinToSell: CommonCoinData | null = null;
-    try {
-      console.debug(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      console.time(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      const coinManager = await getCoinManager()
-      console.timeEnd(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      coinToSell = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error("Finding token error: " + random_uuid, e)
-      console.error(`Token ${coinType} not found in coinManager`);
+    const coinToSell: CommonCoinData | undefined = await conversation.external(async () => {
+      try {
+        console.debug(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        console.time(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        const coinManager = await getCoinManager()
+        console.timeEnd(`[sell] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        const coin = coinManager.getCoinByType(coinType);
 
+        return coin
+      } catch (e) {
+        console.error("Finding token error: " + random_uuid, e)
+        console.error(`Token ${coinType} not found in coinManager`);
+  
+        return;
+      }
+     }
+    )
+
+    if (!coinToSell) {
       await ctx.reply(
         // eslint-disable-next-line max-len
         `Token address not found. Make sure address ${coinType} is correct. \n You can enter a token address or a Suiscan link.
@@ -352,7 +357,7 @@ export async function sell(
 
       return;
     }
-
+    
     const isTokensAreEqual =
       swapTokenTypesAreEqual(coinToSell.type, LONG_SUI_COIN_TYPE) ||
       swapTokenTypesAreEqual(coinToSell.type, SHORT_SUI_COIN_TYPE);
@@ -365,15 +370,20 @@ export async function sell(
       return;
     }
 
-    console.debug(`[sell] from ${ctx.from?.username} before getWalletManager() ${random_uuid}`)
-    const walletManager = await getWalletManager()
-    console.debug(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
-    console.time(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
-    const allCoinsAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
-    console.timeEnd(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
-    const coin = allCoinsAssets.find((el) => el.type === coinToSell?.type);
+    const coin = await conversation.external(async () => {
+      console.debug(`[sell] from ${ctx.from?.username} before getWalletManager() ${random_uuid}`)
+      const walletManager = await getWalletManager()
+      console.debug(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
+      console.time(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
+      // TODO: Maybe we need catch here
+      const allCoinsAssets = await walletManager.getAllCoinAssets(
+        ctx.session.publicKey,
+      );
+      console.timeEnd(`[sell] from ${ctx.from?.username} before getAllCoinAssets() ${random_uuid}`)
+      const coin = allCoinsAssets.find((el) => el.type === coinToSell?.type);
+
+      return coin
+    })
 
     if (!coin) {
       await ctx.reply(
@@ -409,13 +419,18 @@ export async function sell(
       return;
     }
 
-    console.debug(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-    console.time(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-    const availableBalance = await walletManager.getAvailableSuiBalance(
-      ctx.session.publicKey,
-    );
-    console.timeEnd(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-    const isAmountSuiAmountIsValid = +availableBalance > 0;
+    const isAmountSuiAmountIsValid = await conversation.external(async () => {
+      console.debug(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      console.time(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      const walletManager = await getWalletManager()
+      const availableBalance = await walletManager.getAvailableSuiBalance(
+        ctx.session.publicKey,
+      );
+      console.timeEnd(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      const isAmountSuiAmountIsValid = +availableBalance > 0;
+
+      return isAmountSuiAmountIsValid
+    })
 
     if (!isAmountSuiAmountIsValid) {
       await ctx.reply(
@@ -428,14 +443,13 @@ export async function sell(
 
     await ctx.reply('Initiating swap ' + random_uuid);
 
-    let tx;
-
+    const tx = await conversation.external({ task: async () => {
     try {
       console.debug(`[sell] from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
       console.debug(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       console.time(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-      tx = await routerManager.getBestRouteTransaction({
+      const transaction = await routerManager.getBestRouteTransaction({
         tokenFrom: coin.type,
         tokenTo: LONG_SUI_COIN_TYPE,
         amount: possibleAmount,
@@ -443,6 +457,8 @@ export async function sell(
         slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
       });
       console.timeEnd(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+
+      return transaction
     } catch (error) {
       console.error(error);
 
@@ -455,7 +471,25 @@ export async function sell(
           `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
         );
       }
+      return;
+      }
+    }, beforeStore: (value) => {
+      if (value) {
+        return value.serialize()
+      }
+    }, afterLoad: async (value) => {
+      if (value) {
+        return transactionFromSerializedTransaction(value)
+      }
+    }, afterLoadError: async (error) => {
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`)
+      console.error(error)
+    }, beforeStoreError: async (error) => {
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`)
+      console.error(error)
+    }})
 
+    if (!tx) {
       await ctx.reply('Transaction creation failed');
 
       return;
@@ -463,45 +497,60 @@ export async function sell(
 
     await ctx.reply('Route for swap found, sending transaction... ' + random_uuid);
 
-    try {
-      console.debug(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-      const res = await provider.signAndExecuteTransactionBlock({
-        transactionBlock: tx,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
-        options: {
-          showEffects: true,
-        },
-      });
-      console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
-      if (res.effects?.status.status === 'failure') {
-        await ctx.reply(
-          `Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
-        );
+    const resultOfSwap: { digest?: string, result: TransactionResultStatus, reason?: string } = await conversation.external(async () => {
+      try {
+        console.debug(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+        const res = await provider.signAndExecuteTransactionBlock({
+          transactionBlock: tx,
+          signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+            ctx.session.privateKey,
+          ),
+          options: {
+            showEffects: true,
+          },
+        });
+        console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
 
-        return;
+        const isTransactionFailed = res.effects?.status.status === 'failure'
+        const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
+
+        return { digest: res.digest, result }
+
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(
+            `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+          );
+        } else {
+          console.error(
+            `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+          );
+        }
+  
+        const result = TransactionResultStatus.Failure
+        return { result: result, reason: "failed_to_send_transaction" }
       }
+      
+    })
 
+    if (resultOfSwap.result === "success" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest} ${random_uuid}`,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
-      } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
-      }
-
-      await ctx.reply('Transaction sending failed');
 
       return;
     }
-  }
+
+    if (resultOfSwap.result === "failure" && resultOfSwap.digest) {
+      await ctx.reply(
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+      );
+
+      return;
+    }
+
+    await ctx.reply('Transaction sending failed');
+}
 
 export async function exportPrivateKey(
     conversation: MyConversation,
