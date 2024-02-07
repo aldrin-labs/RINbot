@@ -145,7 +145,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     let coinToBuy: CommonCoinData | null = null;
     try {
       console.debug(`[buy] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
+      console.time(`[buy] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       const coinManager = await getCoinManager()
+      console.timeEnd(`[buy] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       coinToBuy = coinManager.getCoinByType(coinType);
     } catch (e) {
       console.error("Finding token error: ", e)
@@ -175,9 +177,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     console.debug(`[buy] from ${ctx.msg?.from?.username} before getWalletManager() ${random_uuid}`)
     const walletManager = await getWalletManager()
     console.debug(`[buy] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+    console.time(`[buy] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     const availableBalance = await walletManager!.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
+    console.timeEnd(`[buy] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     await ctx.reply(
       `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):` + random_uuid,
     );
@@ -208,6 +212,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       console.debug(`[buy] from ${ctx.msg?.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
       console.debug(`[buy] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+      console.time(`[buy] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       tx = await routerManager!.getBestRouteTransaction({
         tokenFrom: LONG_SUI_COIN_TYPE,
         tokenTo: coinToBuy.type,
@@ -215,6 +220,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         signerAddress: ctx.session.publicKey,
         slippagePercentage: 10,
       });
+      console.timeEnd(`[buy] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
     } catch (error) {
       console.error(error);
 
@@ -237,6 +243,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     try {
       console.debug(`[buy] from ${ctx.msg?.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+      console.time(`[buy] from ${ctx.msg?.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: tx,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
@@ -246,6 +253,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           showEffects: true,
         },
       });
+      console.timeEnd(`[buy] from ${ctx.msg?.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
       console.debug(`[buy] from ${ctx.msg?.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
       if (res.effects?.status.status === 'failure') {
         await ctx.reply(
@@ -320,7 +328,9 @@ export async function sell(
     let coinToSell: CommonCoinData | null = null;
     try {
       console.debug(`[sell] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
+      console.time(`[sell] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       const coinManager = await getCoinManager()
+      console.timeEnd(`[sell] from ${ctx.msg?.from?.username} before getCoinManager() ${random_uuid}`)
       coinToSell = coinManager.getCoinByType(coinType);
     } catch (e) {
       console.error("Finding token error: " + random_uuid, e)
@@ -350,9 +360,11 @@ export async function sell(
     console.debug(`[sell] from ${ctx.msg?.from?.username} before getWalletManager() ${random_uuid}`)
     const walletManager = await getWalletManager()
     console.debug(`[sell] from ${ctx.msg?.from?.username} before getAllCoinAssets() ${random_uuid}`)
+    console.time(`[sell] from ${ctx.msg?.from?.username} before getAllCoinAssets() ${random_uuid}`)
     const allCoinsAssets = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
+    console.timeEnd(`[sell] from ${ctx.msg?.from?.username} before getAllCoinAssets() ${random_uuid}`)
     const coin = allCoinsAssets.find((el) => el.type === coinToSell?.type);
 
     if (!coin) {
@@ -390,9 +402,11 @@ export async function sell(
     }
 
     console.debug(`[sell] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+    console.time(`[sell] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     const availableBalance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
+    console.timeEnd(`[sell] from ${ctx.msg?.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
     const isAmountSuiAmountIsValid = +availableBalance > 0;
 
     if (!isAmountSuiAmountIsValid) {
@@ -412,6 +426,7 @@ export async function sell(
       console.debug(`[sell] from ${ctx.msg?.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
       console.debug(`[sell] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+      console.time(`[sell] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       tx = await routerManager.getBestRouteTransaction({
         tokenFrom: coin.type,
         tokenTo: LONG_SUI_COIN_TYPE,
@@ -419,6 +434,7 @@ export async function sell(
         signerAddress: ctx.session.publicKey,
         slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
       });
+      console.timeEnd(`[sell] from ${ctx.msg?.from?.username} before getBestRouteTransaction() ${random_uuid}`)
     } catch (error) {
       console.error(error);
 
