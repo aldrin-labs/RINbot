@@ -114,9 +114,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     console.debug(`[buy] from ${ctx.from?.username} before cointTypeData waitFor ${random_uuid}`)
     const cointTypeData = await conversation.waitFor([':text', '::url']);
-    await fetch("https://simple-vercel-api-phi.vercel.app/")
-    .then(() => { console.debug(`${ctx.from?.username} debug fetch succeded ${random_uuid}`)})
-    .catch(() => {console.debug(`${ctx.from?.username} debug fetch failed ${random_uuid}`)})
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
     const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
@@ -300,11 +297,14 @@ export async function sell(
     );
     console.debug(`[sell] from ${ctx.from?.username} before cointTypeData ${random_uuid}`)
     const cointTypeData = await conversation.waitFor(':text');
-    await fetch("https://simple-vercel-api-phi.vercel.app/")
-    .then(() => { console.debug(`${ctx.from?.username} debug fetch succeded ${random_uuid}`)})
-    .catch(() => {console.debug(`${ctx.from?.username} debug fetch failed ${random_uuid}`)})
 
-    await sleep(10_000)
+    await conversation.external(() => 
+      fetch("https://simple-vercel-api-phi.vercel.app/")
+      .then(() => { console.debug(`${ctx.from?.username} debug fetch succeded ${random_uuid}`)})
+      .catch(() => {console.debug(`${ctx.from?.username} debug fetch failed ${random_uuid}`)})
+    )
+
+    await conversation.external(() => sleep(10_000))
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
     const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
