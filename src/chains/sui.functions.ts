@@ -2,7 +2,7 @@ import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinDat
 import { BotContext, MyConversation } from "../types";
 import positions_menu from "../menu/positions";
 
-import { extractCoinTypeFromLink, isValidCoinLink, sleep, swapTokenTypesAreEqual } from './utils';
+import { extractCoinTypeFromLink, getCurrentTime, isValidCoinLink, sleep, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
@@ -420,8 +420,8 @@ export async function sell(
     }
 
     const isAmountSuiAmountIsValid = await conversation.external(async () => {
-      console.debug(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-      console.time(`[sell] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      console.time(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
       const walletManager = await getWalletManager()
       const availableBalance = await walletManager.getAvailableSuiBalance(
         ctx.session.publicKey,
@@ -445,10 +445,10 @@ export async function sell(
 
     const tx = await conversation.external({ task: async () => {
     try {
-      console.debug(`[sell] from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
+      console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
       const routerManager = await getRouteManager()
-      console.debug(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-      console.time(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+      console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+      console.time(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
       const transaction = await routerManager.getBestRouteTransaction({
         tokenFrom: coin.type,
         tokenTo: LONG_SUI_COIN_TYPE,
@@ -456,7 +456,7 @@ export async function sell(
         signerAddress: ctx.session.publicKey,
         slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
       });
-      console.timeEnd(`[sell] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+      console.timeEnd(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
 
       return transaction
     } catch (error) {
@@ -500,6 +500,7 @@ export async function sell(
     const resultOfSwap: { digest?: string, result: TransactionResultStatus, reason?: string } = await conversation.external(async () => {
       try {
         console.debug(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+        console.time(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
         const res = await provider.signAndExecuteTransactionBlock({
           transactionBlock: tx,
           signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
@@ -509,6 +510,7 @@ export async function sell(
             showEffects: true,
           },
         });
+        console.timeEnd(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
         console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
 
         const isTransactionFailed = res.effects?.status.status === 'failure'

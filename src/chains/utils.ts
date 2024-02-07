@@ -38,3 +38,17 @@ export function isValidCoinLink(link: string): boolean {
   export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+
+export function getCurrentTime(): string {
+  const now: Date = new Date();
+  const timeZoneOffset: number = 3 * 60; // Смещение в минутах для GMT+3
+  const utc: number = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const newDate: Date = new Date(utc + (3600000 * timeZoneOffset));
+
+  const hours: string = String(newDate.getHours()).padStart(2, '0');
+  const minutes: string = String(newDate.getMinutes()).padStart(2, '0');
+  const seconds: string = String(newDate.getSeconds()).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+}
