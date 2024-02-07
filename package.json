@@ -9,7 +9,7 @@
     "node": "20"
   },
   "dependencies": {
-    "@avernikoz/rinbot-sui-sdk": "^2.1.1",
+    "@avernikoz/rinbot-sui-sdk": "^2.1.2",
     "@grammyjs/conversations": "^1.2.0",
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-redis": "^2.4.1",
