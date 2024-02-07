@@ -34,3 +34,7 @@ export function isValidCoinLink(link: string): boolean {
   export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
     return tokenTo === tokenFrom;
   };
+
+  export function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

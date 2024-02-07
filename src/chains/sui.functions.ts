@@ -2,7 +2,7 @@ import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinDat
 import { BotContext, MyConversation } from "../types";
 import positions_menu from "../menu/positions";
 
-import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
+import { extractCoinTypeFromLink, isValidCoinLink, sleep, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
@@ -303,6 +303,8 @@ export async function sell(
     await fetch("https://simple-vercel-api-phi.vercel.app/")
     .then(() => { console.debug(`${ctx.from?.username} debug fetch succeded ${random_uuid}`)})
     .catch(() => {console.debug(`${ctx.from?.username} debug fetch failed ${random_uuid}`)})
+
+    await sleep(10_000)
     const possibleCoin = (cointTypeData.msg.text || '').trim();
 
     const isCoinTypeIsValid = isValidTokenAddress(possibleCoin);
