@@ -3,30 +3,33 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 import { BotContext, SessionData } from './types';
 import menu from './menu/main';
-import SuiApiSingleton from './chains/sui';
+// import SuiApiSingleton from './chains/sui';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
+import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
+import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+
+const APP_VERSION = "1.0.23"
+
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '';
-const ENVIRONMENT = process.env.NODE_ENV || '';
-const VERCEL_URL = process.env.VERCEL_URL || '';
+export const BOT_TOKEN = process.env.BOT_TOKEN || '';
+export const ENVIRONMENT = process.env.NODE_ENV || '';
+export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 
-// @ts-ignore
-const storage = new RedisAdapter({ instance });
+const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-if (ENVIRONMENT !== 'local')
-  void bot.api.setWebhook(`${VERCEL_URL}/api/webhook`);
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
+  // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
+
 
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
@@ -35,12 +38,13 @@ async function startBot(): Promise<void> {
     return ctx.from?.id.toString();
   }
 
+  bot.use(timeoutMiddleware)
   // Make it interactive.
   bot.use(
     session({
-      getSessionKey,
+      // getSessionKey,
       initial: (): SessionData => {
-        const { privateKey, publicKey } = suiApi.generateWallet();
+        const { privateKey, publicKey } = generateWallet();
         return {
           step: 'main',
           privateKey,
@@ -55,14 +59,15 @@ async function startBot(): Promise<void> {
 
   bot.use(conversations());
 
-  bot.use(createConversation(suiApi.buy));
-  bot.use(createConversation(suiApi.sell));
-  bot.use(createConversation(suiApi.exportPrivateKey));
-  bot.use(createConversation(suiApi.withdraw));
+  bot.use(createConversation(buy));
+  bot.use(createConversation(sell));
+  bot.use(createConversation(exportPrivateKey));
+  bot.use(createConversation(withdraw));
 
   bot.use(menu);
 
-  bot.command('start', async (ctx) => suiApi.home(ctx));
+  bot.command('start', async (ctx) => {await home(ctx)});
+  bot.command('version', async (ctx) => { await ctx.reply(`Version ${APP_VERSION}`) })
 
   bot.catch((err) => {
     const ctx = err.ctx;

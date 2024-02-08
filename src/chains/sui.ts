@@ -20,43 +20,8 @@ import {
 import { MyConversation, BotContext } from '../types';
 import positions_menu from '../menu/positions';
 import menu from '../menu/main';
+import { extractCoinTypeFromLink, isValidCoinLink, swapTokenTypesAreEqual } from './utils';
 
-/**
- * Checks if the given string is a valid suiscan link.
- *
- * @param {string} link - The string to be checked.
- * @returns {boolean} - True if the link is valid, false otherwise.
- */
-export function isValidCoinLink(link: string): boolean {
-  // Regular expression to match valid suiscan links
-  const suiscanLinkRegex =
-    /^https:\/\/suiscan\.xyz\/mainnet\/coin\/(0x|0X)?[0-9a-fA-F]+::[0-9a-zA-Z]+::[0-9a-zA-Z]+(\/txs|\/|)$/;
-
-  return suiscanLinkRegex.test(link);
-}
-
-/**
- * Extracts the coin type from a valid suiscan link.
- *
- * @param {string} link - The valid suiscan link.
- * @returns {string | null} - The extracted coin type or null if extraction fails.
- */
-export function extractCoinTypeFromLink(link: string): string | null {
-  const suiscanLinkRegex =
-    /^https:\/\/suiscan\.xyz\/mainnet\/coin\/0x([0-9a-fA-F]+)::([0-9a-zA-Z]+)::([0-9a-zA-Z]+)(\/txs|\/)?$/;
-  const match = link.match(suiscanLinkRegex);
-
-  if (match && match[2]) {
-    const coinType = `0x${match[1]}::${match[2]}::${match[3]}`;
-    return coinType;
-  }
-
-  return null;
-}
-
-export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
-  return tokenTo === tokenFrom;
-};
 
 interface ISuiAPI {
   home(ctx: any): void;
@@ -151,10 +116,10 @@ class SuiApiSingleton {
     // Send the menu.
     const balance = await this.balance(ctx);
     const avl_balance = await this.availableBalance(ctx);
-    const welcome_text = `Welcome to RINbot on Sui Network\n\nYour wallet address: ${ctx.session.publicKey} \n
+    const welcome_text = `Welcome to RINbot on Suiiii Network\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n
 Your SUI balance: ${balance}\n
 Your available SUI balance: ${avl_balance}`;
-    await ctx.reply(welcome_text, { reply_markup: menu });
+    await ctx.reply(welcome_text, { parse_mode: "HTML" , reply_markup: menu });
   }
 
   private async buy(conversation: MyConversation, ctx: BotContext) {
@@ -226,7 +191,8 @@ Your available SUI balance: ${avl_balance}`;
       ctx.session.publicKey,
     );
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to buy (<b>0</b> - <b>${availableBalance} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -401,7 +367,8 @@ Your available SUI balance: ${avl_balance}`;
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1):`,
+      `Reply with the amount you wish to sell (<b>0</b> - <b>${coin.balance} ${coin.symbol || coin.type}</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');
@@ -560,7 +527,8 @@ Your available SUI balance: ${avl_balance}`;
         ctx.session.publicKey,
       );
     await ctx.reply(
-      `Reply with the amount you wish to withdraw (0 - ${availableAmount} SUI, Example: 0.1):`,
+      `Reply with the amount you wish to withdraw (<b>0</b> - <b>${availableAmount} SUI</b>, Example: <b>0.1</b>):`,
+      {parse_mode: "HTML"}
     );
 
     const amountData = await conversation.waitFor(':text');

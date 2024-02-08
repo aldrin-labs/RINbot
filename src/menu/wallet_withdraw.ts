@@ -10,8 +10,7 @@ const withdraw_menu = new Menu<BotContext>("wallet-withdraw-menu")
     await ctx.deleteMessages([last_msg])
     ctx.session.step = "main";
     ctx.menu.close();
-    ctx.reply("Check out this menu:", { reply_markup: menu })
-
+    await ctx.reply("Check out this menu:", { reply_markup: menu })
 });
 
 export default withdraw_menu;
