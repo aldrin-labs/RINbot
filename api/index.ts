@@ -5,7 +5,7 @@ import { BOT_TOKEN, VERCEL_URL } from '../src'
 const setWebhook = async () => {
   let response: AxiosResponse = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`)
   if(response.data['result']['url'] === ''){
-    response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${VERCEL_URL}/api/webhook`)
+    response = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${VERCEL_URL}/api/webhook&max_connections=100`)
     console.debug(response.data['ok']);
   }
 }
