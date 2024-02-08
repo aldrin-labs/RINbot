@@ -10,7 +10,7 @@ import { kv as instance } from '@vercel/kv';
 import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 
-const APP_VERSION = "1.0.21"
+const APP_VERSION = "1.0.22"
 
 
 if (instance && instance['opts']) {
