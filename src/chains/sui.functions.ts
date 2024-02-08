@@ -633,7 +633,7 @@ export async function withdraw(
     ctx: BotContext,
   ): Promise<void> {
     await ctx.reply(
-      `Please type the address you'd like to withdraw ALL you SUI coin`,
+      `Please type the address you'd like to withdraw your SUI coin`,
     );
 
     const messageData = await conversation.waitFor(':text');
