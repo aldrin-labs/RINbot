@@ -13,7 +13,7 @@ enum TransactionResultStatus {
   Failure = 'failure',
 }
 
-const random_uuid = uuidv4()
+const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : ''
 
 const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
