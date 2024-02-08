@@ -17,8 +17,8 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
     ctx.session.step = 'main';
   })
   .row()
-  .text('Deposit', (ctx) => {
-    ctx.reply(`Your public key is: <code>${ctx.session.publicKey}</code>`, {
+  .text('Deposit', async (ctx) => {
+    await ctx.reply(`Your public key is: <code>${ctx.session.publicKey}</code>`, {
       parse_mode: 'HTML',
     });
   })
@@ -34,7 +34,7 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   //     ctx.reply("Reset wallet")
   //   })
   .text('Export private key', async (ctx: any) => {
-    ctx.reply(
+    await ctx.reply(
       `Your private key: ${ctx.session.privateKey} \n !!!Please delete message after you save it!!!`,
     );
   })
