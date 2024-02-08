@@ -445,7 +445,7 @@ export async function sell(
     }
 
     await ctx.reply(
-      `Reply with the amount you wish to buy (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1): `+ random_uuid,
+      `Reply with the amount you wish to sell (0 - ${coin.balance} ${coin.symbol || coin.type}, Example: 0.1): `+ random_uuid,
     );
 
     const amountData = await conversation.waitFor(':text');
