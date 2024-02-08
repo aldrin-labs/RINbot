@@ -222,52 +222,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
       return;
     }
-
-    // const tx = await conversation.external({ task: async () => {
-    //   try {
-    //     console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
-    //     const routerManager = await getRouteManager()
-    //     console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-    //     console.time(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-    //     const transaction = await routerManager.getBestRouteTransaction({
-    //       tokenFrom: coin.type,
-    //       tokenTo: LONG_SUI_COIN_TYPE,
-    //       amount: possibleAmount,
-    //       signerAddress: ctx.session.publicKey,
-    //       slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
-    //     });
-    //     console.timeEnd(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-  
-    //     return transaction
-    //   } catch (error) {
-    //     console.error(error);
-  
-    //     if (error instanceof Error) {
-    //       console.error(
-    //         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-    //       );
-    //     } else {
-    //       console.error(
-    //         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-    //       );
-    //     }
-    //     return;
-    //     }
-      // }, beforeStore: (value) => {
-      //   if (value) {
-      //     return value.serialize()
-      //   }
-      // }, afterLoad: async (value) => {
-      //   if (value) {
-      //     return transactionFromSerializedTransaction(value)
-      //   }
-      // }, afterLoadError: async (error) => {
-      //   console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`)
-      //   console.error(error)
-      // }, beforeStoreError: async (error) => {
-      //   console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`)
-      //   console.error(error)
-      // }})
   
     await ctx.reply('Initiating swap' + random_uuid);
 
@@ -327,45 +281,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
 
     await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
-
-
-    // const resultOfSwap: { digest?: string, result: TransactionResultStatus, reason?: string } = await conversation.external(async () => {
-    //   try {
-    //     console.debug(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-    //     console.time(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-    //     const res = await provider.signAndExecuteTransactionBlock({
-    //       transactionBlock: tx,
-    //       signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-    //         ctx.session.privateKey,
-    //       ),
-    //       options: {
-    //         showEffects: true,
-    //       },
-    //     });
-    //     console.timeEnd(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-    //     console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
-
-        // const isTransactionFailed = res.effects?.status.status === 'failure'
-        // const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
-
-        // return { digest: res.digest, result }
-
-      // } catch (error) {
-      //   if (error instanceof Error) {
-      //     console.error(
-      //       `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-      //     );
-      //   } else {
-      //     console.error(
-      //       `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-      //     );
-      //   }
-  
-      //   const result = TransactionResultStatus.Failure
-      //   return { result: result, reason: "failed_to_send_transaction" }
-    //   }
-      
-    // })
 
     const resultOfSwap = await conversation.external(async () => {
       try {
