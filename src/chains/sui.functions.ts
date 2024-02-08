@@ -147,17 +147,24 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
-    let coinToBuy: CommonCoinData | null = null;
-    try {
-      console.debug(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      console.time(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      const coinManager = await getCoinManager()
-      console.timeEnd(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
-      coinToBuy = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error("Finding token error: ", e)
-      console.error(`Token ${coinType} not found in coinManager` + random_uuid);
+    let coinToBuy = await conversation.external(async () => {
+      try {
+        console.debug(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        console.time(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        const coinManager = await getCoinManager()
+        console.timeEnd(`[buy] from ${ctx.from?.username} before getCoinManager() ${random_uuid}`)
+        const coin = coinManager.getCoinByType(coinType);
 
+        return coin
+      } catch (e) {
+        console.error("Finding token error: ", e)
+        console.error(`Token ${coinType} not found in coinManager` + random_uuid);
+
+        return;
+      }
+    })
+
+    if (!coinToBuy) {
       await ctx.reply(
         // eslint-disable-next-line max-len
         `Token address not found. Make sure address ${possibleCoin} is correct. \n You can enter a token address or a Suiscan link.
@@ -179,14 +186,20 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
-    console.debug(`[buy] from ${ctx.from?.username} before getWalletManager() ${random_uuid}`)
-    const walletManager = await getWalletManager()
-    console.debug(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-    console.time(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
-    const availableBalance = await walletManager.getAvailableSuiBalance(
-      ctx.session.publicKey,
-    );
-    console.timeEnd(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+    const availableBalance = await conversation.external(async () => {
+      console.debug(`[buy] from ${ctx.from?.username} before getWalletManager() ${random_uuid}`)
+      const walletManager = await getWalletManager()
+      console.debug(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      console.time(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+      // TODO: Maybe we should add try/catch here as well
+      const balance = await walletManager.getAvailableSuiBalance(
+        ctx.session.publicKey,
+      );
+      console.timeEnd(`[buy] from ${ctx.from?.username} before getAvailableSuiBalance() ${random_uuid}`)
+
+      return balance
+    })
+
     await ctx.reply(
       `Reply with the amount you wish to buy (0 - ${availableBalance} SUI, Example: 0.1):` + random_uuid,
     );
@@ -210,82 +223,203 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return;
     }
 
+    // const tx = await conversation.external({ task: async () => {
+    //   try {
+    //     console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
+    //     const routerManager = await getRouteManager()
+    //     console.debug(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+    //     console.time(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+    //     const transaction = await routerManager.getBestRouteTransaction({
+    //       tokenFrom: coin.type,
+    //       tokenTo: LONG_SUI_COIN_TYPE,
+    //       amount: possibleAmount,
+    //       signerAddress: ctx.session.publicKey,
+    //       slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
+    //     });
+    //     console.timeEnd(`[sell] ${getCurrentTime()} from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+  
+    //     return transaction
+    //   } catch (error) {
+    //     console.error(error);
+  
+    //     if (error instanceof Error) {
+    //       console.error(
+    //         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
+    //       );
+    //     } else {
+    //       console.error(
+    //         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
+    //       );
+    //     }
+    //     return;
+    //     }
+      // }, beforeStore: (value) => {
+      //   if (value) {
+      //     return value.serialize()
+      //   }
+      // }, afterLoad: async (value) => {
+      //   if (value) {
+      //     return transactionFromSerializedTransaction(value)
+      //   }
+      // }, afterLoadError: async (error) => {
+      //   console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`)
+      //   console.error(error)
+      // }, beforeStoreError: async (error) => {
+      //   console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`)
+      //   console.error(error)
+      // }})
+  
     await ctx.reply('Initiating swap' + random_uuid);
-    let tx;
 
-    try {
-      console.debug(`[buy] from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
-      const routerManager = await getRouteManager()
-      console.debug(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-      console.time(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-      tx = await routerManager.getBestRouteTransaction({
-        tokenFrom: LONG_SUI_COIN_TYPE,
-        tokenTo: coinToBuy.type,
-        amount: possibleAmount,
-        signerAddress: ctx.session.publicKey,
-        slippagePercentage: 10,
-      });
-      console.timeEnd(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
-    } catch (error) {
-      console.error(error);
+    // TODO: Re-check args here
+    const tx = await conversation.external({ args: [coinToBuy], task: async (coinToBuy: CommonCoinData) => {
+      try {
+        console.debug(`[buy] from ${ctx.from?.username} before getRouteManager() ${random_uuid}`)
+        const routerManager = await getRouteManager()
+        console.debug(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+        console.time(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
+        const transaction = await routerManager.getBestRouteTransaction({
+          tokenFrom: LONG_SUI_COIN_TYPE,
+          tokenTo: coinToBuy.type,
+          amount: possibleAmount,
+          signerAddress: ctx.session.publicKey,
+          slippagePercentage: 10,
+        });
+        console.timeEnd(`[buy] from ${ctx.from?.username} before getBestRouteTransaction() ${random_uuid}`)
 
-      if (error instanceof Error) {
-        console.error(
-          `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-        );
-      } else {
-        console.error(
-          `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-        );
+        return transaction
+      } catch (error) {
+        console.error(error);
+  
+        if (error instanceof Error) {
+          console.error(
+            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
+          );
+        } else {
+          console.error(
+            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
+          );
+        }
+    
+        return;
       }
+    }, beforeStore: (value) => {
+      if (value) {
+        return value.serialize()
+      }
+    }, afterLoad: async (value) => {
+      if (value) {
+        return transactionFromSerializedTransaction(value)
+      }
+    }, afterLoadError: async (error) => {
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`)
+      console.error(error)
+    }, beforeStoreError: async (error) => {
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`)
+      console.error(error)
+    }})
 
+    if (!tx) {
       await ctx.reply('Transaction creation failed');
-
+  
       return;
     }
+
 
     await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
 
-    try {
-      console.debug(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-      console.time(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-      const res = await provider.signAndExecuteTransactionBlock({
-        transactionBlock: tx,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
-        options: {
-          showEffects: true,
-        },
-      });
-      console.timeEnd(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
-      console.debug(`[buy] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
-      if (res.effects?.status.status === 'failure') {
-        await ctx.reply(
-          `Swap failed \n https://suiscan.xyz/mainnet/tx/${res.digest}`,
-        );
 
-        return;
-      }
+    // const resultOfSwap: { digest?: string, result: TransactionResultStatus, reason?: string } = await conversation.external(async () => {
+    //   try {
+    //     console.debug(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+    //     console.time(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+    //     const res = await provider.signAndExecuteTransactionBlock({
+    //       transactionBlock: tx,
+    //       signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+    //         ctx.session.privateKey,
+    //       ),
+    //       options: {
+    //         showEffects: true,
+    //       },
+    //     });
+    //     console.timeEnd(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+    //     console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
 
+        // const isTransactionFailed = res.effects?.status.status === 'failure'
+        // const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
+
+        // return { digest: res.digest, result }
+
+      // } catch (error) {
+      //   if (error instanceof Error) {
+      //     console.error(
+      //       `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+      //     );
+      //   } else {
+      //     console.error(
+      //       `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+      //     );
+      //   }
+  
+      //   const result = TransactionResultStatus.Failure
+      //   return { result: result, reason: "failed_to_send_transaction" }
+    //   }
+      
+    // })
+
+    const resultOfSwap = await conversation.external(async () => {
+      try {
+        console.debug(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+        console.time(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+        const res = await provider.signAndExecuteTransactionBlock({
+          transactionBlock: tx,
+          signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+            ctx.session.privateKey,
+          ),
+          options: {
+            showEffects: true,
+          },
+        });
+        console.timeEnd(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
+        console.debug(`[buy] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
+
+        const isTransactionFailed = res.effects?.status.status === 'failure'
+        const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
+
+        return { digest: res.digest, result }
+
+      } catch (error) {
+        if (error instanceof Error) {
+          console.error(
+            `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+          );
+        } else {
+          console.error(
+            `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+          );
+        }
+  
+        const result = TransactionResultStatus.Failure
+        return { result: result, reason: "failed_to_send_transaction" }
+    }})
+
+    if (resultOfSwap.result === "success" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${res.digest}` + random_uuid,
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
-      } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
-      }
-
-      await ctx.reply('Transaction sending failed');
 
       return;
     }
+
+    if (resultOfSwap.result === "failure" && resultOfSwap.digest) {
+      await ctx.reply(
+        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+      );
+
+      return;
+    }
+
+    await ctx.reply('Transaction sending failed');
   }
 
 
