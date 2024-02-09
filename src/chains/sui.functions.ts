@@ -320,7 +320,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     if (resultOfSwap.result === "success" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+        `Swap successful\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
 
       return;
@@ -328,7 +328,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     if (resultOfSwap.result === "failure" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+        `Swap failed\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
 
       return;
@@ -586,7 +586,7 @@ export async function sell(
 
     if (resultOfSwap.result === "success" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+        `Swap successful\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
 
       return;
@@ -594,7 +594,7 @@ export async function sell(
 
     if (resultOfSwap.result === "failure" && resultOfSwap.digest) {
       await ctx.reply(
-        `Swap successful \n https://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
+        `Swap failed\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest} ${random_uuid}`,
       );
 
       return;
