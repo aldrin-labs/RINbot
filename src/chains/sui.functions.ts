@@ -79,7 +79,7 @@ export const getAftermath = async () => {
 
 export const getCoinManager = async () => {
     console.time(`CoinManagerSingleton.getInstance.${random_uuid}`)
-    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
+    const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
 
     const coinManager = CoinManagerSingleton.getInstance(providers);
     console.timeEnd(`CoinManagerSingleton.getInstance.${random_uuid}`)
@@ -100,7 +100,7 @@ export const getWalletManager = async () => {
 export const getRouteManager = async () => {
   // console.time(`RouteManager.getInstance.${random_uuid}`)
   const coinManager = await getCoinManager()
-  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()])
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos()])
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
   // console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
