@@ -2,7 +2,7 @@ import { AftermathSingleton, CetusSingleton, CoinManagerSingleton, CommonCoinDat
 import { BotContext, MyConversation } from "../types";
 import positions_menu from "../menu/positions";
 
-import { extractCoinTypeFromLink, getCurrentTime, isValidCoinLink, sleep, swapTokenTypesAreEqual } from './utils';
+import { extractCoinTypeFromLink, getCurrentTime, isTransactionSuccessful, isValidCoinLink, sleep, swapTokenTypesAreEqual } from './utils';
 import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
 import menu from "../menu/main";
 import { v4 as uuidv4 } from 'uuid';
@@ -298,8 +298,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         console.timeEnd(`[buy] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
         console.debug(`[buy] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
 
-        const isTransactionFailed = res.effects?.status.status === 'failure'
-        const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
+        const isTransactionResultSuccessful = isTransactionSuccessful(res)
+        const result = isTransactionResultSuccessful ? TransactionResultStatus.Success : TransactionResultStatus.Failure
 
         return { digest: res.digest, result }
 
@@ -562,8 +562,8 @@ export async function sell(
         console.timeEnd(`[sell] from ${ctx.from?.username} before signAndExecuteTransactionBlock() ${random_uuid}`)
         console.debug(`[sell] from ${ctx.from?.username} after signAndExecuteTransactionBlock() ${random_uuid}`)
 
-        const isTransactionFailed = res.effects?.status.status === 'failure'
-        const result = isTransactionFailed ? TransactionResultStatus.Failure : TransactionResultStatus.Success
+        const isTransactionResultSuccessful = isTransactionSuccessful(res)
+        const result = isTransactionResultSuccessful ? TransactionResultStatus.Success : TransactionResultStatus.Failure
 
         return { digest: res.digest, result }
 
