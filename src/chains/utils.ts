@@ -52,3 +52,47 @@ export function getCurrentTime(): string {
 
   return `${hours}:${minutes}:${seconds}`;
 }
+
+// TODO: move that util to SDK
+type TransactionResult = {
+  effects: {
+    status: {
+      status: string;
+    };
+  };
+  digest: string;
+};
+
+const isTransactionResult = (value: unknown): value is TransactionResult => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    "digest" in value &&
+    typeof value.digest === 'string' && 
+    'effects' in value &&
+    typeof value.effects === 'object' &&
+    value.effects !== null &&
+    'status' in value.effects &&
+    typeof value.effects.status === 'object' &&
+    value.effects.status !== null &&
+    'status' in value.effects.status &&
+    typeof value.effects.status.status === 'string'
+  );
+};
+
+export const isTransactionSuccessful = (transactionResult: unknown): boolean => {
+  if (isTransactionResult(transactionResult)) {
+    const isSuccess = transactionResult.effects.status.status === 'success';
+
+    if (!isSuccess) {
+      console.warn(`Transaction ${transactionResult.digest} was not successful.`);
+    }
+
+    return isSuccess;
+  } else {
+    console.warn('Transaction is not in a valid shape.');
+    console.warn('Transaction wrong shape: ', transactionResult);
+
+    return false;
+  }
+};
