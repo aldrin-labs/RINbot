@@ -1,17 +1,21 @@
-import { Bot, session, GrammyError, HttpError, Context } from 'grammy';
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { development, production } from './core';
-import { BotContext, SessionData } from './types';
+import { Bot, Context, GrammyError, HttpError, session } from 'grammy';
 import menu from './menu/main';
+import { BotContext, SessionData } from './types';
 // import SuiApiSingleton from './chains/sui';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { buy, exportPrivateKey, generateWallet, home, sell, withdraw } from './chains/sui.functions';
+import {
+  buy,
+  exportPrivateKey,
+  generateWallet,
+  home,
+  sell,
+  withdraw,
+} from './chains/sui.functions';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 
-const APP_VERSION = "1.0.26"
-
+const APP_VERSION = '1.0.28';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -25,11 +29,9 @@ const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
-
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
   // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
-
 
   // Stores data per user.
   function getSessionKey(ctx: Context): string | undefined {
@@ -38,7 +40,7 @@ async function startBot(): Promise<void> {
     return ctx.from?.id.toString();
   }
 
-  bot.use(timeoutMiddleware)
+  bot.use(timeoutMiddleware);
   // Make it interactive.
   bot.use(
     session({
@@ -53,7 +55,7 @@ async function startBot(): Promise<void> {
           assets: [],
         };
       },
-      storage
+      storage,
     }),
   );
 
@@ -66,8 +68,27 @@ async function startBot(): Promise<void> {
 
   bot.use(menu);
 
-  bot.command('start', async (ctx) => {await home(ctx)});
-  bot.command('version', async (ctx) => { await ctx.reply(`Version ${APP_VERSION}`) })
+  bot.command('version', async (ctx) => {
+    await ctx.reply(`Version ${APP_VERSION}`);
+  });
+
+  bot.command('start', async (ctx) => {
+    await home(ctx);
+  });
+
+  bot.callbackQuery('close-conversation', async (ctx) => {
+    await ctx.conversation.exit();
+    ctx.session.step = 'main';
+    await ctx.deleteMessage();
+    await home(ctx);
+    await ctx.answerCallbackQuery();
+  });
+
+  bot.callbackQuery('go-home', async (ctx) => {
+    ctx.session.step = 'main';
+    await home(ctx);
+    await ctx.answerCallbackQuery();
+  });
 
   bot.catch((err) => {
     const ctx = err.ctx;
