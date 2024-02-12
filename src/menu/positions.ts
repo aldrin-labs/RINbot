@@ -1,6 +1,7 @@
-import { BotContext } from '../types';
-import { Menu } from '@grammyjs/menu';
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
+import { Menu } from '@grammyjs/menu';
+import { home } from '../chains/sui.functions';
+import { BotContext } from '../types';
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
@@ -24,17 +25,17 @@ function prevToken(assets: CoinAssetData[]) {
 }
 
 const positions_menu = new Menu<BotContext>('positions-menu')
-  .back('Close', (ctx) => {
-    ctx.session.step = 'main';
+  .text('Sell', async (ctx) => {
+    ctx.session.step = 'sell';
+    await ctx.conversation.enter('sell');
   })
-  // .row()
-  // .text('buy X amount', (ctx) => ctx.reply('buy X'))
   .row()
   .text('<', (ctx) => {
     const assets = ctx.session.assets;
     prevToken(assets);
     ctx.editMessageText(
-      `${currentToken.symbol} | ${currentToken.type} | ${currentToken.balance}`,
+      `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`,
+      { parse_mode: 'HTML' },
     );
   })
   .text((ctx) => {
@@ -49,22 +50,15 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       const assets = ctx.session.assets;
       nextToken(assets);
       ctx.editMessageText(
-        `${currentToken.symbol} | ${currentToken.type} | ${currentToken.balance}`,
+        `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`,
+        { parse_mode: 'HTML' },
       );
     },
     (ctx) => ctx.menu.update(),
   )
-  // .row()
-
-  // .text('sell 25%', (ctx) => ctx.reply('sell 25%'))
-  // .text('sell 100%', (ctx) => ctx.reply('sell 100%'))
-  // .text('sell X%', (ctx) => ctx.reply('sell X%'))
-  .text('sell X', async (ctx) => {
-    ctx.session.step = 'sell';
-    await ctx.conversation.enter('sell');
-  })
-  .row();
-//.url('explorer', "https://suiscan.io").url('dexscreener', "https://dexscreener.io").url('scan', '@ttfbotbot').url('chart', '@ttfbotbot').row()
-// .text('Refresh', (ctx) => ctx.reply('refresh'));
+  .row()
+  .text('Home', async (ctx) => {
+    await home(ctx);
+  });
 
 export default positions_menu;
