@@ -1,3 +1,5 @@
+import { CoinAssetData } from "@avernikoz/rinbot-sui-sdk";
+
 /**
  * Checks if the given string is a valid suiscan link.
  *
@@ -96,3 +98,14 @@ export const isTransactionSuccessful = (transactionResult: unknown): boolean => 
     return false;
   }
 };
+
+export function isCoinAssetData(data: unknown): data is CoinAssetData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data && typeof data.type === 'string' &&
+    'balance' in data && typeof data.balance === 'string' &&
+    'noDecimals' in data && typeof data.noDecimals === 'boolean' &&
+    'decimals' in data && (typeof data.decimals === 'number' || data.decimals === null)
+  );
+}
