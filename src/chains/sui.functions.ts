@@ -38,6 +38,8 @@ import {
   isValidCoinLink,
   swapTokenTypesAreEqual,
 } from './utils';
+import { searchPairsByQuery } from '../dexscreener';
+import { Pair } from '../dexscreener/config';
 
 enum TransactionResultStatus {
   Success = 'success',
@@ -983,10 +985,26 @@ export function getExplorerLink(ctx: BotContext): string {
   return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
 }
 
+export function convertToUSD(balance: string, price: string): BigInt | undefined{
+  try{
+    const balanceInUSD = BigInt(balance) * BigInt(price)
+    return balanceInUSD;
+  }catch(e){
+    return undefined
+  }
+}
+
 export async function home(ctx: BotContext) {
   // Send the menu.
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
+
+  const suiInUSD: Pair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
+
+  const userBalanceInUSD = convertToUSD(userBalance, String(suiInUSD?.priceUsd))
+  
+  const avlBalanceInUSD = convertToUSD(avl_balance, String(suiInUSD?.priceUsd))
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD:${userBalanceInUSD}\nYour available balance in USD:${avlBalanceInUSD}`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
