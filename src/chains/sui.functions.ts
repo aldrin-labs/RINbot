@@ -1001,6 +1001,9 @@ export async function home(ctx: BotContext) {
 
   const suiInUSD: Pair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
 
+  console.log(suiInUSD);
+  
+
   const userBalanceInUSD = convertToUSD(userBalance, String(suiInUSD?.priceUsd))
   
   const avlBalanceInUSD = convertToUSD(avl_balance, String(suiInUSD?.priceUsd))
