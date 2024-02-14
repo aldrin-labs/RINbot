@@ -990,6 +990,8 @@ export function convertToUSD(balance: string, price: string): BigInt | undefined
     const balanceInUSD = BigInt(balance) * BigInt(price)
     return balanceInUSD;
   }catch(e){
+    console.log(e);
+    
     return undefined
   }
 }
