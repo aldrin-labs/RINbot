@@ -985,9 +985,9 @@ export function getExplorerLink(ctx: BotContext): string {
   return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
 }
 
-export function convertToUSD(balance: string, price: string): BigInt | undefined{
+export function convertToUSD(balance: string, price: string): number | undefined{
   try{
-    const balanceInUSD = BigInt(balance) * BigInt(price)
+    const balanceInUSD = Number(balance) * Number(price)
     return balanceInUSD;
   }catch(e){
     console.log(e);
