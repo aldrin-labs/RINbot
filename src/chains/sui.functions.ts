@@ -985,13 +985,12 @@ export function getExplorerLink(ctx: BotContext): string {
   return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
 }
 
-export function convertToUSD(balance: string, price: string): number | undefined{
+export function convertToUSD(balance: string, price: string): string | undefined{
   try{
-    const balanceInUSD = Number(balance) * Number(price)
+    const balanceInUSD: number = Number(balance) * Number(price)
     return balanceInUSD.toFixed(2);
   }catch(e){
-    console.log(e);
-    
+    console.debug(e);
     return undefined
   }
 }
@@ -1002,14 +1001,12 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
 
   const suiInUSD: Pair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
-
-  console.log(suiInUSD);
   
 
   const userBalanceInUSD = convertToUSD(userBalance, suiInUSD.priceUsd!)
   
   const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD:<b>$${userBalanceInUSD}</b>\nYour available balance in USD:<b>$${avlBalanceInUSD}</b>`;
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
