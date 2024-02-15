@@ -988,7 +988,7 @@ export function getExplorerLink(ctx: BotContext): string {
 export function convertToUSD(balance: string, price: string): number | undefined{
   try{
     const balanceInUSD = Number(balance) * Number(price)
-    return balanceInUSD;
+    return balanceInUSD.toFixed(2);
   }catch(e){
     console.log(e);
     
@@ -1010,6 +1010,6 @@ export async function home(ctx: BotContext) {
   
   const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD:${userBalanceInUSD}\nYour available balance in USD:${avlBalanceInUSD}`;
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD:<b>$${userBalanceInUSD}</b>\nYour available balance in USD:<b>$${avlBalanceInUSD}</b>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
