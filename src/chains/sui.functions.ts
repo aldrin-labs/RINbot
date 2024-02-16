@@ -995,13 +995,15 @@ export function convertToUSD(balance: string, price: string): string | undefined
   }
 }
 
-async function setUTCTime() {
+async function setUTCTime(): Promise<boolean> {
   const { redisClient } = await getRedisClient();
-  let timeUTCOffset5min: number = await redisClient.get('timeUTCOffset5min').then(time => Number(time)).catch(() => 0)
+  let timeUTCOffset5min: number = await redisClient.get('timeUTCWithOffset5min').then(time => Number(time))
   if(new Date().getTime() - 300_000 >= Number(timeUTCOffset5min)){
     timeUTCOffset5min = new Date().getTime()
-    await redisClient.set("timeUTCOffset5min", timeUTCOffset5min)
+    await redisClient.set("timeUTCWithOffset5min", timeUTCOffset5min)
+    return true
   }
+  return false
 }
 
 export async function home(ctx: BotContext) {
@@ -1011,14 +1013,19 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
 
-  await setUTCTime()
-
-  const time = await redisClient.get("timeUTCOffset5min")
+  const time = await redisClient.get("timeUTCWithOffset5min")
   console.log(time);
   
+  const isUTCUpdated = await setUTCTime()
+  let suiInUSD: Pair
 
-  const suiInUSD: Pair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
-  
+  if (isUTCUpdated){
+    suiInUSD = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
+    await redisClient.set("SUIPriceInUSD", JSON.stringify(suiInUSD)) 
+  }
+  else
+    suiInUSD = await redisClient.get("SUIPriceInUSD").then(value => JSON.parse(value || ''))
+
   const userBalanceInUSD = convertToUSD(userBalance, suiInUSD.priceUsd!)
   
   const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
