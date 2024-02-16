@@ -1018,10 +1018,10 @@ export async function home(ctx: BotContext) {
 
   if (isUTCUpdated){
     suiPair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
-    await redisClient.set("SUIPriceInUSD", JSON.stringify(suiPair)) 
+    await redisClient.set("suiPair", JSON.stringify(suiPair)) 
   }
   else
-  suiPair = await redisClient.get("SUIPriceInUSD").then(value => JSON.parse(value || ''))
+  suiPair = await redisClient.get("suiPair").then(value => JSON.parse(value || ''))
 
   const userBalanceInUSD = convertToUSD(userBalance, suiPair.priceUsd!)
   
