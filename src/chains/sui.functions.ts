@@ -988,6 +988,8 @@ export function getExplorerLink(ctx: BotContext): string {
 export function convertToUSD(balance: string, price: string): string | undefined{
   try{
     const balanceInUSD: number = Number(balance) * Number(price)
+    //Change back when tested
+    //return String(balanceInUSD.toFixed(2));
     return String(balanceInUSD);
   }catch(e){
     console.debug(e);
