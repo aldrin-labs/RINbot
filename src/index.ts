@@ -90,6 +90,12 @@ async function startBot(): Promise<void> {
     await ctx.answerCallbackQuery();
   });
 
+  //Set commands suggestion
+  await bot.api.setMyCommands([
+    { command: "start", description: "Start the bot" },
+    { command: "version", description: "Show the bot version" },
+  ]);
+
   bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Error while handling update ${ctx.update.update_id}:`);

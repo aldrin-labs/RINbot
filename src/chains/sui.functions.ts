@@ -38,6 +38,8 @@ import {
   isValidCoinLink,
   swapTokenTypesAreEqual,
 } from './utils';
+import { searchPairsByQuery } from '../dexscreener';
+import { Pair } from '../dexscreener/config';
 
 enum TransactionResultStatus {
   Success = 'success',
@@ -983,10 +985,50 @@ export function getExplorerLink(ctx: BotContext): string {
   return `https://suiscan.xyz/mainnet/account/${ctx.session.publicKey}`;
 }
 
+export function convertToUSD(balance: string, price: string): string | undefined{
+  try{
+    const balanceInUSD: number = Number(balance) * Number(price)
+    return String(balanceInUSD);
+  }catch(e){
+    console.debug(e);
+    return undefined
+  }
+}
+
+async function setUTCTime(): Promise<boolean> {
+  const { redisClient } = await getRedisClient();
+  let timeUTCOffset5min: number = await redisClient.get('timeUTCWithOffset5min').then(time => Number(time))
+  if(new Date().getTime() - 300_000 >= Number(timeUTCOffset5min)){
+    timeUTCOffset5min = new Date().getTime()
+    await redisClient.set("timeUTCWithOffset5min", timeUTCOffset5min)
+    return true
+  }
+  return false
+}
+
 export async function home(ctx: BotContext) {
+  //Get redisClient
+  const { redisClient } = await getRedisClient();
   // Send the menu.
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
+
+  const time = await redisClient.get("timeUTCWithOffset5min")
+  
+  const isUTCUpdated = await setUTCTime()
+  let suiInUSD: Pair
+
+  if (isUTCUpdated){
+    suiInUSD = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
+    await redisClient.set("SUIPriceInUSD", JSON.stringify(suiInUSD)) 
+  }
+  else
+    suiInUSD = await redisClient.get("SUIPriceInUSD").then(value => JSON.parse(value || ''))
+
+  const userBalanceInUSD = convertToUSD(userBalance, suiInUSD.priceUsd!)
+  
+  const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: ${time} <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
