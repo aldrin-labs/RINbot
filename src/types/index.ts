@@ -1,11 +1,9 @@
-import { Context, SessionFlavor } from 'grammy';
+import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import {
   type Conversation,
   type ConversationFlavor,
-  conversations,
-  createConversation,
 } from '@grammyjs/conversations';
-import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
+import { Context, SessionFlavor } from 'grammy';
 
 export interface SessionData {
   step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit'; // which step of the form we are on
