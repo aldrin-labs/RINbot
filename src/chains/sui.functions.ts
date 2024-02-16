@@ -1012,23 +1012,21 @@ export async function home(ctx: BotContext) {
   // Send the menu.
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
-
-  const time = await redisClient.get("timeUTCWithOffset5min")
   
   const isUTCUpdated = await setUTCTime()
-  let suiInUSD: Pair
+  let suiPair: Pair
 
   if (isUTCUpdated){
-    suiInUSD = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
-    await redisClient.set("SUIPriceInUSD", JSON.stringify(suiInUSD)) 
+    suiPair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
+    await redisClient.set("SUIPriceInUSD", JSON.stringify(suiPair)) 
   }
   else
-    suiInUSD = await redisClient.get("SUIPriceInUSD").then(value => JSON.parse(value || ''))
+  suiPair = await redisClient.get("SUIPriceInUSD").then(value => JSON.parse(value || ''))
 
-  const userBalanceInUSD = convertToUSD(userBalance, suiInUSD.priceUsd!)
+  const userBalanceInUSD = convertToUSD(userBalance, suiPair.priceUsd!)
   
-  const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
+  const avlBalanceInUSD = convertToUSD(avl_balance, suiPair.priceUsd!)
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: ${time} <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
