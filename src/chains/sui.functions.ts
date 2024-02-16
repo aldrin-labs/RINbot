@@ -998,7 +998,7 @@ export function convertToUSD(balance: string, price: string): string | undefined
 async function setUTCTime() {
   const { redisClient } = await getRedisClient();
   let timeUTCOffset5min: number = await redisClient.get('timeUTCOffset5min').then(time => Number(time)).catch(() => 0)
-  if(Number(timeUTCOffset5min) + 300_000 >= new Date().getTime()){
+  if(new Date().getTime() - 300_000 >= Number(timeUTCOffset5min)){
     timeUTCOffset5min = new Date().getTime()
     await redisClient.set("timeUTCOffset5min", timeUTCOffset5min)
   }
