@@ -1006,6 +1006,6 @@ export async function home(ctx: BotContext) {
   
   const avlBalanceInUSD = convertToUSD(avl_balance, suiInUSD.priceUsd!)
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: ${new Date().getTime()} <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: ${new Date().toISOString()} <code>${ctx.session.publicKey}</code>\nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour balance in USD: <b>$${userBalanceInUSD}</b>\nYour available balance in USD: <b>$${avlBalanceInUSD}</b>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
