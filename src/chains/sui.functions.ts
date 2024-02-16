@@ -988,7 +988,7 @@ export function getExplorerLink(ctx: BotContext): string {
 export function convertToUSD(balance: string, price: string): string | undefined{
   try{
     const balanceInUSD: number = Number(balance) * Number(price)
-    return balanceInUSD.toFixed(2);
+    return String(balanceInUSD);
   }catch(e){
     console.debug(e);
     return undefined
@@ -1014,7 +1014,6 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
 
   const time = await redisClient.get("timeUTCWithOffset5min")
-  console.log(time);
   
   const isUTCUpdated = await setUTCTime()
   let suiInUSD: Pair
