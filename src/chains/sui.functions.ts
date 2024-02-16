@@ -1014,6 +1014,8 @@ export async function home(ctx: BotContext) {
   await setUTCTime()
 
   const time = await redisClient.get("timeUTCOffset5min")
+  console.log(time);
+  
 
   const suiInUSD: Pair = await searchPairsByQuery("SUI").then(response => response.data['pairs'][0])
   
