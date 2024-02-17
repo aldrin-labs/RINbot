@@ -72,9 +72,26 @@ async function startBot(): Promise<void> {
     await ctx.reply(`Version ${APP_VERSION}`);
   });
 
+  bot.command('buy', async (ctx) => {
+    await ctx.conversation.enter('buy');
+  });
+
+  bot.command('sell', async (ctx) => {
+    await ctx.conversation.enter('sell');
+  });
+
   bot.command('start', async (ctx) => {
     await home(ctx);
   });
+
+   //Set commands suggestion
+   await bot.api.setMyCommands([
+    { command: "start", description: "Start the bot" },
+    { command: "version", description: "Show the bot version" },
+    { command: "buy", description: "Show buy menu"},
+    { command: "sell", description: "Show buy menu"}
+  ]);
+
 
   bot.callbackQuery('close-conversation', async (ctx) => {
     await ctx.conversation.exit();
