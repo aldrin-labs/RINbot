@@ -25,6 +25,7 @@ import closeConversation from '../inline-keyboards/closeConversation';
 import goHome from '../inline-keyboards/goHome';
 import menu from '../menu/main';
 import positions_menu from '../menu/positions';
+import position_menu from '../menu/position';
 import { BotContext, MyConversation } from '../types';
 import {
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
@@ -944,6 +945,11 @@ export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
   const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
   return balance;
+}
+
+//Position menu
+export async function position(ctx: BotContext, asset: CoinAssetData) {
+  await ctx.reply(`Position menu ${asset.symbol}`, {reply_markup: position_menu})
 }
 
 export async function assets(ctx: BotContext): Promise<void> {

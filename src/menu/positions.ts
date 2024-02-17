@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
-import { home } from '../chains/sui.functions';
+import { home, position } from '../chains/sui.functions';
 import { BotContext } from '../types';
 
 let currentTokenIndex: number = 0;
@@ -38,8 +38,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       { parse_mode: 'HTML' },
     );
   })
-  .text((ctx) => {
+  .text(async (ctx) => {
     const assets = ctx.session.assets;
+    await position(ctx, currentToken)
     return currentToken
       ? currentToken.symbol!
       : assets[currentTokenIndex].symbol!;
