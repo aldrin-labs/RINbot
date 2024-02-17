@@ -89,7 +89,7 @@ async function startBot(): Promise<void> {
     { command: "start", description: "Start the bot" },
     { command: "version", description: "Show the bot version" },
     { command: "buy", description: "Show buy menu"},
-    { command: "sell", description: "Show buy menu"}
+    { command: "sell", description: "Show sell menu"}
   ]);
 
 
