@@ -38,9 +38,8 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       { parse_mode: 'HTML' },
     );
   })
-  .text(async (ctx) => {
+  .text((ctx) => {
     const assets = ctx.session.assets;
-    await position(ctx, currentToken)
     return currentToken
       ? currentToken.symbol!
       : assets[currentTokenIndex].symbol!;
