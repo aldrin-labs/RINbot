@@ -15,7 +15,7 @@ import {
 } from './chains/sui.functions';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 
-const APP_VERSION = '1.0.28';
+const APP_VERSION = '1.0.29';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
