@@ -80,6 +80,10 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter('sell');
   });
 
+  bot.command('withdrawal', async (ctx) => {
+    await ctx.conversation.enter('withdraw');
+  });
+
   bot.command('start', async (ctx) => {
     await home(ctx);
   });
@@ -89,7 +93,8 @@ async function startBot(): Promise<void> {
     { command: "start", description: "Start the bot" },
     { command: "version", description: "Show the bot version" },
     { command: "buy", description: "Show buy menu"},
-    { command: "sell", description: "Show buy menu"}
+    { command: "sell", description: "Show sell menu"},
+    { command: "withdrawal", description: "Show withdrawal menu"}
   ]);
 
 
