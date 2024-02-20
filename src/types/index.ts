@@ -6,7 +6,7 @@ import {
 import { Context, SessionFlavor } from 'grammy';
 
 export interface SessionData {
-  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit'; // which step of the form we are on
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';  // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };

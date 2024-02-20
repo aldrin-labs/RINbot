@@ -24,6 +24,7 @@ import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import goHome from '../inline-keyboards/goHome';
 import menu from '../menu/main';
+import { nft_menu, nft_exit_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
 import { BotContext, MyConversation } from '../types';
 import {
@@ -989,4 +990,7 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
+}
+export async function nftHome(ctx: BotContext) {
+  await ctx.reply('<b>Welcome to NFT menu!</b>\n\nPlease check the options below.', {parse_mode: "HTML", reply_markup: nft_menu})
 }
