@@ -1,4 +1,7 @@
-import { CoinAssetData } from "@avernikoz/rinbot-sui-sdk";
+import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
+import axios from 'axios';
+import { File, PhotoSize } from 'grammy/types';
+import { BOT_TOKEN } from '../index';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -7,46 +10,45 @@ import { CoinAssetData } from "@avernikoz/rinbot-sui-sdk";
  * @returns {boolean} - True if the link is valid, false otherwise.
  */
 export function isValidCoinLink(link: string): boolean {
-    // Regular expression to match valid suiscan links
-    const suiscanLinkRegex =
-      /^https:\/\/suiscan\.xyz\/mainnet\/coin\/(0x|0X)?[0-9a-fA-F]+::[0-9a-zA-Z]+::[0-9a-zA-Z]+(\/txs|\/|)$/;
-  
-    return suiscanLinkRegex.test(link);
-  }
-  
-  /**
-   * Extracts the coin type from a valid suiscan link.
-   *
-   * @param {string} link - The valid suiscan link.
-   * @returns {string | null} - The extracted coin type or null if extraction fails.
-   */
-  export function extractCoinTypeFromLink(link: string): string | null {
-    const suiscanLinkRegex =
-      /^https:\/\/suiscan\.xyz\/mainnet\/coin\/0x([0-9a-fA-F]+)::([0-9a-zA-Z]+)::([0-9a-zA-Z]+)(\/txs|\/)?$/;
-    const match = link.match(suiscanLinkRegex);
-  
-    if (match && match[2]) {
-      const coinType = `0x${match[1]}::${match[2]}::${match[3]}`;
-      return coinType;
-    }
-  
-    return null;
-  }
-  
-  export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
-    return tokenTo === tokenFrom;
-  };
+  // Regular expression to match valid suiscan links
+  const suiscanLinkRegex =
+    /^https:\/\/suiscan\.xyz\/mainnet\/coin\/(0x|0X)?[0-9a-fA-F]+::[0-9a-zA-Z]+::[0-9a-zA-Z]+(\/txs|\/|)$/;
 
-  export function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  return suiscanLinkRegex.test(link);
 }
 
+/**
+ * Extracts the coin type from a valid suiscan link.
+ *
+ * @param {string} link - The valid suiscan link.
+ * @returns {string | null} - The extracted coin type or null if extraction fails.
+ */
+export function extractCoinTypeFromLink(link: string): string | null {
+  const suiscanLinkRegex =
+    /^https:\/\/suiscan\.xyz\/mainnet\/coin\/0x([0-9a-fA-F]+)::([0-9a-zA-Z]+)::([0-9a-zA-Z]+)(\/txs|\/)?$/;
+  const match = link.match(suiscanLinkRegex);
+
+  if (match && match[2]) {
+    const coinType = `0x${match[1]}::${match[2]}::${match[3]}`;
+    return coinType;
+  }
+
+  return null;
+}
+
+export const swapTokenTypesAreEqual = (tokenTo: string, tokenFrom: string) => {
+  return tokenTo === tokenFrom;
+};
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function getCurrentTime(): string {
   const now: Date = new Date();
   const timeZoneOffset: number = 3 * 60; // Смещение в минутах для GMT+3
-  const utc: number = now.getTime() + (now.getTimezoneOffset() * 60000);
-  const newDate: Date = new Date(utc + (3600000 * timeZoneOffset));
+  const utc: number = now.getTime() + now.getTimezoneOffset() * 60000;
+  const newDate: Date = new Date(utc + 3600000 * timeZoneOffset);
 
   const hours: string = String(newDate.getHours()).padStart(2, '0');
   const minutes: string = String(newDate.getMinutes()).padStart(2, '0');
@@ -69,8 +71,8 @@ const isTransactionResult = (value: unknown): value is TransactionResult => {
   return (
     typeof value === 'object' &&
     value !== null &&
-    "digest" in value &&
-    typeof value.digest === 'string' && 
+    'digest' in value &&
+    typeof value.digest === 'string' &&
     'effects' in value &&
     typeof value.effects === 'object' &&
     value.effects !== null &&
@@ -82,12 +84,16 @@ const isTransactionResult = (value: unknown): value is TransactionResult => {
   );
 };
 
-export const isTransactionSuccessful = (transactionResult: unknown): boolean => {
+export const isTransactionSuccessful = (
+  transactionResult: unknown,
+): boolean => {
   if (isTransactionResult(transactionResult)) {
     const isSuccess = transactionResult.effects.status.status === 'success';
 
     if (!isSuccess) {
-      console.warn(`Transaction ${transactionResult.digest} was not successful.`);
+      console.warn(
+        `Transaction ${transactionResult.digest} was not successful.`,
+      );
     }
 
     return isSuccess;
@@ -103,9 +109,75 @@ export function isCoinAssetData(data: unknown): data is CoinAssetData {
   return (
     typeof data === 'object' &&
     data !== null &&
-    'type' in data && typeof data.type === 'string' &&
-    'balance' in data && typeof data.balance === 'string' &&
-    'noDecimals' in data && typeof data.noDecimals === 'boolean' &&
-    'decimals' in data && (typeof data.decimals === 'number' || data.decimals === null)
+    'type' in data &&
+    typeof data.type === 'string' &&
+    'balance' in data &&
+    typeof data.balance === 'string' &&
+    'noDecimals' in data &&
+    typeof data.noDecimals === 'boolean' &&
+    'decimals' in data &&
+    (typeof data.decimals === 'number' || data.decimals === null)
   );
+}
+
+/**
+ * The method sorts the image data in ascending order based on their height and then returns the second
+ * or the first one, if second data doesn't exist.
+ * Telegram's specification dictates that the size of the second image in the sorted order cannot exceed 320x320 pixels,
+ * hence it is returned. If the size of the sent image does not exceed 90x90 pixels, there will be only one element
+ * in the array, and it will be returned.
+ */
+export function getSuitableCoinImageData(imagesData: PhotoSize[]): PhotoSize {
+  const sortedByHeightImagesData = imagesData.sort(
+    (imageA, imageB) => imageA.height - imageB.height,
+  );
+
+  return sortedByHeightImagesData[1] || sortedByHeightImagesData[0];
+}
+
+/**
+ * Extracts file extension from Telegram file-path url or throws an error, where cannot do this.
+ * @throws {Error} When cannot extract extension from url.
+ * @returns {string} File extension from url.
+ */
+export function extractFileExtension(url: string): string {
+  const parts = url.split('/');
+  const fileNameWithExtension = parts[parts.length - 1];
+  const fileNameParts = fileNameWithExtension.split('.');
+
+  if (fileNameParts.length > 1) {
+    return fileNameParts[fileNameParts.length - 1];
+  } else {
+    throw new Error(
+      `[extractFileExtension] Cannot extract extension of file in url "${url}"`,
+    );
+  }
+}
+
+/**
+ * Fetches an image from given url and converts it to base64 browser readable format.
+ */
+export async function imageUrlToBase64(url: string): Promise<string> {
+  try {
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
+    });
+
+    const extension = extractFileExtension(url);
+    const base64String = Buffer.from(response.data).toString('base64');
+    const imageString = `data:image/${extension};base64,${base64String}`;
+    return imageString;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+}
+
+export function getTelegramFileUrl(file: File) {
+  const filePath = file.file_path;
+  return `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+}
+
+export function getSuiVisionCoinLink(coinType: string) {
+  return `https://suivision.xyz/coin/${coinType}`;
 }

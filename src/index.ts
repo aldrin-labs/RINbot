@@ -7,6 +7,8 @@ import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import {
   buy,
+  createCoin,
+  createPool,
   exportPrivateKey,
   generateWallet,
   home,
@@ -14,8 +16,10 @@ import {
   withdraw,
 } from './chains/sui.functions';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { retryAndGoHomeButtonsData } from './inline-keyboards/retryConversationButtonsFactory';
+import { ConversationId } from './chains/conversations.config';
 
-const APP_VERSION = '1.0.29';
+const APP_VERSION = '1.0.30';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -61,10 +65,16 @@ async function startBot(): Promise<void> {
 
   bot.use(conversations());
 
-  bot.use(createConversation(buy));
-  bot.use(createConversation(sell));
-  bot.use(createConversation(exportPrivateKey));
-  bot.use(createConversation(withdraw));
+  bot.use(createConversation(buy, { id: ConversationId.Buy }));
+  bot.use(createConversation(sell, { id: ConversationId.Sell }));
+  bot.use(
+    createConversation(exportPrivateKey, {
+      id: ConversationId.ExportPrivateKey,
+    }),
+  );
+  bot.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
+  bot.use(createConversation(createPool, { id: ConversationId.CreatePool }));
+  bot.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
 
   bot.use(menu);
 
@@ -73,16 +83,25 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('buy', async (ctx) => {
-    await ctx.conversation.enter('buy');
+    await ctx.conversation.enter(ConversationId.Buy);
   });
 
   bot.command('sell', async (ctx) => {
-    await ctx.conversation.enter('sell');
+    await ctx.conversation.enter(ConversationId.Sell);
   });
 
   bot.command('withdrawal', async (ctx) => {
-    await ctx.conversation.enter('withdraw');
+    await ctx.conversation.enter(ConversationId.Withdraw);
   });
+
+  bot.command('createpool', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreatePool);
+  });
+
+  bot.command('createcoin', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateCoin);
+  });
+
 
   bot.command('start', async (ctx) => {
     await home(ctx);
@@ -94,7 +113,9 @@ async function startBot(): Promise<void> {
     { command: "version", description: "Show the bot version" },
     { command: "buy", description: "Show buy menu"},
     { command: "sell", description: "Show sell menu"},
-    { command: "withdrawal", description: "Show withdrawal menu"}
+    { command: "withdrawal", description: "Show withdrawal menu"},
+    { command: "createpool", description: "Create liquidity pool"},
+    { command: "createcoin", description: "Create coin"},
   ]);
 
 
@@ -110,6 +131,14 @@ async function startBot(): Promise<void> {
     ctx.session.step = 'main';
     await home(ctx);
     await ctx.answerCallbackQuery();
+  });
+
+  Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
+    bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
+      await ctx.conversation.exit();
+      await ctx.conversation.enter(conversationId);
+      await ctx.answerCallbackQuery();
+    });
   });
 
   bot.catch((err) => {
