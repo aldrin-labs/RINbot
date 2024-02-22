@@ -31,28 +31,30 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   })
   .row()
   .text('<', (ctx) => {
-    const assets = ctx.session.assets;
-    prevToken(assets);
-    ctx.editMessageText(
-      `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`,
-      { parse_mode: 'HTML' },
-    );
+    prevToken(ctx.session.assets);
+
+    const newMessage = currentToken.symbol
+      ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
+      : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
+
+    ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
   })
   .text((ctx) => {
     const assets = ctx.session.assets;
-    return currentToken
-      ? currentToken.symbol!
-      : assets[currentTokenIndex].symbol!;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
+    return tokenToUse.symbol ?? tokenToUse.type;
   })
   .text(
     '>',
     (ctx) => {
-      const assets = ctx.session.assets;
-      nextToken(assets);
-      ctx.editMessageText(
-        `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`,
-        { parse_mode: 'HTML' },
-      );
+      nextToken(ctx.session.assets);
+
+      const newMessage = currentToken.symbol
+        ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
+        : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
+
+      ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
     },
     (ctx) => ctx.menu.update(),
   )
