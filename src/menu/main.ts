@@ -1,10 +1,10 @@
 import { Menu } from '@grammyjs/menu';
-import { assets, nftHome } from '../chains/sui.functions';
+import { assets, ownedPools, nftHome } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
-import {nft_menu, nft_exit_menu} from './nft';
+import { nft_menu, nft_exit_menu } from './nft';
 import help_menu from './help';
 import positions_menu from './positions';
 import refer_menu from './refer';
@@ -36,14 +36,23 @@ const menu = new Menu<BotContext>('main')
     ctx.menu.nav('wallet-menu');
   })
   .row()
+  .text('Create Coin', async (ctx) => {
+    await ctx.conversation.enter('createCoin')
+  })
+  .text('Create Pool', async (ctx) => {
+    await ctx.conversation.enter('createPool');
+  })
+  .text('Owned Pools', async (ctx) => {
+    await ownedPools(ctx);
+  })
+  .row()
   .text('User Agreement', async (ctx) => {
     await ctx.reply(
       '<b>Beta Version Software Disclaimer:</b>\nThis software is provided as a beta version and is currently under testing. Aldrin Labs grants you access to this software on an "as is" and "as available" basis, and you are voluntarily participating in its testing.\n<b>Limitation of Liability</b>\nAldrin Labs expressly disclaims any warranty for this software. The software and any related documentation is provided "as is" without warranty of any kind, either expressed or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the software remains with you.\n<b>No Liability for Damages</b>\nIn no event shall Aldrin Labs or its affiliates, or any of its directors, employees, or other representatives be liable for any damages whatsoever (including, without limitation, damages for loss of business profits, business interruption, loss of business information, or other pecuniary loss) arising out of the use of or inability to use this beta version software, even if Aldrin Labs has been advised of the possibility of such damages.\n<b>Feedback and Reporting</b>\nAs a beta tester, you are encouraged to provide feedback, suggestions, and report any bugs or issues you encounter. Your feedback is valuable to us and will be used to improve the final release of the software. However, please note that we are under no obligation to provide you with technical support unless specified otherwise.\n<b>Agreement</b>\nBy using this beta version software, you agree to the terms of this disclaimer. If you do not agree with these terms, you are not authorized to use or access this software.',
       { parse_mode: 'HTML', reply_markup: goHome },
     );
   })
-  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
-  .row();
+  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN');
 
 menu.register(buy_menu);
 menu.register(nft_menu);
