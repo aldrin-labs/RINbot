@@ -57,7 +57,7 @@ import {
   isTransactionSuccessful,
   isValidCoinLink,
   sleep,
-  swapTokenTypesAreEqual
+  swapTokenTypesAreEqual,
 } from './utils';
 
 enum TransactionResultStatus {
@@ -795,7 +795,7 @@ export async function exportPrivateKey(
   }
 
   await ctx.reply(
-    `Your private key is: <span>${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
+    `Your private key is: <span class="tg-spoiler">${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
     { parse_mode: 'HTML', reply_markup: goHome },
   );
 }
@@ -1028,7 +1028,10 @@ export async function home(ctx: BotContext) {
   await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
 }
 export async function nftHome(ctx: BotContext) {
-  await ctx.reply('<b>Welcome to NFT menu!</b>\n\nPlease check the options below.', {parse_mode: "HTML", reply_markup: nft_menu})
+  await ctx.reply(
+    '<b>Welcome to NFT menu!</b>\n\nPlease check the options below.',
+    { parse_mode: 'HTML', reply_markup: nft_menu },
+  );
 }
 
 // TODO: refactor code to move boilerplate code

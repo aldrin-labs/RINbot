@@ -1,11 +1,12 @@
 import { Menu } from '@grammyjs/menu';
-import { assets, ownedPools, nftHome } from '../chains/sui.functions';
+import { assets, nftHome } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
-import { nft_menu, nft_exit_menu } from './nft';
 import help_menu from './help';
+import { nft_exit_menu, nft_menu } from './nft';
+import poolsMenu from './pools';
 import positions_menu from './positions';
 import refer_menu from './refer';
 import settings_menu from './settings';
@@ -24,10 +25,10 @@ const menu = new Menu<BotContext>('main')
   })
   .row()
   .text('Manage NFTs', async (ctx) => {
-    ctx.session.step = 'nft-menu'
-    await nftHome(ctx)
+    ctx.session.step = 'nft-menu';
+    await nftHome(ctx);
   })
-    //await ctx.reply('This feature will be implemented soon, please follow <a href="https://twitter.com/aldrin_labs">@aldrin_labs</a> to stay tunes', {parse_mode: "HTML", link_preview_options: {is_disabled: true},
+  //await ctx.reply('This feature will be implemented soon, please follow <a href="https://twitter.com/aldrin_labs">@aldrin_labs</a> to stay tunes', {parse_mode: "HTML", link_preview_options: {is_disabled: true},
   //reply_markup: nft_menu})})
   //.text("Refer friends", (ctx) => ctx.menu.nav("refer-menu"))
   //.text("Alerts", (ctx) => ctx.menu.nav("alerts-menu")).row()
@@ -36,14 +37,11 @@ const menu = new Menu<BotContext>('main')
     ctx.menu.nav('wallet-menu');
   })
   .row()
+  .text('Pools', async (ctx) => {
+    ctx.menu.nav('sui-pools');
+  })
   .text('Create Coin', async (ctx) => {
-    await ctx.conversation.enter('createCoin')
-  })
-  .text('Create Pool', async (ctx) => {
-    await ctx.conversation.enter('createPool');
-  })
-  .text('Owned Pools', async (ctx) => {
-    await ownedPools(ctx);
+    await ctx.conversation.enter('createCoin');
   })
   .row()
   .text('User Agreement', async (ctx) => {
@@ -56,7 +54,7 @@ const menu = new Menu<BotContext>('main')
 
 menu.register(buy_menu);
 menu.register(nft_menu);
-menu.register(nft_exit_menu)
+menu.register(nft_exit_menu);
 menu.register(positions_menu);
 menu.register(help_menu);
 menu.register(refer_menu);
@@ -65,5 +63,6 @@ menu.register(wallet_menu);
 menu.register(settings_menu);
 menu.register(deposit_menu, 'wallet-menu');
 menu.register(withdraw_menu, 'wallet-menu');
+menu.register(poolsMenu);
 
 export default menu;
