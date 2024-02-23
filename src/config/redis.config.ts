@@ -7,8 +7,10 @@ let redisClient: RedisStorageClient | undefined = undefined
 export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient}> => {
   let kvUrl = process.env.KV_URL
   
-  if(process.env.NODE_ENV === 'development')
+  if(process.env.NODE_ENV === 'development'){
+    console.debug(process.env.KV_DEV_URL)
     kvUrl = process.env.KV_DEV_URL
+  }
   
   if (!kvUrl) {
     throw new Error("Empty REDIS_URL")
