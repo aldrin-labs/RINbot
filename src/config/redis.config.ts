@@ -5,7 +5,12 @@ import { createClient } from "redis";
 let redisClient: RedisStorageClient | undefined = undefined
 
 export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient}> => {
-  if (!process.env.KV_URL) {
+  let kvUrl = process.env.KV_URL
+  
+  if(process.env.NODE_ENV === 'development')
+    kvUrl = process.env.KV_DEV_URL
+  
+  if (!kvUrl) {
     throw new Error("Empty REDIS_URL")
   }
 
@@ -15,7 +20,7 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
 
   console.time("[getRedisClient] init")
   redisClient = createClient({
-    url: process.env.KV_URL,
+    url: kvUrl,
     socket: { tls: true },
   });
 
