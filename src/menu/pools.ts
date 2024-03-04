@@ -8,6 +8,8 @@ const poolsMenu = new Menu<BotContext>('sui-pools')
   })
   .text('Owned Pools', async (ctx) => {
     await ownedPools(ctx);
-  });
+  })
+  .row()
+  .back('Home');
 
 export default poolsMenu;
