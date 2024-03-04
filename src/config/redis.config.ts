@@ -1,11 +1,19 @@
 import { RedisStorageClient } from "@avernikoz/rinbot-sui-sdk";
 import { createClient } from "redis";
 
-
 let redisClient: RedisStorageClient | undefined = undefined
 
 export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient}> => {
-  if (!process.env.KV_URL) {
+  let kvUrl;
+  
+  if(process.env.NODE_ENV === 'development'){
+    console.debug(process.env.KV_DEV_URL)
+    kvUrl = process.env.KV_DEV_URL
+  }
+  else
+    kvUrl = process.env.KV_URL
+  
+  if (!kvUrl) {
     throw new Error("Empty REDIS_URL")
   }
 
@@ -15,7 +23,7 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
 
   console.time("[getRedisClient] init")
   redisClient = createClient({
-    url: process.env.KV_URL,
+    url: kvUrl,
     socket: { tls: true },
   });
 

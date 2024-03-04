@@ -35,6 +35,9 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
+  console.debug(process.env.NODE_ENV);
+  console.debug(process.env.KV_DEV_URL);
+  
   // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
 
   // Stores data per user.
