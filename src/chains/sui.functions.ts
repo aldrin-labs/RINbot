@@ -60,19 +60,17 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-enum TransactionResultStatus {
+export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
 }
 
-const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
+export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
 
-const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
+export const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 export const getTurbos = async () => {
   const { redisClient } = await getRedisClient();
-  console.log(redisClient);
-  
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
   // console.time(`TurbosSingleton.getInstance.${random_uuid}`)
