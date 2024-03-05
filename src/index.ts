@@ -1,10 +1,10 @@
-import { Bot, Context, GrammyError, HttpError, session } from 'grammy';
-import menu from './menu/main';
-import { BotContext, SessionData } from './types';
-// import SuiApiSingleton from './chains/sui';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
+import { Bot, GrammyError, HttpError, session } from 'grammy';
+import { ConversationId } from './chains/conversations.config';
+import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
+import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import {
   buy,
   createCoin,
@@ -15,11 +15,13 @@ import {
   sell,
   withdraw,
 } from './chains/sui.functions';
+import menu from './menu/main';
+import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
-import { retryAndGoHomeButtonsData } from './inline-keyboards/retryConversationButtonsFactory';
-import { ConversationId } from './chains/conversations.config';
+import { BotContext, SessionData } from './types';
+import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 
-const APP_VERSION = '1.0.30';
+const APP_VERSION = '1.1.0';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -35,23 +37,10 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  console.debug(process.env.NODE_ENV);
-  console.debug(process.env.KV_DEV_URL);
-  
-  // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
-
-  // Stores data per user.
-  function getSessionKey(ctx: Context): string | undefined {
-    // Give every user their personal session storage
-    // (will be shared across groups and in their private chat)
-    return ctx.from?.id.toString();
-  }
 
   bot.use(timeoutMiddleware);
-  // Make it interactive.
   bot.use(
     session({
-      // getSessionKey,
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
         return {
@@ -78,6 +67,11 @@ async function startBot(): Promise<void> {
   bot.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
   bot.use(createConversation(createPool, { id: ConversationId.CreatePool }));
   bot.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  bot.use(
+    createConversation(buySurfdogTickets, {
+      id: SurfdogConversationId.BuySurfdogTickets,
+    }),
+  );
 
   bot.use(menu);
 
@@ -105,44 +99,27 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.CreateCoin);
   });
 
+  bot.command('surfdog', async (ctx) => {
+    await showSurfdogPage(ctx);
+  });
 
   bot.command('start', async (ctx) => {
     await home(ctx);
   });
 
-   //Set commands suggestion
-   await bot.api.setMyCommands([
-    { command: "start", description: "Start the bot" },
-    { command: "version", description: "Show the bot version" },
-    { command: "buy", description: "Show buy menu"},
-    { command: "sell", description: "Show sell menu"},
-    { command: "withdrawal", description: "Show withdrawal menu"},
-    { command: "createpool", description: "Create liquidity pool"},
-    { command: "createcoin", description: "Create coin"},
+  // Set commands suggestion
+  await bot.api.setMyCommands([
+    { command: 'start', description: 'Start the bot' },
+    { command: 'version', description: 'Show the bot version' },
+    { command: 'buy', description: 'Show buy menu' },
+    { command: 'sell', description: 'Show sell menu' },
+    { command: 'withdrawal', description: 'Show withdrawal menu' },
+    { command: 'createpool', description: 'Create liquidity pool' },
+    { command: 'createcoin', description: 'Create coin' },
+    { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
   ]);
 
-
-  bot.callbackQuery('close-conversation', async (ctx) => {
-    await ctx.conversation.exit();
-    ctx.session.step = 'main';
-    await ctx.deleteMessage();
-    await home(ctx);
-    await ctx.answerCallbackQuery();
-  });
-
-  bot.callbackQuery('go-home', async (ctx) => {
-    ctx.session.step = 'main';
-    await home(ctx);
-    await ctx.answerCallbackQuery();
-  });
-
-  Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
-    bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
-      await ctx.conversation.exit();
-      await ctx.conversation.enter(conversationId);
-      await ctx.answerCallbackQuery();
-    });
-  });
+  useCallbackQueries(bot);
 
   bot.catch((err) => {
     const ctx = err.ctx;
