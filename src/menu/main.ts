@@ -5,6 +5,9 @@ import { BotContext } from '../types';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
 import help_menu from './help';
+import launchpadMenu from './launchpad/launchpad';
+import globalStatsMenu from './launchpad/surfdog/globalStats';
+import surfdogMenu from './launchpad/surfdog/main';
 import { nft_exit_menu, nft_menu } from './nft';
 import poolsMenu from './pools';
 import positions_menu from './positions';
@@ -44,6 +47,10 @@ const menu = new Menu<BotContext>('main')
     await ctx.conversation.enter('createCoin');
   })
   .row()
+  .text('Launchpad', (ctx) => {
+    ctx.menu.nav('launchpad');
+  })
+  .row()
   .text('User Agreement', async (ctx) => {
     await ctx.reply(
       '<b>Beta Version Software Disclaimer:</b>\nThis software is provided as a beta version and is currently under testing. Aldrin Labs grants you access to this software on an "as is" and "as available" basis, and you are voluntarily participating in its testing.\n<b>Limitation of Liability</b>\nAldrin Labs expressly disclaims any warranty for this software. The software and any related documentation is provided "as is" without warranty of any kind, either expressed or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the software remains with you.\n<b>No Liability for Damages</b>\nIn no event shall Aldrin Labs or its affiliates, or any of its directors, employees, or other representatives be liable for any damages whatsoever (including, without limitation, damages for loss of business profits, business interruption, loss of business information, or other pecuniary loss) arising out of the use of or inability to use this beta version software, even if Aldrin Labs has been advised of the possibility of such damages.\n<b>Feedback and Reporting</b>\nAs a beta tester, you are encouraged to provide feedback, suggestions, and report any bugs or issues you encounter. Your feedback is valuable to us and will be used to improve the final release of the software. However, please note that we are under no obligation to provide you with technical support unless specified otherwise.\n<b>Agreement</b>\nBy using this beta version software, you agree to the terms of this disclaimer. If you do not agree with these terms, you are not authorized to use or access this software.',
@@ -64,5 +71,6 @@ menu.register(settings_menu);
 menu.register(deposit_menu, 'wallet-menu');
 menu.register(withdraw_menu, 'wallet-menu');
 menu.register(poolsMenu);
+menu.register(launchpadMenu);
 
 export default menu;
