@@ -2,7 +2,7 @@
   "functions": {
     "api/webhook.ts": {
         "memory": 1024,
-        "maxDuration": 31
+        "maxDuration": 55
     }
   },
   "version": 2,

@@ -21,7 +21,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
