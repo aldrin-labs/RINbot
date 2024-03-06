@@ -13,11 +13,14 @@ import {
   signAndExecuteTransactionAndReturnResult,
 } from '../../../conversations.utils';
 import { getWalletManager } from '../../../sui.functions';
+import { sleep } from '../../../utils';
 import { getSurfdogLaunchpad } from '../getSurfdogLaunchpad';
 import { waitForTicketResult } from '../utils/waitForTicketResult';
-import { SurfdogConversationId } from './conversations.config';
+import {
+  MAX_TICKETS_TO_BUY,
+  SurfdogConversationId,
+} from './conversations.config';
 import { createUserState } from './conversations.utils';
-import { sleep } from '../../../utils';
 
 export async function buySurfdogTickets(
   conversation: MyConversation,
@@ -55,9 +58,9 @@ export async function buySurfdogTickets(
 
     return balance;
   });
-  const maxTicketsCount = surfdog.getMaxTicketsCount(
-    suiBalance,
-    ticketPriceInSui,
+  const maxTicketsCount = Math.min(
+    surfdog.getMaxTicketsCount(suiBalance, ticketPriceInSui),
+    MAX_TICKETS_TO_BUY,
   );
   const ticketPriceWithGasBudget = new BigNumber(
     SurfdogLaunchpadSingleton.GAS_BUDGET_FOR_BUYING_TICKET,
