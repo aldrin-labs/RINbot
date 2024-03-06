@@ -10,6 +10,10 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
     console.debug(process.env.KV_DEV_URL)
     kvUrl = process.env.KV_DEV_URL
   }
+  if(process.env.NODE_ENV === 'development-testnet'){
+    console.debug(process.env.KV_TESTNET_DEV_URL)
+    kvUrl = process.env.KV_TESTNET_DEV_URL
+  }
   else
     kvUrl = process.env.KV_URL
   

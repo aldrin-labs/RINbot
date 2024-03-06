@@ -16,6 +16,7 @@ import {
   withdraw,
 } from './chains/sui.functions';
 import menu from './menu/main';
+import Redis from 'ioredis';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
@@ -31,7 +32,9 @@ export const BOT_TOKEN = process.env.BOT_TOKEN || '';
 export const ENVIRONMENT = process.env.NODE_ENV || '';
 export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 
-const storage = new RedisAdapter<SessionData>({ instance });
+const redisInstance = new Redis(process.env.KV_TESTNET_DEV_URL!)
+
+const storage = new RedisAdapter<SessionData>({ instance: redisInstance});
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
