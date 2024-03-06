@@ -1,7 +1,6 @@
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import Redis from 'ioredis';
 import { Bot, GrammyError, HttpError, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
@@ -32,22 +31,7 @@ export const BOT_TOKEN = process.env.BOT_TOKEN || '';
 export const ENVIRONMENT = process.env.NODE_ENV || '';
 export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 
-// Create a Redis client
-const redisClient = new Redis({
-  host: process.env.KV_TESTNET_HOST!, // Redis server host
-  port: 44522,        // Redis server port
-  username: "default",
-  password: process.env.REDIS_PASSWORD!, // Redis password if required
-  tls: {}
-});
-
-
-// const redisClient = createClient({
-//   url: process.env.KV_TESTNET_DEV_URL!,
-//   token: process.env.KV_TESTNET_DEV_REST_API_TOKEN!
-// });
-
-const storage = new RedisAdapter<SessionData>({instance: redisClient});
+const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 
