@@ -232,11 +232,11 @@ export async function buySurfdogTickets(
       if (userHasWon) {
         await waitForTicketResult(ctx);
         await ctx.reply("<b>You've WON!</b>", { parse_mode: 'HTML' });
-        await sleep(500);
+        await sleep(300);
       } else {
         await waitForTicketResult(ctx);
         await ctx.reply("<b>You've LOST.</b>", { parse_mode: 'HTML' });
-        await sleep(500);
+        await sleep(300);
       }
 
       succededTransactionsCount++;
