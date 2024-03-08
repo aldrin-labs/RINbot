@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.3.1":
-  version "2.3.1"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.3.1.tgz#13a193052ab3e0d70379a611dd6d399a58e1b932"
-  integrity sha512-lxrIN0Fhm6YmJ6cSX9JW1PLLOKCCrSoP8nKmaLXdatt9tyqceUSe9VRqasp1YdwBpv+reDmnxxCCjh9lwTHENw==
+"@avernikoz/rinbot-sui-sdk@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.3.2.tgz#d19afa80f50b2d4ea0e9ec9b70c5ba25e911cd36"
+  integrity sha512-wBDXZN2ADoi1nob1d8s5Q1OqppFki/RRNrRGk+CTQmjItB7ds1KfyfP6lQqxwN2BLcGPoIHIqkeSZJVaB4GvFw==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
-    "@flowx-pkg/ts-sdk" "^0.0.8"
+    "@flowx-pkg/ts-sdk" "^0.0.11"
     "@mysten/sui.js" "^0.42.0"
     "@types/redis" "^4.0.11"
     aftermath-ts-sdk "^1.1.32"
@@ -223,10 +223,10 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.1.0.tgz#0709e9f4cb252351c609c6e6d8d6779a8d25edff"
   integrity sha512-+KpH+QxZU7O4675t3mnkQKcZZg56u+K/Ct2K+N2AZYNVK8kyeo/bI18tI8aPm3tvNNRyTWfj6s5tnGNlcbQRsA==
 
-"@flowx-pkg/ts-sdk@^0.0.8":
-  version "0.0.8"
-  resolved "https://registry.yarnpkg.com/@flowx-pkg/ts-sdk/-/ts-sdk-0.0.8.tgz#386854454f85c028f62b1dc0720c81b3607521ff"
-  integrity sha512-0ZCnZ0nFMlr5dUg3xfPvMzU0nyk+M3aRJJbaT463V2K3n32zDe0jNuV7MXW7RyY0iJQoN8fEzYiqSXrmsWwqlQ==
+"@flowx-pkg/ts-sdk@^0.0.11":
+  version "0.0.11"
+  resolved "https://registry.npmjs.org/@flowx-pkg/ts-sdk/-/ts-sdk-0.0.11.tgz#27f427a3cef2c6d66155897c1af2ad82c9f8fd48"
+  integrity sha512-IpOXGGY/O7rLsDBhO+WAKxrtVAcEP9scJiZy1ZSAnoGeMYxySaarHj4nqEgQVCqJl2biGBxNsriFSfQ/y9Z6+A==
   dependencies:
     "@mysten/sui.js" "^0.35.1"
     bignumber.js "^9.1.2"
