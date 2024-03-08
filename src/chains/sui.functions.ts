@@ -1025,7 +1025,7 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
-  await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
+  await ctx.replyWithPhoto("https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg", { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' });
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
