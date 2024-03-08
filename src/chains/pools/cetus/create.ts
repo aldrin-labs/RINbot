@@ -204,7 +204,8 @@ export async function createCetusPool(
     .add(...retryButtons);
   await ctx.reply(
     `<a href="${getCetusPoolUrl(poolId)}"><b>Pool</b></a> is successfully created!\n\n` +
-      `<b>Pool address</b>: <code>${poolId}</code>`,
+      `<b>Pool address</b>: <code>${poolId}</code>\n\n<b>Info</b>: trading on your pool will be ` +
+      `available within 5 minutes.`,
     { reply_markup: addLiquidityWithRetryButtons, parse_mode: 'HTML' },
   );
 
