@@ -2,6 +2,7 @@ import {
   GetTransactionType,
   TransactionBlock,
   WalletManagerSingleton,
+  isTransactionBlock,
   transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import { BotContext, MyConversation } from '../types';
@@ -10,9 +11,81 @@ import {
   provider,
   random_uuid,
 } from './sui.functions';
-import { isTransactionSuccessful } from './utils';
 import { SuiTransactionBlockResponse } from './types';
+import { isTransactionSuccessful } from './utils';
 
+export async function getTransactionFromMethod<
+  T extends (
+    params: Parameters<T>[0],
+  ) => Promise<TransactionBlock> | GetTransactionType,
+>({
+  conversation,
+  ctx,
+  method,
+  params,
+}: {
+  conversation: MyConversation;
+  ctx: BotContext;
+  method: T;
+  params: Parameters<T>[0];
+}) {
+  const transaction = await conversation.external({
+    task: async () => {
+      try {
+        const tx = await method(params);
+
+        if (isTransactionBlock(tx)) {
+          return tx;
+        } else if (isTransactionBlock(tx.tx)) {
+          return tx.tx;
+        } else {
+          return;
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (error instanceof Error) {
+          console.error(
+            `[getTransactionForPlainResult(${method.name})] failed to create transaction: ${error.message}`,
+          );
+        } else {
+          console.error(
+            `[getTransactionForPlainResult(${method.name})] failed to create transaction: ${error}`,
+          );
+        }
+
+        return;
+      }
+    },
+    beforeStore: (value) => {
+      if (value) {
+        return value.serialize();
+      }
+    },
+    afterLoad: async (value) => {
+      if (value) {
+        return transactionFromSerializedTransaction(value);
+      }
+    },
+    afterLoadError: async (error) => {
+      console.debug(
+        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
+      );
+      console.error(error);
+    },
+    beforeStoreError: async (error) => {
+      console.debug(
+        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
+      );
+      console.error(error);
+    },
+  });
+  console.debug('transaction in method:', transaction);
+
+  return transaction;
+}
+
+// TODO: Remove this method after replacing and testing with `getTransactionFromMethod`
 export async function getTransactionForStructuredResult<
   T extends (params: Parameters<T>[0]) => GetTransactionType,
 >({

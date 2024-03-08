@@ -24,6 +24,7 @@ import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
+import continueKeyboard from '../inline-keyboards/continue';
 import goHome from '../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import skip from '../inline-keyboards/skip';
@@ -49,6 +50,8 @@ import {
 import { SuiTransactionBlockResponse } from './types';
 import {
   extractCoinTypeFromLink,
+  findCoinInAssets,
+  getAftermathPoolLink,
   getSuiVisionCoinLink,
   getSuitableCoinImageData,
   getTelegramFileUrl,
@@ -570,7 +573,7 @@ export async function sell(
       return false;
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -1025,7 +1028,10 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
-  await ctx.replyWithPhoto("https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg", { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' });
+  await ctx.replyWithPhoto(
+    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
+  );
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
@@ -1035,10 +1041,41 @@ export async function nftHome(ctx: BotContext) {
 }
 
 // TODO: refactor code to move boilerplate code
-export async function createPool(
+export async function createAftermathPool(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const closeButton = closeConversation.inline_keyboard[0];
+  const continueWithCloseKeyboard = continueKeyboard
+    .clone()
+    .add(...closeButton);
+
+  await ctx.reply(
+    '<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI ' +
+      'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
+      'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
+      'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
+      'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
+      'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
+    { reply_markup: continueWithCloseKeyboard, parse_mode: 'HTML' },
+  );
+
+  const continueContext = await conversation.waitFor('callback_query:data');
+  const continueCallbackQueryData = continueContext.callbackQuery.data;
+
+  if (continueCallbackQueryData === 'close-conversation') {
+    await conversation.skip();
+  }
+  if (continueCallbackQueryData === 'continue') {
+    await continueContext.answerCallbackQuery();
+  } else {
+    await ctx.reply('Please, choose the button.', {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip({ drop: true });
+  }
+
   await ctx.reply(
     'What would be <b>the first coin</b> in pool? Please send a coin type or a link to suiscan.',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -1049,7 +1086,8 @@ export async function createPool(
     { parse_mode: 'HTML' },
   );
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreatePool];
+  const retryButton =
+    retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -1113,7 +1151,7 @@ export async function createPool(
       }
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -1318,7 +1356,7 @@ export async function createPool(
       return false;
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -2480,7 +2518,7 @@ export async function createCoin(
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
 
-export async function ownedPools(ctx: BotContext) {
+export async function ownedAftermathPools(ctx: BotContext) {
   const loadingMessage = await ctx.reply('<b>Loading...</b>', {
     parse_mode: 'HTML',
   });
@@ -2494,15 +2532,21 @@ export async function ownedPools(ctx: BotContext) {
   );
 
   if (ownedPoolInfos.length === 0) {
-    await ctx.reply('You have no pools yet.', { reply_markup: goHome });
+    await ctx.api.editMessageText(
+      loadingMessage.chat.id,
+      loadingMessage.message_id,
+      'You have no pools yet.',
+      { reply_markup: goHome },
+    );
 
     return;
   }
 
   let infoString = '<b>Owned Pools</b>:';
-  let providerName = 'Aftermath';
   ownedPoolInfos.forEach((poolInfo) => {
-    infoString += `\n\nName: <b>${poolInfo.name}</b> (<i>${providerName}</i>)\n`;
+    const poolLink = getAftermathPoolLink(poolInfo.poolObjectId);
+
+    infoString += `\n\nName: <a href="${poolLink}"><b>${poolInfo.name}</b></a>\n`;
     infoString += `TVL: <code>${poolInfo.tvl}</code>\n`;
     infoString += `Volume: <code>${poolInfo.volume}</code>\n`;
     infoString += `APR: <code>${poolInfo.apr}</code>\n`;
