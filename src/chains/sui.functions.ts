@@ -60,19 +60,17 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-enum TransactionResultStatus {
+export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
 }
 
-const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
+export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
 
-const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
+export const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 export const getTurbos = async () => {
   const { redisClient } = await getRedisClient();
-  console.log(redisClient);
-  
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
   // console.time(`TurbosSingleton.getInstance.${random_uuid}`)
@@ -1027,7 +1025,7 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
-  await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
+  await ctx.replyWithPhoto("https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg", { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' });
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
