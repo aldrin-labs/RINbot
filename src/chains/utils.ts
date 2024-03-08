@@ -1,7 +1,12 @@
-import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
+import {
+  AftermathSingleton,
+  CoinAssetData,
+  isSuiCoinType,
+} from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
 import { File, PhotoSize } from 'grammy/types';
 import { BOT_TOKEN } from '../index';
+import { CoinForPool } from './types';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -120,6 +125,19 @@ export function isCoinAssetData(data: unknown): data is CoinAssetData {
   );
 }
 
+export function isCoinForPool(data: unknown): data is CoinForPool {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    typeof (data as CoinForPool).type === 'string' &&
+    'decimals' in data &&
+    typeof (data as CoinForPool).decimals === 'number' &&
+    'balance' in data &&
+    typeof (data as CoinForPool).balance === 'string'
+  );
+}
+
 /**
  * The method sorts the image data in ascending order based on their height and then returns the second
  * or the first one, if second data doesn't exist.
@@ -180,4 +198,27 @@ export function getTelegramFileUrl(file: File) {
 
 export function getSuiVisionCoinLink(coinType: string) {
   return `https://suivision.xyz/coin/${coinType}`;
+}
+
+export function getCetusPoolUrl(poolId: string) {
+  return `https://app.cetus.zone/liquidity/deposit?poolAddress=${poolId}`;
+}
+
+export function getSuiVisionTransactionLink(digest: string) {
+  return `https://suivision.xyz/txblock/${digest}`;
+}
+
+export function getAftermathPoolLink(poolObjectId: string) {
+  return `${AftermathSingleton.AFTERMATH_POOL_URL}/${poolObjectId}`;
+}
+
+export function findCoinInAssets(
+  assets: CoinAssetData[],
+  coinType: string,
+): CoinAssetData | undefined {
+  return assets.find(
+    (asset) =>
+      (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) ||
+      asset.type === coinType,
+  );
 }
