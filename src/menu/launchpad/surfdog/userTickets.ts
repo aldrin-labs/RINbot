@@ -4,8 +4,11 @@ import { showSurfdogPage } from '../../../chains/launchpad/surfdog/show-pages/sh
 import { BotContext } from '../../../types';
 
 const userTicketsMenu = new Menu<BotContext>('surfdog-user-tickets')
-  .text('Buy Tickets', async (ctx) => {
-    await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+  .text('Buy Tickets (TBA)', async (ctx) => {
+    // TODO: Uncomment before launch
+    // await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+
+    await ctx.reply(`Follow @SurfDog_Sui on X for updates on the launch date.`);
   })
   .text('Back', async (ctx) => {
     await showSurfdogPage(ctx);

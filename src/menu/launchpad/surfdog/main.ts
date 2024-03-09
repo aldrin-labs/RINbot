@@ -12,8 +12,11 @@ const surfdogMenu = new Menu<BotContext>('surfdog')
   .text('Your Tickets', async (ctx) => {
     await showUserTickets(ctx);
   })
-  .text('Buy Tickets', async (ctx) => {
-    await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+  .text('Buy Tickets (TBA)', async (ctx) => {
+    // TODO: Uncomment before launch
+    // await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+
+    await ctx.reply(`Follow @SurfDog_Sui on X for updates on the launch date.`);
   })
   .row()
   .text('Global Stats', async (ctx) => {
