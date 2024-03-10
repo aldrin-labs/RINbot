@@ -3,11 +3,14 @@
     "api/webhook.ts": {
       "memory": 1024,
       "maxDuration": 55
+    },
+    "api/cronjob-update-pool-provider-caches": {
+      "maxDuration": 45
     }
   },
   "crons": [
     {
-      "path": "/api/update-pool-provider-caches.ts",
+      "path": "/api/cronjob-update-pool-provider-caches.ts",
       "schedule": "*/5 * * * *"
     }
   ],
