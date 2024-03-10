@@ -39,7 +39,6 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-
   bot.use(timeoutMiddleware);
   bot.use(
     session({
