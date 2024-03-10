@@ -1,6 +1,4 @@
-import {
-  getPoolObjectIdFromTransactionResult
-} from '@avernikoz/rinbot-sui-sdk';
+import { getPoolObjectIdFromTransactionResult } from '@avernikoz/rinbot-sui-sdk';
 import addCetusLiquidityKeyboard from '../../../inline-keyboards/addCetusLiquidity';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
@@ -13,7 +11,7 @@ import {
   TransactionResultStatus,
   getCetus,
   getCoinManager,
-  getWalletManager
+  getWalletManager,
 } from '../../sui.functions';
 import { SuiTransactionBlockResponse } from '../../types';
 import { getCetusPoolUrl } from '../../utils';
@@ -205,7 +203,7 @@ export async function createCetusPool(
   await ctx.reply(
     `<a href="${getCetusPoolUrl(poolId)}"><b>Pool</b></a> is successfully created!\n\n` +
       `<b>Pool address</b>: <code>${poolId}</code>\n\n<b>Info</b>: trading on your pool will be ` +
-      `available within 5 minutes.`,
+      `available within 5 minutes after adding liquidity to it.`,
     { reply_markup: addLiquidityWithRetryButtons, parse_mode: 'HTML' },
   );
 

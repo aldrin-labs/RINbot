@@ -221,23 +221,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    let coinToBuy: CommonCoinData;
-    try {
-      coinToBuy = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(`Token ${coinType} not found in coinManager`);
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
+    if (fetchedCoin === null) {
       await ctx.reply(
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (!coinToBuy) {
-      await ctx.reply(
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
         { reply_markup: closeConversation },
       );
 
@@ -245,8 +233,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     }
 
     const tokenToBuyIsSui: boolean =
-      swapTokenTypesAreEqual(coinToBuy.type, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(coinToBuy.type, SHORT_SUI_COIN_TYPE);
+      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
+      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
     if (tokenToBuyIsSui) {
       await ctx.reply(
@@ -257,7 +245,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    validatedCoinType = coinToBuy.type;
+    validatedCoinType = fetchedCoin.type;
     return true;
   });
 
@@ -526,34 +514,11 @@ export async function sell(
       coinType = extractedCoin;
     }
 
-    let coinToSell: CommonCoinData;
-    try {
-      coinToSell = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(`Token ${coinType} not found in coinManager`);
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
+    if (fetchedCoin === null) {
       await ctx.reply(
-        // eslint-disable-next-line max-len
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (!coinToSell) {
-      await ctx.reply(
-        // eslint-disable-next-line max-len
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (coinToSell.decimals === null) {
-      await ctx.reply(
-        `Token decimals not found for ${coinType}. Please, use another token for sell or contact support.`,
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
         { reply_markup: closeConversation },
       );
 
@@ -561,8 +526,8 @@ export async function sell(
     }
 
     const tokenToSellIsSui: boolean =
-      swapTokenTypesAreEqual(coinToSell.type, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(coinToSell.type, SHORT_SUI_COIN_TYPE);
+      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
+      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
     if (tokenToSellIsSui) {
       await ctx.reply(
@@ -1131,24 +1096,15 @@ export async function createAftermathPool(
       return false;
     }
 
-    try {
-      coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(
-        `Coin ${coinType} not found in coinManager, so fetching...`,
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
+
+    if (fetchedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
       );
 
-      // TODO: use getCoinByType2, it fetches coin metadata under the hood
-      const fetchedCoin = await coinManager.fetchCoinMetadata(coinType);
-
-      if (fetchedCoin === null) {
-        await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
+      return false;
     }
 
     const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
@@ -1311,33 +1267,15 @@ export async function createAftermathPool(
       return false;
     }
 
-    let coin:
-      | CommonCoinData
-      | Exclude<
-          Awaited<ReturnType<typeof coinManager.fetchCoinMetadata>>,
-          null
-        >;
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
-    try {
-      coin = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(
-        `Coin ${coinType} not found in coinManager, so fetching...`,
+    if (fetchedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
       );
 
-      // TODO: use getCoinByType2, it fetches coin metadata under the hood
-      const fetchedCoin = await coinManager.fetchCoinMetadata(coinType);
-
-      if (fetchedCoin === null) {
-        await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
-
-      coin = fetchedCoin;
+      return false;
     }
 
     const secondCoinIsSui: boolean =
@@ -1375,7 +1313,7 @@ export async function createAftermathPool(
           coinTypeA: firstValidatedCoinToAdd.type,
           amountA: firstValidatedInputAmount,
           coinTypeB: foundCoin.type,
-          decimalsB: coin.decimals,
+          decimalsB: fetchedCoin.decimals,
         });
 
       if (foundCoin.balance < minAmountB) {
