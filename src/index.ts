@@ -1,7 +1,7 @@
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { Bot, GrammyError, HttpError, session } from 'grammy';
+import { Bot, BotError, Composer, GrammyError, HttpError, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
@@ -33,11 +33,12 @@ if (instance && instance['opts']) {
 const storage = new RedisAdapter<SessionData>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
+const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  bot.use(timeoutMiddleware);
-  bot.use(
+  composer.use(timeoutMiddleware);
+  composer.use(
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
@@ -53,39 +54,39 @@ async function startBot(): Promise<void> {
     }),
   );
 
-  bot.use(conversations());
+  composer.use(conversations());
 
-  bot.use(createConversation(buy, { id: ConversationId.Buy }));
-  bot.use(createConversation(sell, { id: ConversationId.Sell }));
-  bot.use(
+  composer.use(createConversation(buy, { id: ConversationId.Buy }));
+  composer.use(createConversation(sell, { id: ConversationId.Sell }));
+  composer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
     }),
   );
-  bot.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
-  bot.use(
+  composer.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
+  composer.use(
     createConversation(createAftermathPool, {
       id: ConversationId.CreateAftermathPool,
     }),
   );
-  bot.use(
+  composer.use(
     createConversation(addCetusLiquidity, {
       id: ConversationId.AddCetusPoolLiquidity,
     }),
   );
-  bot.use(
+  composer.use(
     createConversation(createCetusPool, {
       id: ConversationId.CreateCetusPool,
     }),
   );
-  bot.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
-  bot.use(
+  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
   );
 
-  bot.use(menu);
+  composer.use(menu);
 
   bot.command('version', async (ctx) => {
     await ctx.reply(`Version ${APP_VERSION}`);
@@ -172,6 +173,12 @@ async function startBot(): Promise<void> {
       console.error('Unknown error:', e);
     }
   });
+
+  function errorBoundaryHandler(err: BotError) {
+    console.error('[Error Boundary Handler]', err);
+  }
+
+  bot.errorBoundary(errorBoundaryHandler, composer)
 
   ENVIRONMENT === 'local' && bot.start();
 }
