@@ -35,6 +35,8 @@ export default async function updateProviderCaches() {
     },
     lazyLoading: false,
   });
+  TurbosSingleton.removeInstance();
+
   await CetusSingleton.getInstance({
     sdkOptions: clmmMainnet,
     cacheOptions: {
@@ -45,6 +47,8 @@ export default async function updateProviderCaches() {
     suiProviderUrl: SUI_PROVIDER_URL,
     lazyLoading: false,
   });
+  CetusSingleton.removeInstance();
+
   await AftermathSingleton.getInstance({
     cacheOptions: {
       storage: redis,
@@ -53,6 +57,8 @@ export default async function updateProviderCaches() {
     },
     lazyLoading: false,
   });
+  AftermathSingleton.removeInstance();
+
   await FlowxSingleton.getInstance({
     cacheOptions: {
       storage: redis,
@@ -61,6 +67,7 @@ export default async function updateProviderCaches() {
     },
     lazyLoading: false,
   });
+  FlowxSingleton.removeInstance();
 
   await redisClient.disconnect();
 
