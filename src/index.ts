@@ -180,6 +180,8 @@ async function startBot(): Promise<void> {
 
   bot.errorBoundary(errorBoundaryHandler).use(composer)
 
+  bot.errorBoundary(errorBoundaryHandler)
+
   ENVIRONMENT === 'local' && bot.start();
 }
 
