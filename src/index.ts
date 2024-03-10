@@ -178,7 +178,7 @@ async function startBot(): Promise<void> {
     console.error('[Error Boundary Handler]', err);
   }
 
-  bot.errorBoundary(errorBoundaryHandler, composer)
+  bot.errorBoundary(errorBoundaryHandler).use(composer)
 
   ENVIRONMENT === 'local' && bot.start();
 }
