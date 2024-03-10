@@ -71,8 +71,6 @@ const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 export const getTurbos = async () => {
   const { redisClient } = await getRedisClient();
-  console.log(redisClient);
-  
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
   // console.time(`TurbosSingleton.getInstance.${random_uuid}`)
