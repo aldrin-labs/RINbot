@@ -20,7 +20,7 @@ import { SUI_PROVIDER_URL } from '../src/chains/sui.config';
  * Additionally, this function is necessary to include liquidity pools created by users in a shorter timeframe than specified
  * in `SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS` (e.g., instead of 30 minutes, it occurs in 5 minutes).
  */
-async function updateProviderCaches() {
+export default async function updateProviderCaches() {
   console.time('Caches are updated for');
 
   const { redisClient } = await getRedisClient();
@@ -66,5 +66,3 @@ async function updateProviderCaches() {
 
   console.timeEnd('Caches are updated for');
 }
-
-updateProviderCaches();
