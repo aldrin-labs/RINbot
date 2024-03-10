@@ -24,6 +24,11 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
 import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
 
+function errorBoundaryHandler(err: BotError) {
+  console.error('[Error Boundary Handler]', err);
+}
+
+
 const APP_VERSION = '1.1.2';
 
 if (instance && instance['opts']) {
@@ -86,6 +91,7 @@ async function startBot(): Promise<void> {
     }),
   );
 
+  bot.errorBoundary(errorBoundaryHandler).use(composer)
   bot.use(menu);
 
   bot.command('version', async (ctx) => {
@@ -173,12 +179,6 @@ async function startBot(): Promise<void> {
       console.error('Unknown error:', e);
     }
   });
-
-  function errorBoundaryHandler(err: BotError) {
-    console.error('[Error Boundary Handler]', err);
-  }
-
-  bot.errorBoundary(errorBoundaryHandler).use(composer)
 
   // bot.errorBoundary(errorBoundaryHandler)
 
