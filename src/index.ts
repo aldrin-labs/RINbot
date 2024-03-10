@@ -37,8 +37,8 @@ const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  composer.use(timeoutMiddleware);
-  composer.use(
+  bot.use(timeoutMiddleware);
+  bot.use(
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
@@ -86,7 +86,7 @@ async function startBot(): Promise<void> {
     }),
   );
 
-  composer.use(menu);
+  bot.use(menu);
 
   bot.command('version', async (ctx) => {
     await ctx.reply(`Version ${APP_VERSION}`);
