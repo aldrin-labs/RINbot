@@ -23,7 +23,7 @@ import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.1.2';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
