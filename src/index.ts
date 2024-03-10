@@ -37,7 +37,7 @@ const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  bot.use(timeoutMiddleware);
+  composer.use(timeoutMiddleware);
   bot.use(
     session({
       initial: (): SessionData => {
