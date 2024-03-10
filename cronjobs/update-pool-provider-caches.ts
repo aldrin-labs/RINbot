@@ -69,7 +69,9 @@ export default async function updateProviderCaches() {
   });
   FlowxSingleton.removeInstance();
 
+
   await redisClient.disconnect();
+  RedisStorageSingleton.removeInstance();
 
   console.timeEnd('Caches are updated for');
 }
