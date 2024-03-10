@@ -16,7 +16,7 @@ export const getRedisClient = async (): Promise<{redisClient: RedisStorageClient
     throw new Error("Empty REDIS_URL")
   }
 
-  if (redisClient) {
+  if (redisClient && redisClient.isOpen) {
     return { redisClient }
   }
 
