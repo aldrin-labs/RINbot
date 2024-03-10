@@ -4,7 +4,7 @@
       "memory": 1024,
       "maxDuration": 55
     },
-    "api/cronjob-update-pool-provider-caches": {
+    "api/cronjob-update-pool-provider-caches.ts": {
       "maxDuration": 45
     }
   },
