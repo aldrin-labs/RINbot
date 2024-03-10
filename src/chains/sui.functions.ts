@@ -260,7 +260,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   await ctx.reply(
-    `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -567,7 +567,7 @@ export async function sell(
   const validCoinToSell = validatedCoin as CoinAssetData;
 
   await ctx.reply(
-    `Reply with the amount you wish to withdraw (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
