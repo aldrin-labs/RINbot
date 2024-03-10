@@ -22,16 +22,13 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
+import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
 
 const APP_VERSION = '1.1.2';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
-
-export const BOT_TOKEN = process.env.BOT_TOKEN || '';
-export const ENVIRONMENT = process.env.NODE_ENV || '';
-export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 
 const storage = new RedisAdapter<SessionData>({ instance });
 

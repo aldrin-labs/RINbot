@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import axios, { AxiosResponse } from 'axios'
-import { BOT_TOKEN, VERCEL_URL } from '../src'
+import { BOT_TOKEN, VERCEL_URL } from '../src/config/bot.config';
 
 const setWebhook = async () => {
   let response: AxiosResponse = await axios.get(`https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo`)
