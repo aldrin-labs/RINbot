@@ -7,7 +7,7 @@
   },
   "crons": [
     {
-      "path": "/api/updateProvidersCaches.ts",
+      "path": "/api/update-pool-provider-caches.ts",
       "schedule": "*/5 * * * *"
     }
   ],
