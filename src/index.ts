@@ -35,18 +35,6 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  console.debug(process.env.NODE_ENV);
-  console.debug(process.env.KV_DEV_URL);
-  
-  // const suiApi = (await SuiApiSingleton.getInstance()).getApi(); // Get SuiApiSingleton instance
-
-  // Stores data per user.
-  function getSessionKey(ctx: Context): string | undefined {
-    // Give every user their personal session storage
-    // (will be shared across groups and in their private chat)
-    return ctx.from?.id.toString();
-  }
-
   bot.use(timeoutMiddleware);
   // Make it interactive.
   bot.use(
