@@ -80,7 +80,6 @@ export async function getTransactionFromMethod<
       console.error(error);
     },
   });
-  console.debug('transaction in method:', transaction);
 
   return transaction;
 }

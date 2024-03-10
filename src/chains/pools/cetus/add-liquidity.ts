@@ -1,7 +1,8 @@
 import {
+  CoinAssetData,
   isSuiCoinType,
   isValidSuiAddress,
-  isValidTokenAmount
+  isValidTokenAmount,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
@@ -18,13 +19,13 @@ import {
   TransactionResultStatus,
   getCetus,
   getCoinManager,
-  getWalletManager
+  getWalletManager,
 } from '../../sui.functions';
 import { CetusPool, SuiTransactionBlockResponse } from '../../types';
 import {
   findCoinInAssets,
   getCetusPoolUrl,
-  getSuiVisionTransactionLink
+  getSuiVisionTransactionLink,
 } from '../../utils';
 
 export async function addCetusLiquidity(
@@ -265,97 +266,71 @@ export async function addCetusLiquidity(
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
-  let exactAmountA: string | undefined;
-  let exactAmountB: string | undefined;
-  await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
-      return false;
-    }
-
-    const amount = ctx.msg?.text ?? '';
-
-    const { isValid: amountIsValid, reason } = isValidTokenAmount({
-      amount: amount,
-      maxAvailableAmount: availableAmount,
-      decimals: coinDecimalsA,
-    });
-
-    if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    // TODO: Now we open position near the current price of the pool and because of that `amountB` is
-    // too large. We can fix this either by providing price range from user or by adding global liquidity.
-    // (more in Cetus dev docs)
-    const cetus = await getCetus();
-    const { amountB } = cetus.getAddLiquidityPayload({
+  let exactAmountA;
+  let userConfirmedAmounts = false;
+  do {
+    const exactAmounts = await askForExactAmountToAddInPool({
+      conversation,
+      ctx,
+      availableAmount,
+      coinASymbol,
+      coinBInAssets,
+      coinBSymbol,
+      coinDecimalsA,
+      coinDecimalsB,
       pool: poolToAddLiquidity,
-      coinAmountA: amount,
-      decimalsA: coinDecimalsA,
-      decimalsB: coinDecimalsB,
       slippage,
     });
 
-    if (coinBInAssets.balance < amountB) {
+    // ts check
+    if (exactAmounts === null) {
       await ctx.reply(
-        `You need <code>${amountB}</code> <b>${coinBSymbol}</b> to add <code>${amount}</code> ` +
-          `<b>${coinASymbol}</b>, but have only <code>${coinBInAssets.balance}</code> <b>${coinBSymbol}</b>.` +
-          `\n\nPlease, enter the less amount of <b>${coinASymbol}</b> or buy more <b>${coinBSymbol}</b>.`,
-        {
-          reply_markup: closeConversation,
-          parse_mode: 'HTML',
-        },
+        'Failed to process coin amounts to add liquidity. Please, try again or contact support.',
+        { reply_markup: retryButton },
       );
 
-      return false;
+      return;
     }
 
-    exactAmountA = amount;
-    exactAmountB = amountB;
+    const { amountA, amountB } = exactAmounts;
 
-    return true;
-  });
-
-  // ts check
-  if (exactAmountA === undefined || exactAmountB === undefined) {
     await ctx.reply(
-      'Specified amounts are invalid. Please, try again or contact support.',
-      { reply_markup: retryButton },
+      `You are about to add liquidity to the pool with the following assets:` +
+        `\n<code>${amountA}</code> <b>${coinASymbol}</b>\n` +
+        `<code>${amountB}</code> <b>${coinBSymbol}</b>?`,
+      { reply_markup: yesOrNo, parse_mode: 'HTML' },
+    );
+
+    const userAnswerContext =
+      await conversation.waitForCallbackQuery(/^(yes|no)$/);
+    const callbackQueryData = userAnswerContext.callbackQuery.data;
+
+    if (callbackQueryData === 'no') {
+      await userAnswerContext.answerCallbackQuery();
+
+      await ctx.reply(
+        `Please, enter another amount of <b>${coinASymbol}</b>.`,
+        { reply_markup: closeConversation, parse_mode: 'HTML' },
+      );
+
+      continue;
+    }
+    if (callbackQueryData === 'yes') {
+      userConfirmedAmounts = true;
+      exactAmountA = amountA;
+
+      await userAnswerContext.answerCallbackQuery();
+    }
+  } while (!userConfirmedAmounts);
+
+  if (exactAmountA === undefined) {
+    await ctx.reply(
+      `Failed to process amount of <b>${coinASymbol}</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
     return;
   }
-
-  await ctx.reply(
-    `You are about to add liquidity to the pool with the following assets:` +
-      `\n<code>${exactAmountA}</code> <b>${coinASymbol}</b>\n` +
-      `<code>${exactAmountB}</code> <b>${coinBSymbol}</b>?`,
-    { reply_markup: yesOrNo, parse_mode: 'HTML' },
-  );
-
-  const userAnswerContext =
-    await conversation.waitForCallbackQuery(/^(yes|no)$/);
-  const callbackQueryData = userAnswerContext.callbackQuery.data;
-
-  if (callbackQueryData === 'no') {
-    await userAnswerContext.answerCallbackQuery();
-    await ctx.reply('Got it, try to use another parameters.', {
-      reply_markup: retryButton,
-    });
-
-    return;
-  }
-  if (callbackQueryData === 'yes') {
-    await userAnswerContext.answerCallbackQuery();
-  }
-
-  // This reassignment is needed only to make TypeScript sure this variable is string.
-  const resultAmountA = exactAmountA;
 
   await ctx.reply('Creating a transaction to add liquidity...');
 
@@ -366,7 +341,7 @@ export async function addCetusLiquidity(
       cetus,
     ) as typeof cetus.getAddLiquidityTransaction,
     params: {
-      coinAmountA: resultAmountA,
+      coinAmountA: exactAmountA,
       decimalsA: coinDecimalsA,
       decimalsB: coinDecimalsB,
       pool: poolToAddLiquidity,
@@ -437,4 +412,90 @@ export async function addCetusLiquidity(
   );
 
   return;
+}
+
+export async function askForExactAmountToAddInPool({
+  conversation,
+  ctx,
+  availableAmount,
+  coinDecimalsA,
+  coinDecimalsB,
+  coinASymbol,
+  coinBSymbol,
+  pool,
+  slippage,
+  coinBInAssets,
+}: {
+  conversation: MyConversation;
+  ctx: BotContext;
+  availableAmount: string;
+  coinDecimalsA: number;
+  coinDecimalsB: number;
+  coinASymbol: string;
+  coinBSymbol: string;
+  pool: CetusPool;
+  slippage: number;
+  coinBInAssets: CoinAssetData;
+}): Promise<{ amountA: string; amountB: string } | null> {
+  const amountAContext = await conversation.wait();
+  const amountA = amountAContext.msg?.text;
+  const amountACallbackQueryData = amountAContext.callbackQuery?.data;
+
+  if (amountACallbackQueryData === 'close-conversation') {
+    await conversation.skip();
+  }
+  if (amountA !== undefined) {
+    const { isValid: amountIsValid, reason } = isValidTokenAmount({
+      amount: amountA,
+      maxAvailableAmount: availableAmount,
+      decimals: coinDecimalsA,
+    });
+
+    if (!amountIsValid) {
+      await ctx.reply(
+        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
+        {
+          reply_markup: closeConversation,
+        },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    // TODO: Now we open position near the current price of the pool and because of that `amountB` is
+    // too large. We can fix this either by providing price range from user or by adding global liquidity.
+    // (more in Cetus dev docs)
+    const cetus = await getCetus();
+    const { amountB } = cetus.getAddLiquidityPayload({
+      pool,
+      coinAmountA: amountA,
+      decimalsA: coinDecimalsA,
+      decimalsB: coinDecimalsB,
+      slippage,
+    });
+
+    if (coinBInAssets.balance < amountB) {
+      await ctx.reply(
+        `You need <code>${amountB}</code> <b>${coinBSymbol}</b> to add <code>${amountA}</code> ` +
+          `<b>${coinASymbol}</b>, but have only <code>${coinBInAssets.balance}</code> <b>${coinBSymbol}</b>.` +
+          `\n\nPlease, enter the less amount of <b>${coinASymbol}</b> or buy more <b>${coinBSymbol}</b>.`,
+        {
+          reply_markup: closeConversation,
+          parse_mode: 'HTML',
+        },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    return { amountA, amountB };
+  } else {
+    await ctx.reply('Please, enter the amount.', {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip();
+  }
+
+  return null;
 }
