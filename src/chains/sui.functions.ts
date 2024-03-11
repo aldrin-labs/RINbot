@@ -844,7 +844,7 @@ export async function withdraw(
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
-    await ctx.reply("⚠️ Heads up! Your available balance is currently 5 SUI or less. At the moment, there are no funds available for withdrawal. Keep in mind that the initial 5 SUI bonus is non-withdrawable. Trade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. Stay focused on your trading goals! 📊💼")
+    await ctx.reply("⚠️ Heads up! Your available balance is currently 5 SUI or less. At the moment, there are no funds available for withdrawal. Keep in mind that the initial 5 SUI bonus is non-withdrawable. Trade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. Stay focused on your trading goals! 📊💼", { reply_markup: goHome })
 
     return;
   }
