@@ -416,7 +416,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       { reply_markup: retryButton },
     );
 
-    ctx.session.tradesCount = ctx.session.tradesCount + 1
+    conversation.session.tradesCount = conversation.session.tradesCount + 1
 
     return;
   }
@@ -728,7 +728,7 @@ export async function sell(
       { reply_markup: retryButton },
     );
 
-    ctx.session.tradesCount = ctx.session.tradesCount + 1
+    conversation.session.tradesCount = conversation.session.tradesCount + 1
 
     return;
   }
