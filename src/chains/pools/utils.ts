@@ -8,6 +8,7 @@ import { InlineKeyboard } from 'grammy';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import tickSpacingKeyboard from '../../inline-keyboards/tickSpacing';
 import { BotContext, MyConversation } from '../../types';
+import { CallbackQueryData } from '../../types/callback-queries-data';
 import { CoinForPool } from '../types';
 import {
   extractCoinTypeFromLink,
@@ -44,7 +45,7 @@ export async function askForCoinInPool({
 
   let validatedCoin: CoinForPool | null = null;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -161,7 +162,7 @@ export async function askForPoolPrice({
   );
 
   const priceMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -221,7 +222,7 @@ export async function askForTickSpacing({
     const callbackQueryData = ctx.callbackQuery?.data;
     const isTickSpacingRegExp = /^(2|10|60|200)$/;
 
-    if (callbackQueryData === 'close-conversation') {
+    if (callbackQueryData === CallbackQueryData.Cancel) {
       return false;
     }
 
