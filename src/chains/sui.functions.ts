@@ -63,7 +63,7 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import { BOT_PUBLIC_KEY, BOT_PRIVATE_KEY, FIRST_USER_BONUS_AMOUNT } from '../config/bot.config';
+import { BOT_PUBLIC_KEY, BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT } from '../config/bot.config';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -415,6 +415,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
+
+    ctx.session.tradesCount = ctx.session.tradesCount + 1
 
     return;
   }
@@ -944,7 +946,7 @@ async function depositBonus(ctx: BotContext){
     await walletManager.getAvailableWithdrawSuiAmount(BOT_PUBLIC_KEY);
 
   const { isValid: amountIsValid, reason } = isValidTokenAmount({
-    amount: FIRST_USER_BONUS_AMOUNT,
+    amount: WELCOME_BONUS_AMOUNT,
     maxAvailableAmount: availableAmount,
     decimals: SUI_DECIMALS,
   });
@@ -957,7 +959,7 @@ async function depositBonus(ctx: BotContext){
   let tx;
   try {
     const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
-      amount: FIRST_USER_BONUS_AMOUNT,
+      amount: WELCOME_BONUS_AMOUNT,
       address: ctx.session.publicKey, //destination address
     });
     txBlock.setGasBudget(Number(totalGasFee));
@@ -993,7 +995,7 @@ async function depositBonus(ctx: BotContext){
       return false;
     }
 
-    //ctx.session.bonus -= +FIRST_USER_BONUS_AMOUNT;
+    //ctx.session.welcomeBonus.amount -= +WELCOME_BONUS_AMOUNT;
 
   } catch (error) {
     if (error instanceof Error) {
@@ -1065,7 +1067,7 @@ export function getExplorerLink(ctx: BotContext): string {
 
 export async function home(ctx: BotContext) {
   // Send the menu.
-  // if(ctx.session.bonus > 0 && FIRST_USER_BONUS_AMOUNT !== '0')
+  // if(ctx.session.welcomeBonus.amount > 0 && WELCOME_BONUS_AMOUNT !== '0')
   //   await depositBonus(ctx)
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);

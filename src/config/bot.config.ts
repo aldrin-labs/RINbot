@@ -4,4 +4,4 @@ export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 export const BOT_PUBLIC_KEY = process.env.BOT_PUBLIC_KEY || '';
 export const BOT_PRIVATE_KEY = process.env.BOT_PRIVATE_KEY || '';
 export const ENABLE_FIRST_USER_BONUS = process.env.ENABLE_FIRST_USER_BONUS?.length && process.env.ENABLE_FIRST_USER_BONUS === 'true'
-export const FIRST_USER_BONUS_AMOUNT = process.env.FIRST_USER_BONUS_AMOUNT && process.env.FIRST_USER_BONUS_AMOUNT.length && !isNaN(parseFloat(process.env.FIRST_USER_BONUS_AMOUNT)) && parseFloat(process.env.FIRST_USER_BONUS_AMOUNT) || 0;
+export const WELCOME_BONUS_AMOUNT = process.env.WELCOME_BONUS_AMOUNT && process.env.WELCOME_BONUS_AMOUNT.length && !isNaN(parseFloat(process.env.WELCOME_BONUS_AMOUNT)) && parseFloat(process.env.WELCOME_BONUS_AMOUNT) || 0;

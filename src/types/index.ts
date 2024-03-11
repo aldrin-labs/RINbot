@@ -11,8 +11,9 @@ export interface SessionData {
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetData[];
-  bonus?: number
-  tradesCount?: number
+  welcomeBonus: { amount: number, isUserAgreeWithBonus: boolean | null }
+  tradesCount: number
+  createdAt: number
 }
 
 export type BotContext = Context &
