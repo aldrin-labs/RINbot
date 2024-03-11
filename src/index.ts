@@ -1,21 +1,20 @@
+import { conversations, createConversation } from '@grammyjs/conversations';
+import { RedisAdapter } from '@grammyjs/storage-redis';
+import { kv as instance } from '@vercel/kv';
 import {
   Bot,
-  Context,
+  BotError,
+  Composer,
   Enhance,
   GrammyError,
   HttpError,
   enhanceStorage,
   session,
-  BotError,
-  Composer,
 } from 'grammy';
-import menu from './menu/main';
-import { createDca, depositDcaBase } from './chains/dca/dca.conversations';
-import { showActiveDCAs } from './chains/dca/showActiveDCAs';
-import { conversations, createConversation } from '@grammyjs/conversations';
-import { RedisAdapter } from '@grammyjs/storage-redis';
-import { kv as instance } from '@vercel/kv';
 import { ConversationId } from './chains/conversations.config';
+import { createDca } from './chains/dca/conversations/create-dca';
+import { depositDcaBase } from './chains/dca/conversations/deposit-base';
+import { withdrawDcaBase } from './chains/dca/conversations/withdraw-base';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
@@ -31,12 +30,12 @@ import {
   sell,
   withdraw,
 } from './chains/sui.functions';
-import { retryAndGoHomeButtonsData } from './inline-keyboards/retryConversationButtonsFactory';
-import { addDCAsToUser } from './migrations/addDCAs';
+import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
+import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addDCAsToUser } from './migrations/addDCAs';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN } from './config/bot.config';
 
 const APP_VERSION = '1.1.3';
 
@@ -103,6 +102,9 @@ async function startBot(): Promise<void> {
     createConversation(depositDcaBase, { id: ConversationId.DepositDcaBase }),
   );
   composer.use(
+    createConversation(withdrawDcaBase, { id: ConversationId.WithdrawDcaBase }),
+  );
+  composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
@@ -155,6 +157,10 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.CreateDca);
   });
 
+  bot.command('withdrawdcabase', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -179,6 +185,10 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createdca', description: 'Create DCA' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
+    {
+      command: 'withdrawdcabase',
+      description: 'Withdraw base coin from selected DCA',
+    },
   ]);
 
   useCallbackQueries(bot);
