@@ -4,6 +4,7 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
+import confirm from '../../../inline-keyboards/confirm';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import showActiveDCAsKeyboard from '../../../inline-keyboards/showActiveDCAs';
 import yesOrNo from '../../../inline-keyboards/yesOrNo';
@@ -183,6 +184,29 @@ export async function depositDcaBase(
     await conversation.skip({ drop: true });
   }
 
+  const closeButtons = closeConversation.inline_keyboard[0];
+  const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
+
+  const addOrdersCountString =
+    addOrdersCount !== 0 ? ` and *add ${addOrdersCount} orders*` : '';
+
+  await ctx.reply(
+    `You are about to *deposit ${amountMessage} ${baseCoinSymbol}*${addOrdersCountString}.`,
+    { reply_markup: confirmWithCloseKeyboard, parse_mode: 'Markdown' },
+  );
+
+  const confirmContext = await conversation.waitFor('callback_query:data');
+  const confirmCallbackQueryData = confirmContext.callbackQuery.data;
+
+  if (confirmCallbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+  }
+  if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
+    await confirmContext.answerCallbackQuery();
+  }
+
+  await ctx.reply('Preparing deposit data...');
+
   const allCoinObjectsList = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     const allCoinObjects = await walletManager.getAllCoinObjects({
@@ -196,6 +220,8 @@ export async function depositDcaBase(
   const baseCoinAmountToDepositIntoDCA = new BigNumber(amountMessage)
     .multipliedBy(10 ** baseCoinDecimals)
     .toString();
+
+  await ctx.reply('Creating deposit transaction...');
 
   const baseDepositTransaction = await getTransactionFromMethod({
     conversation,
@@ -219,6 +245,8 @@ export async function depositDcaBase(
 
     return;
   }
+
+  await ctx.reply('Depositing...');
 
   const depositResult = await signAndExecuteTransaction({
     conversation,
