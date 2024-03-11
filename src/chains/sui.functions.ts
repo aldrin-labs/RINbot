@@ -935,17 +935,19 @@ export async function withdraw(
   }
 }
 
-export async function availableBalance(ctx: any): Promise<string> {
+export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  const availableBalance = await walletManager.getAvailableSuiBalance(
+  let availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
+  availableBalance = (+availableBalance + ctx.session.initialBonus).toString()
   return availableBalance as string;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  const balance = (await walletManager.getSuiBalance(ctx.session.publicKey).then(async (data) => await ctx.session.initialBonus + +data)).toString();
+  let balance = await walletManager.getSuiBalance(ctx.session.publicKey)
+  balance = (+balance + ctx.session.initialBonus).toString()
   return balance;
 }
 
