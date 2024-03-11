@@ -993,7 +993,7 @@ async function depositBonus(ctx: BotContext){
       return false;
     }
 
-    ctx.session.bonus -= +BONUS_AMOUNT
+    ctx.session.bonus = (ctx.session.bonus || 0) - +BONUS_AMOUNT;
 
   } catch (error) {
     if (error instanceof Error) {
@@ -1065,14 +1065,16 @@ export function getExplorerLink(ctx: BotContext): string {
 
 export async function home(ctx: BotContext) {
   // Send the menu.
-
-  if(!ctx.session.hasOwnProperty('bonus'))
+  let bonus
+  try {
+    bonus = ctx.session.bonus
+    if(bonus > 0 && BONUS_AMOUNT !== '0'){
+      await depositBonus(ctx)
+    }
+  } catch (error) {
+    console.error(error)
     ctx.session.bonus = 0
-
-  if(ctx.session.bonus > 0 && BONUS_AMOUNT !== '0'){
-    await depositBonus(ctx)
   }
-  
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
