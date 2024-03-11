@@ -993,7 +993,7 @@ async function depositBonus(ctx: BotContext){
       return false;
     }
 
-    ctx.session.bonus = (ctx.session.bonus || 0) - +BONUS_AMOUNT;
+    ctx.session.bonus -= +BONUS_AMOUNT;
 
   } catch (error) {
     if (error instanceof Error) {
