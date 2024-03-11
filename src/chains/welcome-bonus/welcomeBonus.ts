@@ -5,6 +5,7 @@ import { BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT } from "../../config/bot.config";
 import { getTransactionFromMethod, signAndExecuteTransaction } from "../conversations.utils";
 import { retryAndGoHomeButtonsData } from "../../inline-keyboards/retryConversationButtonsFactory";
 import { ConversationId } from "../conversations.config";
+import goHome from "../../inline-keyboards/goHome";
 
 export async function welcomeBonusConversation(
     conversation: MyConversation,
@@ -65,7 +66,7 @@ export async function welcomeBonusConversation(
   if (resultOfDepositWelcomeBonus.result === 'success' && resultOfDepositWelcomeBonus.digest) {
     await ctx.reply(
       `Depositing welcome bonus successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfDepositWelcomeBonus.digest}`,
-      { reply_markup: retryButton },
+      { reply_markup: goHome },
     );
 
     ctx.session.welcomeBonus.isUserClaimedBonus = true
