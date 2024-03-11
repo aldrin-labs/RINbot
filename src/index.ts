@@ -22,7 +22,7 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT, BONUS_AMOUNT } from './config/bot.config';
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -53,7 +53,7 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 10 },
           assets: [],
-          bonus: 5
+          bonus: +BONUS_AMOUNT
         };
       },
       storage,
