@@ -9,4 +9,5 @@ export enum ConversationId {
   CreateCoin = 'createCoin',
   CreateDca = 'createDca',
   DepositDcaBase = 'depositDcaBase',
+  WithdrawDcaBase = 'withdrawDcaBase',
 }
