@@ -25,6 +25,8 @@ import { BotContext, SessionData } from './types';
 import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
+import { autoRetry } from "@grammyjs/auto-retry";
+
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -68,6 +70,8 @@ async function startBot(): Promise<void> {
       storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus } }),
     }),
   );
+
+  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }))
 
   composer.use(conversations());
 
