@@ -1068,7 +1068,7 @@ export async function home(ctx: BotContext) {
   let bonus
   try {
     bonus = ctx.session.bonus
-    if(ctx.session.bonus > 0 && BONUS_AMOUNT !== '0'){
+    if(bonus || 0 > 0 && BONUS_AMOUNT !== '0'){
       await depositBonus(ctx)
     }
   } catch (error) {
