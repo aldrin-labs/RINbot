@@ -1029,11 +1029,11 @@ export async function home(ctx: BotContext) {
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 
-  const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus
+  // const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus
 
-  if (isUserEligibleToGetBonus && !isUserClaimedBonus && (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)) {
-    await ctx.conversation.enter(ConversationId.WelcomeBonus)
-  }
+  // if (isUserEligibleToGetBonus && !isUserClaimedBonus && (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)) {
+  //   await ctx.conversation.enter(ConversationId.WelcomeBonus)
+  // }
 
 }
 export async function nftHome(ctx: BotContext) {
