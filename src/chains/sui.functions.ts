@@ -945,7 +945,7 @@ export async function availableBalance(ctx: any): Promise<string> {
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  const balance = await walletManager.getSuiBalance(ctx.session.publicKey).then(data => ctx.session.initialBonus + data);
+  const balance = await walletManager.getSuiBalance(ctx.session.publicKey).then(async (data) => await ctx.session.initialBonus.toString() + data);
   return balance;
 }
 
