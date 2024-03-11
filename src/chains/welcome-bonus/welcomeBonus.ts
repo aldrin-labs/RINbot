@@ -70,6 +70,7 @@ export async function welcomeBonusConversation(
     );
 
     conversation.session.welcomeBonus.isUserClaimedBonus = true
+    await answerContext.answerCallbackQuery();
 
     return;
   }
@@ -79,9 +80,11 @@ export async function welcomeBonusConversation(
       `Depositing welcome bonus failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfDepositWelcomeBonus.digest}`,
       { reply_markup: retryButton },
     );
+    await answerContext.answerCallbackQuery();
 
     return;
   }
 
+  await answerContext.answerCallbackQuery();
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
