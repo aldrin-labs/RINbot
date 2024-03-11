@@ -63,7 +63,7 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import { BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT } from '../config/bot.config';
+import { BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT, WELCOME_BONUS_MIN_TRADES_LIMIT } from '../config/bot.config';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -750,9 +750,9 @@ export async function exportPrivateKey(
   ctx: BotContext,
 ): Promise<void> {
   const { welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, }, tradesCount  } = ctx.session
-  const isUserEligibleToExportPrivateKey = isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < 15
+  const isUserNotEligibleToExportPrivateKey = isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT
 
-  if (isUserEligibleToExportPrivateKey) {
+  if (isUserNotEligibleToExportPrivateKey) {
     await ctx.reply("🔐 Oops! It seems you're eager to export your private key. To maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing 15 trades. Keep trading to unlock this feature and secure your gains! Happy trading! 📈")
 
     return
