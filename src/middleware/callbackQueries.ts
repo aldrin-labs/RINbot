@@ -1,4 +1,5 @@
 import { Bot } from 'grammy';
+import { showActiveDCAs } from '../chains/dca/showActiveDCAs';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
@@ -22,6 +23,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   });
 
   useSurfdogCallbackQueries(bot);
+  useDcaCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -29,6 +31,11 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
       await ctx.conversation.enter(conversationId);
       await ctx.answerCallbackQuery();
     });
+  });
+
+  bot.on('callback_query:data', async (ctx) => {
+    console.log('Unknown button event with payload', ctx.callbackQuery.data);
+    await ctx.answerCallbackQuery();
   });
 }
 
@@ -53,5 +60,12 @@ function useSurfdogCallbackQueries(bot: Bot<BotContext>) {
     await ctx.deleteMessage();
     await showSurfdogPage(ctx);
     await ctx.answerCallbackQuery();
+  });
+}
+
+function useDcaCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery('show-active-dcas', async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showActiveDCAs(ctx);
   });
 }
