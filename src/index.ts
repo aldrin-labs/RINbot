@@ -24,6 +24,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
 import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -98,6 +99,11 @@ async function startBot(): Promise<void> {
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
+  );
+  composer.use(
+    createConversation(welcomeBonusConversation, {
+      id: ConversationId.WelcomeBonus,
+    })
   );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer)
