@@ -5,8 +5,8 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
 import { File, PhotoSize } from 'grammy/types';
+import { BOT_TOKEN } from '../index';
 import { CoinForPool } from './types';
-import { BOT_TOKEN } from '../config/bot.config';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -221,4 +221,35 @@ export function findCoinInAssets(
       (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) ||
       asset.type === coinType,
   );
+}
+
+export function formatPrice(price: string): string {
+  const numericPrice = parseFloat(price);
+
+  if (isNaN(numericPrice)) {
+    throw new Error('Invalid price format');
+  }
+
+  if (numericPrice >= 1) {
+    return numericPrice.toFixed(6);
+  } else {
+    const decimalIndex = price.indexOf('.');
+
+    if (decimalIndex !== -1) {
+      let firstNotNullSymbolIndex = 0;
+
+      for (let i = decimalIndex + 1; i < price.length; i++) {
+        const symbol = price[i];
+
+        if (symbol !== '0') {
+          firstNotNullSymbolIndex = i;
+          break;
+        }
+      }
+
+      return price.substring(0, firstNotNullSymbolIndex + 6);
+    } else {
+      return price;
+    }
+  }
 }
