@@ -1028,13 +1028,6 @@ export async function home(ctx: BotContext) {
     'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
-
-  // const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus
-
-  // if (isUserEligibleToGetBonus && !isUserClaimedBonus && (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)) {
-  //   await ctx.conversation.enter(ConversationId.WelcomeBonus)
-  // }
-
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
