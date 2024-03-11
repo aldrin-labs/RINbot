@@ -132,13 +132,13 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
-    if(!ctx.session.bonus){
-      await ctx.reply("no bonus")
-    }
-    else{
+    if(ctx.session.bonus !== undefined){
       await ctx.reply("bonus")
     }
-    //await home(ctx);
+    else{
+      await ctx.reply("no bonus")
+    }
+    await home(ctx);
   });
 
   // Set commands suggestion
