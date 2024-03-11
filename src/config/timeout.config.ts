@@ -6,7 +6,7 @@
  * If TIMEOUT_GRAMMY_WEBHOOK exceeds the maxDuration in versel.json, it may lead to an infinite loop
  * of Telegram resending messages until they are processed.
  */
-export const TIMEOUT_GRAMMY_WEBHOOK = 28_000
+export const TIMEOUT_GRAMMY_WEBHOOK = 50_000
 
 /**
  * Timeout duration for Grammy middleware.

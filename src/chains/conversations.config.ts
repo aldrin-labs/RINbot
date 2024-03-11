@@ -3,6 +3,9 @@ export enum ConversationId {
   Sell = 'sell',
   Withdraw = 'withdraw',
   ExportPrivateKey = 'exportPrivateKey',
-  CreatePool = 'createPool',
+  CreateAftermathPool = 'createAftermathPool',
+  CreateCetusPool = 'createCetusPool',
+  AddCetusPoolLiquidity = 'addCetusPoolLiquidity',
   CreateCoin = 'createCoin',
+  WelcomeBonus = 'welcomeBonus'
 }

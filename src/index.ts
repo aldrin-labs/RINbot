@@ -1,45 +1,52 @@
-import { Bot, Context, GrammyError, HttpError, session } from 'grammy';
-import menu from './menu/main';
-import { BotContext, SessionData } from './types';
-// import SuiApiSingleton from './chains/sui';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
+import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
+import { ConversationId } from './chains/conversations.config';
+import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
+import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
+import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { addCetusLiquidity } from './chains/pools/cetus/add-liquidity';
+import { createCetusPool } from './chains/pools/cetus/create';
 import {
   buy,
+  createAftermathPool,
   createCoin,
-  createPool,
   exportPrivateKey,
   generateWallet,
   home,
   sell,
   withdraw,
 } from './chains/sui.functions';
+import menu from './menu/main';
+import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
-import { retryAndGoHomeButtonsData } from './inline-keyboards/retryConversationButtonsFactory';
-import { ConversationId } from './chains/conversations.config';
+import { BotContext, SessionData } from './types';
+import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 
-const APP_VERSION = '1.0.30';
+function errorBoundaryHandler(err: BotError) {
+  console.error('[Error Boundary Handler]', err);
+}
+
+
+const APP_VERSION = '1.1.2';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
 
-export const BOT_TOKEN = process.env.BOT_TOKEN || '';
-export const ENVIRONMENT = process.env.NODE_ENV || '';
-export const VERCEL_URL = process.env.WEBHOOK_URL || '';
-
-const storage = new RedisAdapter<SessionData>({ instance });
+const storage = new RedisAdapter<Enhance<SessionData>>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
+const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  bot.use(timeoutMiddleware);
-  // Make it interactive.
+  composer.use(timeoutMiddleware);
   bot.use(
     session({
-      // getSessionKey,
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
         return {
@@ -48,25 +55,58 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 10 },
           assets: [],
+          welcomeBonus: {
+            amount: WELCOME_BONUS_AMOUNT,
+            isUserEligibleToGetBonus: true,
+            isUserClaimedBonus: null,
+            isUserAgreeWithBonus: null,
+          },
+          tradesCount: 0,
+          createdAt: Date.now(),
         };
       },
-      storage,
+      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus } }),
     }),
   );
 
-  bot.use(conversations());
+  composer.use(conversations());
 
-  bot.use(createConversation(buy, { id: ConversationId.Buy }));
-  bot.use(createConversation(sell, { id: ConversationId.Sell }));
-  bot.use(
+  composer.use(createConversation(buy, { id: ConversationId.Buy }));
+  composer.use(createConversation(sell, { id: ConversationId.Sell }));
+  composer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
     }),
   );
-  bot.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
-  bot.use(createConversation(createPool, { id: ConversationId.CreatePool }));
-  bot.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
+  composer.use(
+    createConversation(createAftermathPool, {
+      id: ConversationId.CreateAftermathPool,
+    }),
+  );
+  // composer.use(
+  //   createConversation(addCetusLiquidity, {
+  //     id: ConversationId.AddCetusPoolLiquidity,
+  //   }),
+  // );
+  // composer.use(
+  //   createConversation(createCetusPool, {
+  //     id: ConversationId.CreateCetusPool,
+  //   }),
+  // );
+  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(
+    createConversation(buySurfdogTickets, {
+      id: SurfdogConversationId.BuySurfdogTickets,
+    }),
+  );
+  composer.use(
+    createConversation(welcomeBonusConversation, {
+      id: ConversationId.WelcomeBonus,
+    })
+  );
 
+  bot.errorBoundary(errorBoundaryHandler).use(composer)
   bot.use(menu);
 
   bot.command('version', async (ctx) => {
@@ -85,51 +125,60 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.Withdraw);
   });
 
-  bot.command('createpool', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CreatePool);
+  bot.command('createaftermathpool', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateAftermathPool);
+  });
+
+  bot.command('createcetuspool', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateCetusPool);
+  });
+
+  bot.command('addcetuspoolliquidity', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
   });
 
   bot.command('createcoin', async (ctx) => {
     await ctx.conversation.enter(ConversationId.CreateCoin);
   });
 
+  bot.command('surfdog', async (ctx) => {
+    await showSurfdogPage(ctx);
+  });
 
   bot.command('start', async (ctx) => {
     await home(ctx);
   });
 
-   //Set commands suggestion
-   await bot.api.setMyCommands([
-    { command: "start", description: "Start the bot" },
-    { command: "version", description: "Show the bot version" },
-    { command: "buy", description: "Show buy menu"},
-    { command: "sell", description: "Show sell menu"},
-    { command: "withdrawal", description: "Show withdrawal menu"},
-    { command: "createpool", description: "Create liquidity pool"},
-    { command: "createcoin", description: "Create coin"},
+  // Set commands suggestion
+  await bot.api.setMyCommands([
+    { command: 'start', description: 'Start the bot' },
+    { command: 'version', description: 'Show the bot version' },
+    { command: 'buy', description: 'Show buy menu' },
+    { command: 'sell', description: 'Show sell menu' },
+    { command: 'withdrawal', description: 'Show withdrawal menu' },
+    {
+      command: 'createaftermathpool',
+      description: 'Create Aftermath liquidity pool',
+    },
+    // {
+    //   command: 'createcetuspool',
+    //   description: 'Create Cetus concentrated liquidity pool',
+    // },
+    // {
+    //   command: 'addcetuspoolliquidity',
+    //   description: 'Add liquidity to Cetus pool',
+    // },
+    { command: 'createcoin', description: 'Create coin' },
+    { command: 'createpool', description: 'Create liquidity pool' },
+    { command: 'createcoin', description: 'Create coin' },
+    { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
   ]);
 
+  useCallbackQueries(bot);
 
-  bot.callbackQuery('close-conversation', async (ctx) => {
-    await ctx.conversation.exit();
-    ctx.session.step = 'main';
-    await ctx.deleteMessage();
-    await home(ctx);
+  bot.callbackQuery('add-cetus-liquidity', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
     await ctx.answerCallbackQuery();
-  });
-
-  bot.callbackQuery('go-home', async (ctx) => {
-    ctx.session.step = 'main';
-    await home(ctx);
-    await ctx.answerCallbackQuery();
-  });
-
-  Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
-    bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
-      await ctx.conversation.exit();
-      await ctx.conversation.enter(conversationId);
-      await ctx.answerCallbackQuery();
-    });
   });
 
   bot.catch((err) => {
@@ -146,10 +195,12 @@ async function startBot(): Promise<void> {
     }
   });
 
+  // bot.errorBoundary(errorBoundaryHandler)
+
   ENVIRONMENT === 'local' && bot.start();
 }
 
-startBot(); // Call the function to start the bot
+startBot();
 
 //prod mode (Vercel)
 // export const startVercel = async (req: VercelRequest, res: VercelResponse) => {

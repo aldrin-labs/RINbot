@@ -24,6 +24,7 @@ import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
+import continueKeyboard from '../inline-keyboards/continue';
 import goHome from '../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import skip from '../inline-keyboards/skip';
@@ -49,6 +50,8 @@ import {
 import { SuiTransactionBlockResponse } from './types';
 import {
   extractCoinTypeFromLink,
+  findCoinInAssets,
+  getAftermathPoolLink,
   getSuiVisionCoinLink,
   getSuitableCoinImageData,
   getTelegramFileUrl,
@@ -60,14 +63,16 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-enum TransactionResultStatus {
+import { BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT, WELCOME_BONUS_MIN_TRADES_LIMIT } from '../config/bot.config';
+
+export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
 }
 
-const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
+export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
 
-const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
+export const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
 export const getTurbos = async () => {
   const { redisClient } = await getRedisClient();
@@ -218,23 +223,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    let coinToBuy: CommonCoinData;
-    try {
-      coinToBuy = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(`Token ${coinType} not found in coinManager`);
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
+    if (fetchedCoin === null) {
       await ctx.reply(
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (!coinToBuy) {
-      await ctx.reply(
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
         { reply_markup: closeConversation },
       );
 
@@ -242,8 +235,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     }
 
     const tokenToBuyIsSui: boolean =
-      swapTokenTypesAreEqual(coinToBuy.type, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(coinToBuy.type, SHORT_SUI_COIN_TYPE);
+      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
+      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
     if (tokenToBuyIsSui) {
       await ctx.reply(
@@ -254,7 +247,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    validatedCoinType = coinToBuy.type;
+    validatedCoinType = fetchedCoin.type;
     return true;
   });
 
@@ -269,7 +262,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   await ctx.reply(
-    `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -423,6 +416,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       { reply_markup: retryButton },
     );
 
+    conversation.session.tradesCount = conversation.session.tradesCount + 1
+
     return;
   }
 
@@ -523,34 +518,11 @@ export async function sell(
       coinType = extractedCoin;
     }
 
-    let coinToSell: CommonCoinData;
-    try {
-      coinToSell = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(`Token ${coinType} not found in coinManager`);
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
+    if (fetchedCoin === null) {
       await ctx.reply(
-        // eslint-disable-next-line max-len
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (!coinToSell) {
-      await ctx.reply(
-        // eslint-disable-next-line max-len
-        `Token address not found. Make sure address "${coinType}" is correct.\n\nYou can enter a token address or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (coinToSell.decimals === null) {
-      await ctx.reply(
-        `Token decimals not found for ${coinType}. Please, use another token for sell or contact support.`,
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
         { reply_markup: closeConversation },
       );
 
@@ -558,8 +530,8 @@ export async function sell(
     }
 
     const tokenToSellIsSui: boolean =
-      swapTokenTypesAreEqual(coinToSell.type, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(coinToSell.type, SHORT_SUI_COIN_TYPE);
+      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
+      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
     if (tokenToSellIsSui) {
       await ctx.reply(
@@ -570,7 +542,7 @@ export async function sell(
       return false;
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -599,7 +571,7 @@ export async function sell(
   const validCoinToSell = validatedCoin as CoinAssetData;
 
   await ctx.reply(
-    `Reply with the amount you wish to withdraw (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -756,6 +728,8 @@ export async function sell(
       { reply_markup: retryButton },
     );
 
+    conversation.session.tradesCount = conversation.session.tradesCount + 1
+
     return;
   }
 
@@ -775,6 +749,15 @@ export async function exportPrivateKey(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const { welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, }, tradesCount  } = ctx.session
+  const isUserNotEligibleToExportPrivateKey = isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT
+
+  if (isUserNotEligibleToExportPrivateKey) {
+    await ctx.reply(`🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`, { reply_markup: goHome })
+
+    return
+  }
+
   await ctx.reply(
     `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -804,6 +787,13 @@ export async function withdraw(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const { welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, }, tradesCount  } = ctx.session
+  const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus
+
+  if (isUserUsedWelcomeBonus) {
+    await ctx.reply(`💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`)
+  }
+
   await ctx.reply(
     `Please, type the address to which you would like to send your SUI.`,
     { reply_markup: closeConversation },
@@ -846,8 +836,18 @@ export async function withdraw(
   }
 
   const walletManager = await getWalletManager();
-  const { availableAmount, totalGasFee } =
+  let { availableAmount, totalGasFee } =
     await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+
+  // Decrease available amount in case user participate in the welcome bonus program
+  availableAmount = isUserUsedWelcomeBonus ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString() : availableAmount
+
+  // There is no sense to allow user reply with amount in case it's 0 or less than 0
+  if (parseFloat(availableAmount) <= 0) {
+    await ctx.reply(`⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`, { reply_markup: goHome })
+
+    return;
+  }
 
   await ctx.reply(
     `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -967,7 +967,7 @@ export async function withdraw(
   }
 }
 
-export async function availableBalance(ctx: any): Promise<string> {
+export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
@@ -977,7 +977,7 @@ export async function availableBalance(ctx: any): Promise<string> {
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
+  const balance = await walletManager.getSuiBalance(ctx.session.publicKey)
   return balance;
 }
 
@@ -1021,11 +1021,13 @@ export function getExplorerLink(ctx: BotContext): string {
 }
 
 export async function home(ctx: BotContext) {
-  // Send the menu.
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
-  await ctx.reply(welcome_text, { reply_markup: menu, parse_mode: 'HTML' });
+  await ctx.replyWithPhoto(
+    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
+  );
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
@@ -1035,10 +1037,41 @@ export async function nftHome(ctx: BotContext) {
 }
 
 // TODO: refactor code to move boilerplate code
-export async function createPool(
+export async function createAftermathPool(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const closeButton = closeConversation.inline_keyboard[0];
+  const continueWithCloseKeyboard = continueKeyboard
+    .clone()
+    .add(...closeButton);
+
+  await ctx.reply(
+    '<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI ' +
+      'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
+      'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
+      'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
+      'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
+      'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
+    { reply_markup: continueWithCloseKeyboard, parse_mode: 'HTML' },
+  );
+
+  const continueContext = await conversation.waitFor('callback_query:data');
+  const continueCallbackQueryData = continueContext.callbackQuery.data;
+
+  if (continueCallbackQueryData === 'close-conversation') {
+    await conversation.skip();
+  }
+  if (continueCallbackQueryData === 'continue') {
+    await continueContext.answerCallbackQuery();
+  } else {
+    await ctx.reply('Please, choose the button.', {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip({ drop: true });
+  }
+
   await ctx.reply(
     'What would be <b>the first coin</b> in pool? Please send a coin type or a link to suiscan.',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -1049,7 +1082,8 @@ export async function createPool(
     { parse_mode: 'HTML' },
   );
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreatePool];
+  const retryButton =
+    retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -1093,27 +1127,18 @@ export async function createPool(
       return false;
     }
 
-    try {
-      coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(
-        `Coin ${coinType} not found in coinManager, so fetching...`,
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
+
+    if (fetchedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
       );
 
-      // TODO: use getCoinByType2, it fetches coin metadata under the hood
-      const fetchedCoin = await coinManager.fetchCoinMetadata(coinType);
-
-      if (fetchedCoin === null) {
-        await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
+      return false;
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -1273,33 +1298,15 @@ export async function createPool(
       return false;
     }
 
-    let coin:
-      | CommonCoinData
-      | Exclude<
-          Awaited<ReturnType<typeof coinManager.fetchCoinMetadata>>,
-          null
-        >;
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
-    try {
-      coin = coinManager.getCoinByType(coinType);
-    } catch (e) {
-      console.error(
-        `Coin ${coinType} not found in coinManager, so fetching...`,
+    if (fetchedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
       );
 
-      // TODO: use getCoinByType2, it fetches coin metadata under the hood
-      const fetchedCoin = await coinManager.fetchCoinMetadata(coinType);
-
-      if (fetchedCoin === null) {
-        await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
-
-      coin = fetchedCoin;
+      return false;
     }
 
     const secondCoinIsSui: boolean =
@@ -1318,7 +1325,7 @@ export async function createPool(
       return false;
     }
 
-    const foundCoin = allCoinsAssets.find((el) => el.type === coinType);
+    const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
       await ctx.reply(
@@ -1337,7 +1344,7 @@ export async function createPool(
           coinTypeA: firstValidatedCoinToAdd.type,
           amountA: firstValidatedInputAmount,
           coinTypeB: foundCoin.type,
-          decimalsB: coin.decimals,
+          decimalsB: fetchedCoin.decimals,
         });
 
       if (foundCoin.balance < minAmountB) {
@@ -2480,7 +2487,7 @@ export async function createCoin(
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
 
-export async function ownedPools(ctx: BotContext) {
+export async function ownedAftermathPools(ctx: BotContext) {
   const loadingMessage = await ctx.reply('<b>Loading...</b>', {
     parse_mode: 'HTML',
   });
@@ -2494,15 +2501,21 @@ export async function ownedPools(ctx: BotContext) {
   );
 
   if (ownedPoolInfos.length === 0) {
-    await ctx.reply('You have no pools yet.', { reply_markup: goHome });
+    await ctx.api.editMessageText(
+      loadingMessage.chat.id,
+      loadingMessage.message_id,
+      'You have no pools yet.',
+      { reply_markup: goHome },
+    );
 
     return;
   }
 
   let infoString = '<b>Owned Pools</b>:';
-  let providerName = 'Aftermath';
   ownedPoolInfos.forEach((poolInfo) => {
-    infoString += `\n\nName: <b>${poolInfo.name}</b> (<i>${providerName}</i>)\n`;
+    const poolLink = getAftermathPoolLink(poolInfo.poolObjectId);
+
+    infoString += `\n\nName: <a href="${poolLink}"><b>${poolInfo.name}</b></a>\n`;
     infoString += `TVL: <code>${poolInfo.tvl}</code>\n`;
     infoString += `Volume: <code>${poolInfo.volume}</code>\n`;
     infoString += `APR: <code>${poolInfo.apr}</code>\n`;
