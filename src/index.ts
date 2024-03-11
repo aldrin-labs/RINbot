@@ -135,7 +135,7 @@ async function startBot(): Promise<void> {
     if(!ctx.session.hasOwnProperty("bonus")){
       const user = await instance.get(ctx.from!.id.toString())
       console.log(user);
-      
+      await ctx.reply(`${user}`)
     }
     await home(ctx);
   });
