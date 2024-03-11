@@ -132,6 +132,9 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
+    if(!ctx.session.bonus){
+      await ctx.reply("no bonus")
+    }
     await home(ctx);
   });
 
