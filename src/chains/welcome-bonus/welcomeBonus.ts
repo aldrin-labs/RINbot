@@ -24,9 +24,9 @@ export async function welcomeBonusConversation(
   const answer = answerContext.callbackQuery.data;
 
   if (answer === "no") {
-    ctx.session.welcomeBonus.isUserAgreeWithBonus = false
-    await ctx.api.deleteMessage(welcomeBonusInitialMessage.chat.id, welcomeBonusInitialMessage.message_id);
+    conversation.session.welcomeBonus.isUserAgreeWithBonus = false
     await answerContext.answerCallbackQuery();
+    await ctx.api.deleteMessage(welcomeBonusInitialMessage.chat.id, welcomeBonusInitialMessage.message_id);
 
     return
   }
@@ -41,7 +41,7 @@ export async function welcomeBonusConversation(
 
 
   // We confirm that user agreed with requirements
-  ctx.session.welcomeBonus.isUserAgreeWithBonus = true
+  conversation.session.welcomeBonus.isUserAgreeWithBonus = true
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
@@ -69,7 +69,7 @@ export async function welcomeBonusConversation(
       { reply_markup: goHome },
     );
 
-    ctx.session.welcomeBonus.isUserClaimedBonus = true
+    conversation.session.welcomeBonus.isUserClaimedBonus = true
 
     return;
   }
