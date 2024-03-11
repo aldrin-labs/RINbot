@@ -6,9 +6,10 @@ import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUser
 import { home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
+import { CallbackQueryData } from '../types/callback-queries-data';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
-  bot.callbackQuery('close-conversation', async (ctx) => {
+  bot.callbackQuery(CallbackQueryData.Cancel, async (ctx) => {
     await ctx.conversation.exit();
     ctx.session.step = 'main';
     await ctx.deleteMessage();
@@ -33,6 +34,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     });
   });
 
+  // We need this to handle button clicks which are not handled wherever (e.g. in conversations)
   bot.on('callback_query:data', async (ctx) => {
     console.log('Unknown button event with payload', ctx.callbackQuery.data);
     await ctx.answerCallbackQuery();

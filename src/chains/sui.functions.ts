@@ -3,7 +3,6 @@ import {
   CetusSingleton,
   CoinAssetData,
   CoinManagerSingleton,
-  CommonCoinData,
   FlowxSingleton,
   LONG_SUI_COIN_TYPE,
   RedisStorageSingleton,
@@ -33,6 +32,7 @@ import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
 import { BotContext, MyConversation } from '../types';
+import { CallbackQueryData } from '../types/callback-queries-data';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -191,7 +191,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   let validatedCoinType: string | undefined;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -266,7 +266,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   let validatedInputAmount: string | undefined;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -477,7 +477,7 @@ export async function sell(
 
   let validatedCoin: CoinAssetData | null = null;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -573,7 +573,7 @@ export async function sell(
 
   let validatedInputAmount: string;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -779,7 +779,7 @@ export async function withdraw(
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
 
   const messageData = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -823,7 +823,7 @@ export async function withdraw(
   );
 
   const amountData = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -1028,7 +1028,7 @@ export async function createAftermathPool(
   const continueContext = await conversation.waitFor('callback_query:data');
   const continueCallbackQueryData = continueContext.callbackQuery.data;
 
-  if (continueCallbackQueryData === 'close-conversation') {
+  if (continueCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   }
   if (continueCallbackQueryData === 'continue') {
@@ -1066,7 +1066,7 @@ export async function createAftermathPool(
 
   let firstValidatedCoin: CoinAssetData | null = null;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -1168,7 +1168,7 @@ export async function createAftermathPool(
 
   const firstValidatedInputAmountMessage = await conversation.waitUntil(
     async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
+      if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
         return false;
       }
 
@@ -1237,7 +1237,7 @@ export async function createAftermathPool(
   let secondCoinMaxAmount: string | undefined;
 
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -1401,7 +1401,7 @@ export async function createAftermathPool(
 
   const secondValidatedInputAmountMessage = await conversation.waitUntil(
     async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
+      if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
         return false;
       }
 
@@ -1488,7 +1488,7 @@ export async function createAftermathPool(
   );
 
   const tradeFeeMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -1969,7 +1969,7 @@ export async function createCoin(
   );
 
   const coinNameMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -2006,7 +2006,7 @@ export async function createCoin(
   );
 
   const coinSymbolMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -2046,7 +2046,7 @@ export async function createCoin(
   );
 
   const coinDescriptionMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'skip') {
@@ -2097,7 +2097,7 @@ export async function createCoin(
   );
 
   const imagesDataMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'skip') {
@@ -2189,7 +2189,7 @@ export async function createCoin(
   );
 
   const coinDecimalsMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'skip') {
@@ -2236,7 +2236,7 @@ export async function createCoin(
   );
 
   const totalSupplyMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -2279,7 +2279,7 @@ export async function createCoin(
   );
 
   const fixedSupplyMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'yes') {
