@@ -1,7 +1,7 @@
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { Bot, BotError, Composer, GrammyError, HttpError, session } from 'grammy';
+import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
@@ -22,7 +22,9 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -35,7 +37,7 @@ if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
 
-const storage = new RedisAdapter<SessionData>({ instance });
+const storage = new RedisAdapter<Enhance<SessionData>>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 const composer = new Composer<BotContext>();
@@ -53,9 +55,17 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 10 },
           assets: [],
+          welcomeBonus: {
+            amount: WELCOME_BONUS_AMOUNT,
+            isUserEligibleToGetBonus: true,
+            isUserClaimedBonus: null,
+            isUserAgreeWithBonus: null,
+          },
+          tradesCount: 0,
+          createdAt: Date.now(),
         };
       },
-      storage,
+      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus } }),
     }),
   );
 
@@ -89,6 +99,11 @@ async function startBot(): Promise<void> {
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
+  );
+  composer.use(
+    createConversation(welcomeBonusConversation, {
+      id: ConversationId.WelcomeBonus,
+    })
   );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer)

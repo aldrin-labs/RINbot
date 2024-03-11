@@ -151,10 +151,12 @@ export async function signAndExecuteTransaction({
   conversation,
   ctx,
   transaction,
+  signerPrivateKey = ctx.session.privateKey,
 }: {
   conversation: MyConversation;
   ctx: BotContext;
   transaction: TransactionBlock;
+  signerPrivateKey?: string,
 }): Promise<{
   digest?: string;
   result: TransactionResultStatus;
@@ -169,7 +171,7 @@ export async function signAndExecuteTransaction({
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
         signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
+          signerPrivateKey,
         ),
         options: {
           showEffects: true,
