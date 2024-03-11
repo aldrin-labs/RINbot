@@ -5,8 +5,8 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
 import { File, PhotoSize } from 'grammy/types';
-import { BOT_TOKEN } from '../index';
 import { CoinForPool } from './types';
+import { BOT_TOKEN } from '../config/bot.config';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -222,7 +222,7 @@ export function findCoinInAssets(
       asset.type === coinType,
   );
 }
-
+// Move to SDK & add tests for this method
 export function formatPrice(price: string): string {
   const numericPrice = parseFloat(price);
 
