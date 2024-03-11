@@ -12,8 +12,7 @@ export async function welcomeBonusConversation(
     ctx: BotContext,
   ): Promise<void> {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.WelcomeBonus];
-
-  const caption = `To kickstart your journey with us, we're granting you ${conversation.session.welcomeBonus.amount} SUI for free. 🚀 \n\n🤔 The catch? You can't withdraw these ${conversation.session.welcomeBonus.amount} SUI permanently or export your private key until you've engaged in ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. But worry not, you can trade, profit, and withdraw those gains! \nReady to get started?\n\n🌐 Your journey begins now! Tap 'Yes' and let the trading adventure commence! 🌟`;
+  const caption = `To kickstart your journey with us, we're bestowing upon you ${conversation.session.welcomeBonus.amount} SUI to jumpstart your expedition with us. 🚀 \n\n🤔 👀 Here's the twist: After any withdrawal, your balance must remain at least ${conversation.session.welcomeBonus.amount} SUI, and the option to export your private key becomes available only after engaging in at least ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. But fear not, you're all set to trade, reap profits, and withdraw your gains!\n Are you ready to take on the challenge? \n\n🌐 Your journey begins now! Tap 'Yes' and let the trading adventure commence! 🌟`;
 
   const welcomeBonusInitialMessage = await ctx.replyWithPhoto('https://pbs.twimg.com/media/FttYpSnakAAS51Z.jpg', {
     caption,
