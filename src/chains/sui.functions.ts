@@ -969,7 +969,7 @@ export async function withdraw(
 
 export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  let availableBalance = await walletManager.getAvailableSuiBalance(
+  const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
   return availableBalance as string;
@@ -977,7 +977,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  let balance = await walletManager.getSuiBalance(ctx.session.publicKey)
+  const balance = await walletManager.getSuiBalance(ctx.session.publicKey)
   return balance;
 }
 
