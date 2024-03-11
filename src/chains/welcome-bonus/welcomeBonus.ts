@@ -1,7 +1,7 @@
 import { WalletManagerSingleton } from "@avernikoz/rinbot-sui-sdk";
 import yesOrNo from "../../inline-keyboards/yesOrNo";
 import { BotContext, MyConversation } from "../../types";
-import { WELCOME_BONUS_AMOUNT } from "../../config/bot.config";
+import { BOT_PRIVATE_KEY, WELCOME_BONUS_AMOUNT } from "../../config/bot.config";
 import { getTransactionFromMethod, signAndExecuteTransaction } from "../conversations.utils";
 import { retryAndGoHomeButtonsData } from "../../inline-keyboards/retryConversationButtonsFactory";
 import { ConversationId } from "../conversations.config";
@@ -59,7 +59,7 @@ export async function welcomeBonusConversation(
     return;
   }
 
-  const resultOfDepositWelcomeBonus = await signAndExecuteTransaction({ conversation, ctx, transaction })
+  const resultOfDepositWelcomeBonus = await signAndExecuteTransaction({ conversation, ctx, transaction, signerPrivateKey: BOT_PRIVATE_KEY })
 
   if (resultOfDepositWelcomeBonus.result === 'success' && resultOfDepositWelcomeBonus.digest) {
     await ctx.reply(
