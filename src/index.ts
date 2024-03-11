@@ -36,7 +36,7 @@ import { addDCAsToUser } from './migrations/addDCAs';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN } from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
 
 const APP_VERSION = '1.1.3';
 
