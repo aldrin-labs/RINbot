@@ -84,16 +84,16 @@ async function startBot(): Promise<void> {
       id: ConversationId.CreateAftermathPool,
     }),
   );
-  composer.use(
-    createConversation(addCetusLiquidity, {
-      id: ConversationId.AddCetusPoolLiquidity,
-    }),
-  );
-  composer.use(
-    createConversation(createCetusPool, {
-      id: ConversationId.CreateCetusPool,
-    }),
-  );
+  // composer.use(
+  //   createConversation(addCetusLiquidity, {
+  //     id: ConversationId.AddCetusPoolLiquidity,
+  //   }),
+  // );
+  // composer.use(
+  //   createConversation(createCetusPool, {
+  //     id: ConversationId.CreateCetusPool,
+  //   }),
+  // );
   composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
   composer.use(
     createConversation(buySurfdogTickets, {
@@ -160,14 +160,14 @@ async function startBot(): Promise<void> {
       command: 'createaftermathpool',
       description: 'Create Aftermath liquidity pool',
     },
-    {
-      command: 'createcetuspool',
-      description: 'Create Cetus concentrated liquidity pool',
-    },
-    {
-      command: 'addcetuspoolliquidity',
-      description: 'Add liquidity to Cetus pool',
-    },
+    // {
+    //   command: 'createcetuspool',
+    //   description: 'Create Cetus concentrated liquidity pool',
+    // },
+    // {
+    //   command: 'addcetuspoolliquidity',
+    //   description: 'Add liquidity to Cetus pool',
+    // },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
