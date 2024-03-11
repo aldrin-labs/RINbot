@@ -208,6 +208,10 @@ export function getSuiVisionTransactionLink(digest: string) {
   return `https://suivision.xyz/txblock/${digest}`;
 }
 
+export function getSuiScanTransactionLink(digest: string) {
+  return `https://suiscan.xyz/mainnet/tx/${digest}`;
+}
+
 export function getAftermathPoolLink(poolObjectId: string) {
   return `${AftermathSingleton.AFTERMATH_POOL_URL}/${poolObjectId}`;
 }
