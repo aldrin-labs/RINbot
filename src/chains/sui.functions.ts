@@ -749,6 +749,15 @@ export async function exportPrivateKey(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const { welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, }, tradesCount  } = ctx.session
+  const isUserEligibleToExportPrivateKey = isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < 15
+
+  if (isUserEligibleToExportPrivateKey) {
+    await ctx.reply("🔐 Oops! It seems you're eager to export your private key. To maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing 15 trades. Keep trading to unlock this feature and secure your gains! Happy trading! 📈")
+
+    return
+  }
+
   await ctx.reply(
     `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -778,6 +787,13 @@ export async function withdraw(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const { welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, }, tradesCount  } = ctx.session
+  const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus
+
+  if (isUserUsedWelcomeBonus) {
+    await ctx.reply("💸 Hold on! Before you go withdrawing, a quick heads up. While you can deposit and trade more SUI, the initial 5 SUI bonus is non-withdrawable. But hey, the profits you make from trading? Those are yours to take! Keep growing that portfolio and enjoy the fruits of your trading strategies. Happy profiting! 🌈🚀")
+  }
+
   await ctx.reply(
     `Please, type the address to which you would like to send your SUI.`,
     { reply_markup: closeConversation },
@@ -820,8 +836,18 @@ export async function withdraw(
   }
 
   const walletManager = await getWalletManager();
-  const { availableAmount, totalGasFee } =
+  let { availableAmount, totalGasFee } =
     await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+
+  // Decrease available amount in case user participate in the welcome bonus program
+  availableAmount = isUserUsedWelcomeBonus ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString() : availableAmount
+
+  // There is no sense to allow user reply with amount in case it's 0 or less than 0
+  if (parseFloat(availableAmount) <= 0) {
+    await ctx.reply("⚠️ Heads up! Your available balance is currently 5 SUI or less. At the moment, there are no funds available for withdrawal. Keep in mind that the initial 5 SUI bonus is non-withdrawable. Trade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. Stay focused on your trading goals! 📊💼")
+
+    return;
+  }
 
   await ctx.reply(
     `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,

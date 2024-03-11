@@ -57,6 +57,7 @@ async function startBot(): Promise<void> {
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
             isUserEligibleToGetBonus: true,
+            isUserClaimedBonus: null,
             isUserAgreeWithBonus: null,
           },
           tradesCount: 0,
