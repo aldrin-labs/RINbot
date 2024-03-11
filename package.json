@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@avernikoz/rinbot-sui-sdk": "^2.3.7",
+    "@grammyjs/auto-retry": "^1.1.1",
     "@grammyjs/conversations": "^1.2.0",
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-redis": "^2.4.1",

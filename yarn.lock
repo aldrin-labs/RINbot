@@ -241,6 +241,11 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
+"@grammyjs/auto-retry@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.npmjs.org/@grammyjs/auto-retry/-/auto-retry-1.1.1.tgz#0391aec411585b30269eaaab7ca10043b099054a"
+  integrity sha512-vaQDl45Unhidi4r5+JrwDKfmPFJuJpAh9YmE38pACcP3TyKnwUMQxQ3bRdl0Y1ME/uBwTm9YiX1pwol0vnubCw==
+
 "@grammyjs/conversations@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@grammyjs/conversations/-/conversations-1.2.0.tgz#01e295db07cd00373f54d548c8c5e913fccd6e88"
