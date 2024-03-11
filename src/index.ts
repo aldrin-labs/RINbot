@@ -1,7 +1,20 @@
+import {
+  Bot,
+  Context,
+  Enhance,
+  GrammyError,
+  HttpError,
+  enhanceStorage,
+  session,
+  BotError,
+  Composer,
+} from 'grammy';
+import menu from './menu/main';
+import { createDca, depositDcaBase } from './chains/dca/dca.conversations';
+import { showActiveDCAs } from './chains/dca/showActiveDCAs';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { Bot, BotError, Composer, GrammyError, HttpError, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
@@ -18,31 +31,27 @@ import {
   sell,
   withdraw,
 } from './chains/sui.functions';
-import menu from './menu/main';
+import { retryAndGoHomeButtonsData } from './inline-keyboards/retryConversationButtonsFactory';
+import { addDCAsToUser } from './migrations/addDCAs';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
 
-function errorBoundaryHandler(err: BotError) {
-  console.error('[Error Boundary Handler]', err);
-}
-
-
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.1.3';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
 }
 
-const storage = new RedisAdapter<SessionData>({ instance });
+const storage = new RedisAdapter<Enhance<SessionData>>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
 const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  composer.use(timeoutMiddleware);
+
+  bot.use(timeoutMiddleware);
   bot.use(
     session({
       initial: (): SessionData => {
@@ -53,9 +62,10 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 10 },
           assets: [],
+          dcas: { currentIndex: null, objects: [] },
         };
       },
-      storage,
+      storage: enhanceStorage({ storage, migrations: { 1: addDCAsToUser } }),
     }),
   );
 
@@ -84,14 +94,20 @@ async function startBot(): Promise<void> {
       id: ConversationId.CreateCetusPool,
     }),
   );
-  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(
+    createConversation(createCoin, { id: ConversationId.CreateCoin }),
+  );
+  composer.use(createConversation(createDca, { id: ConversationId.CreateDca }));
+  composer.use(
+    createConversation(depositDcaBase, { id: ConversationId.DepositDcaBase }),
+  );
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
   );
+  bot.errorBoundary(boundaryHandler).use(composer);
 
-  bot.errorBoundary(errorBoundaryHandler).use(composer)
   bot.use(menu);
 
   bot.command('version', async (ctx) => {
@@ -134,6 +150,10 @@ async function startBot(): Promise<void> {
     await home(ctx);
   });
 
+  bot.command('createdca', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateDca);
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -156,6 +176,7 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
+    { command: 'createdca', description: 'Create DCA' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
   ]);
 
@@ -180,8 +201,6 @@ async function startBot(): Promise<void> {
     }
   });
 
-  // bot.errorBoundary(errorBoundaryHandler)
-
   ENVIRONMENT === 'local' && bot.start();
 }
 
@@ -191,5 +210,9 @@ startBot();
 // export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
 //   await production(req, res, bot);
 // };
+
+function boundaryHandler(err: BotError) {
+  console.error('[Error Boundary]', err);
+}
 
 export { bot };
