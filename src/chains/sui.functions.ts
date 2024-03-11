@@ -1066,8 +1066,7 @@ export function getExplorerLink(ctx: BotContext): string {
 export async function home(ctx: BotContext) {
   // Send the menu.
   console.log(ctx.session.bonus);
-  if(ctx.session.bonus > 0){
-    
+  if(ctx.session.bonus || 0 > 0 && BONUS_AMOUNT !== '0'){
     await depositBonus(ctx)
   }
   const userBalance = await balance(ctx);
