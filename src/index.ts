@@ -132,7 +132,11 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
-    await home(ctx);
+    if(ctx.session.bonus)
+      await ctx.reply('yes')
+    else
+      await ctx.reply('no')
+    //await home(ctx);
   });
 
   // Set commands suggestion
