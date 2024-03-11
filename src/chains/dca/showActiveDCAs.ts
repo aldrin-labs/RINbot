@@ -20,7 +20,12 @@ export async function showActiveDCAs(ctx: BotContext) {
   });
 
   if (dcaList.length === 0) {
-    await ctx.reply('You have no DCAs yet.', { reply_markup: goHome });
+    await ctx.api.editMessageText(
+      loadingMessage.chat.id,
+      loadingMessage.message_id,
+      'You have no DCAs yet.',
+      { reply_markup: goHome },
+    );
 
     return;
   }
