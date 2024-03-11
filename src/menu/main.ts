@@ -2,8 +2,10 @@ import { Menu } from '@grammyjs/menu';
 import { assets, nftHome } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
+import activeDcas from './active-dcas';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
+import dcaMenu from './dca';
 import help_menu from './help';
 import launchpadMenu from './launchpad/launchpad';
 import globalStatsMenu from './launchpad/surfdog/globalStats';
@@ -47,6 +49,9 @@ const menu = new Menu<BotContext>('main')
     await ctx.conversation.enter('createCoin');
   })
   .row()
+  .text('DCA', async (ctx) => {
+    ctx.menu.nav('sui-dca');
+  })
   .text('Launchpad', (ctx) => {
     ctx.menu.nav('launchpad');
   })
@@ -57,6 +62,7 @@ const menu = new Menu<BotContext>('main')
       { parse_mode: 'HTML', reply_markup: goHome },
     );
   })
+  .row()
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN');
 
 menu.register(buy_menu);
@@ -71,6 +77,8 @@ menu.register(settings_menu);
 menu.register(deposit_menu, 'wallet-menu');
 menu.register(withdraw_menu, 'wallet-menu');
 menu.register(poolsMenu);
+menu.register(dcaMenu);
+menu.register(activeDcas);
 menu.register(launchpadMenu);
 
 export default menu;
