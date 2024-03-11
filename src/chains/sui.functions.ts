@@ -728,6 +728,8 @@ export async function sell(
       { reply_markup: retryButton },
     );
 
+    ctx.session.tradesCount = ctx.session.tradesCount + 1
+
     return;
   }
 
