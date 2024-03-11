@@ -7,4 +7,6 @@ export enum ConversationId {
   CreateCetusPool = 'createCetusPool',
   AddCetusPoolLiquidity = 'addCetusPoolLiquidity',
   CreateCoin = 'createCoin',
+  CreateDca = 'createDca',
+  DepositDcaBase = 'depositDcaBase',
 }
