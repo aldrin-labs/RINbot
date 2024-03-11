@@ -753,7 +753,7 @@ export async function exportPrivateKey(
   const isUserNotEligibleToExportPrivateKey = isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT
 
   if (isUserNotEligibleToExportPrivateKey) {
-    await ctx.reply("🔐 Oops! It seems you're eager to export your private key. To maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing 15 trades. Keep trading to unlock this feature and secure your gains! Happy trading! 📈", { reply_markup: goHome })
+    await ctx.reply(`🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`, { reply_markup: goHome })
 
     return
   }
