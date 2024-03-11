@@ -8,33 +8,37 @@ import {
   isValidTokenAmount,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
-import closeConversation from '../../inline-keyboards/closeConversation';
-import confirm from '../../inline-keyboards/confirm';
-import dcaTimeUnitKeyboard from '../../inline-keyboards/dcaTimeUnit';
-import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import showActiveDCAsKeyboard from '../../inline-keyboards/showActiveDCAs';
-import skip from '../../inline-keyboards/skip';
-import yesOrNo from '../../inline-keyboards/yesOrNo';
-import { BotContext, MyConversation } from '../../types';
-import { ConversationId } from '../conversations.config';
+import closeConversation from '../../../inline-keyboards/closeConversation';
+import confirm from '../../../inline-keyboards/confirm';
+import dcaTimeUnitKeyboard from '../../../inline-keyboards/dcaTimeUnit';
+import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
+import showActiveDCAsKeyboard from '../../../inline-keyboards/showActiveDCAs';
+import skip from '../../../inline-keyboards/skip';
+import { BotContext, MyConversation } from '../../../types';
+import { CallbackQueryData } from '../../../types/callback-queries-data';
+import { ConversationId } from '../../conversations.config';
 import {
-  getTransactionForStructuredResult,
+  getTransactionFromMethod,
   signAndExecuteTransaction,
-} from '../conversations.utils';
-import { MIN_DCA_BASE_AMOUNT, USDC_COIN_TYPE } from '../sui.config';
+} from '../../conversations.utils';
+import { USDC_COIN_TYPE } from '../../sui.config';
 import {
   getCoinManager,
   getRouteManager,
   getWalletManager,
-} from '../sui.functions';
+} from '../../sui.functions';
 import {
   extractCoinTypeFromLink,
   findCoinInAssets,
   formatPrice,
   getSuiVisionCoinLink,
   isValidCoinLink,
-} from '../utils';
-import { getCreateDCATransaction } from './dca.conversations.utils';
+} from '../../utils';
+import {
+  MAX_TOTAL_ORDERS_COUNT,
+  MIN_DCA_BASE_AMOUNT,
+  MIN_TOTAL_ORDERS_COUNT,
+} from '../constants';
 
 export async function createDca(
   conversation: MyConversation,
@@ -81,7 +85,11 @@ export async function createDca(
     return;
   }
 
-  if (new BigNumber(foundUsdc.balance) < new BigNumber(MIN_DCA_BASE_AMOUNT)) {
+  if (
+    new BigNumber(foundUsdc.balance).isLessThan(
+      new BigNumber(MIN_DCA_BASE_AMOUNT),
+    )
+  ) {
     await ctx.api.editMessageText(
       lookingAtAssetsMessage.chat.id,
       lookingAtAssetsMessage.message_id,
@@ -109,7 +117,7 @@ export async function createDca(
   let quoteCoinPrice: string | null = null;
 
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -255,7 +263,7 @@ export async function createDca(
   );
 
   const baseCoinAmountContext = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -297,14 +305,14 @@ export async function createDca(
   const defaultMaxPrice = (1_000_000_000).toString();
 
   await ctx.reply(
-    `Enter the <b>minimum price</b> at which <b>DCA</b> will buy the quote coin.\n\n` +
+    `Enter the <b>minimum price</b> at which <b>DCA</b> will buy <b>${quoteCoinSymbol}</b>.\n\n` +
       `Current <b>${quoteCoinSymbol}</b> price: ` +
       `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>`,
     { reply_markup: closeWithSkipReplyMarkup, parse_mode: 'HTML' },
   );
 
   const minPriceContext = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'skip') {
@@ -351,7 +359,7 @@ export async function createDca(
 
   // Asking for a max price
   await ctx.reply(
-    `Enter the <b>maximum price</b> at which <b>DCA</b> will buy the quote coin.\n\n` +
+    `Enter the <b>maximum price</b> at which <b>DCA</b> will buy <b>${quoteCoinSymbol}</b>.\n\n` +
       `Current <b>${quoteCoinSymbol}</b> price: ` +
       `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>` +
       (minPrice === defaultMinPrice
@@ -366,7 +374,7 @@ export async function createDca(
   const arrivedPriceCallbackQueryData: string | undefined =
     maxPriceContext.callbackQuery?.data;
 
-  if (arrivedPriceCallbackQueryData === 'close-conversation') {
+  if (arrivedPriceCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   } else if (arrivedPriceCallbackQueryData === 'skip') {
     maxPrice = defaultMaxPrice;
@@ -425,7 +433,7 @@ export async function createDca(
   const arrivedUnitCallbackQueryData: string | undefined =
     timeUnitContext.callbackQuery.data;
 
-  if (arrivedUnitCallbackQueryData === 'close-conversation') {
+  if (arrivedUnitCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   }
   switch (arrivedUnitCallbackQueryData) {
@@ -533,35 +541,70 @@ export async function createDca(
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
-  const totalOrdersContext = await conversation.waitFor('message:text');
-  const totalOrdersMessage = totalOrdersContext.msg.text;
-  const totalOrdersInt = parseInt(totalOrdersMessage);
+  const totalOrdersContext = await conversation.wait();
+  const totalOrdersMessage = totalOrdersContext.msg?.text;
+  const totalOrdersCallbackQueryData = totalOrdersContext.callbackQuery?.data;
+  let totalOrders;
 
-  if (isNaN(totalOrdersInt)) {
-    await ctx.reply(
-      'Total orders count must be an integer. Please, try again.',
-      { reply_markup: closeConversation },
-    );
-
-    await conversation.skip({ drop: true });
+  if (totalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
   }
+  if (totalOrdersMessage !== undefined) {
+    const totalOrdersInt = parseInt(totalOrdersMessage);
 
-  const totalOrdersIsLessOrEqualThanBaseCoinAmount = new BigNumber(
-    totalOrdersInt,
-  ).isLessThanOrEqualTo(new BigNumber(baseCoinAmount));
-  if (!totalOrdersIsLessOrEqualThanBaseCoinAmount) {
-    await ctx.reply(
-      `Total orders count must be less than base coin amount (<code>${baseCoinAmount}</code>), ` +
-        `because minimum sell-per-order amount is <code>1</code> <b>${baseCoinSymbol}</b>.\n\nPlease, try again.`,
-      { reply_markup: closeConversation, parse_mode: 'HTML' },
-    );
+    if (isNaN(totalOrdersInt)) {
+      await ctx.reply(
+        'Total orders count must be an integer. Please, try again.',
+        { reply_markup: closeConversation },
+      );
 
-    await conversation.skip({ drop: true });
-  }
+      await conversation.skip({ drop: true });
+    }
 
-  const totalOrdersCountIsLessThanTwo = totalOrdersInt < 2;
-  if (totalOrdersCountIsLessThanTwo) {
-    await ctx.reply('Total orders count cannot be lower than <code>2</code>.', {
+    const totalOrdersIsLessOrEqualThanBaseCoinAmount = new BigNumber(
+      totalOrdersInt,
+    ).isLessThanOrEqualTo(new BigNumber(baseCoinAmount));
+    if (!totalOrdersIsLessOrEqualThanBaseCoinAmount) {
+      await ctx.reply(
+        `Total orders count must be less than base coin amount (<code>${baseCoinAmount}</code>), ` +
+          `because minimum sell-per-order amount is <code>1</code> <b>${baseCoinSymbol}</b>.\n\nPlease, try again.`,
+        { reply_markup: closeConversation, parse_mode: 'HTML' },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    const totalOrdersCountIsLessThanMin =
+      totalOrdersInt < MIN_TOTAL_ORDERS_COUNT;
+    if (totalOrdersCountIsLessThanMin) {
+      await ctx.reply(
+        `Total orders count cannot be lower than <code>${MIN_TOTAL_ORDERS_COUNT}</code>.`,
+        {
+          reply_markup: closeConversation,
+          parse_mode: 'HTML',
+        },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    const totalOrdersCountIsGreaterThanMax =
+      totalOrdersInt > MAX_TOTAL_ORDERS_COUNT;
+    if (totalOrdersCountIsGreaterThanMax) {
+      await ctx.reply(
+        `Total orders count cannot be greater than <code>${MAX_TOTAL_ORDERS_COUNT.toPrecision()}</code>.`,
+        {
+          reply_markup: closeConversation,
+          parse_mode: 'HTML',
+        },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    totalOrders = totalOrdersInt;
+  } else {
+    await ctx.reply('Please, enter <b>total orders count</b>.', {
       reply_markup: closeConversation,
       parse_mode: 'HTML',
     });
@@ -569,20 +612,15 @@ export async function createDca(
     await conversation.skip({ drop: true });
   }
 
-  const totalOrdersCountIsGreaterThanMax = totalOrdersInt > 1_000_000;
-  if (totalOrdersCountIsGreaterThanMax) {
+  if (totalOrders === undefined) {
     await ctx.reply(
-      'Total orders count cannot be greater than <code>1000000</code>.',
-      {
-        reply_markup: closeConversation,
-        parse_mode: 'HTML',
-      },
+      'Cannot process <b>total orders count</b>. Please, try again or contact support.',
+      { parse_mode: 'HTML' },
     );
 
-    await conversation.skip({ drop: true });
+    return;
   }
 
-  const totalOrders = totalOrdersInt;
   const oneOrderBaseCoinAmount = new BigNumber(baseCoinAmount)
     .dividedBy(totalOrders)
     .toFixed(4);
@@ -614,7 +652,7 @@ export async function createDca(
   const confirmDcaContext = await conversation.waitFor('callback_query:data');
   const confirmDcaCallbackQueryData = confirmDcaContext.callbackQuery.data;
 
-  if (confirmDcaCallbackQueryData === 'close-conversation') {
+  if (confirmDcaCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   }
   if (confirmDcaCallbackQueryData === 'confirm') {
@@ -641,9 +679,10 @@ export async function createDca(
     return allCoinObjects;
   });
 
-  const createDCATransaction = await getCreateDCATransaction({
+  const createDCATransaction = await getTransactionFromMethod({
     conversation,
     ctx,
+    method: DCAManagerSingleton.createDCAInitTransaction,
     params: {
       allCoinObjectsList,
       baseCoinAmountToDepositIntoDCA: convertToBNFormat(
@@ -695,7 +734,7 @@ export async function createDca(
   if (resultOfExecution.result === 'failure' && resultOfExecution.digest) {
     await ctx.reply(
       `Failed to create <b>DCA</b>.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfExecution.digest}`,
-      { reply_markup: retryButton },
+      { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
     return;
@@ -708,214 +747,6 @@ export async function createDca(
       parse_mode: 'HTML',
     },
   );
-
-  return;
-}
-
-export async function depositDcaBase(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.DepositDcaBase];
-
-  const { currentIndex, objects } = ctx.session.dcas;
-  const dca = objects[currentIndex ?? 0];
-  const {
-    base_coin_symbol: baseCoinSymbol,
-    base_coin_type: baseCoinType,
-    base_coin_decimals: baseCoinDecimals,
-    quote_coin_type: quoteCoinType,
-  } = dca.fields;
-  const currentTotalOrdersCount = +dca.fields.remaining_orders;
-  const baseBalance = new BigNumber(dca.fields.base_balance).dividedBy(
-    10 ** baseCoinDecimals,
-  );
-
-  const lookingAtAssetsMessage = await ctx.reply(
-    `Looking at your assets to find <b>${baseCoinSymbol}</b>...`,
-    { parse_mode: 'HTML' },
-  );
-
-  const assets = await conversation.external(async () => {
-    const walletManager = await getWalletManager();
-    const coinAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
-
-    return coinAssets;
-  });
-
-  const baseCoinInAssets = findCoinInAssets(assets, baseCoinType);
-
-  if (baseCoinInAssets === undefined) {
-    await ctx.api.editMessageText(
-      lookingAtAssetsMessage.chat.id,
-      lookingAtAssetsMessage.message_id,
-      `<b>${baseCoinSymbol}</b> is not found in your assets. Please, top up your <b>${baseCoinSymbol}</b> balance to deposit into <b>DCA</b>.`,
-      { reply_markup: retryButton, parse_mode: 'HTML' },
-    );
-
-    return;
-  }
-
-  const maxBaseCoinAmount = baseCoinInAssets.balance;
-
-  await ctx.api.editMessageText(
-    lookingAtAssetsMessage.chat.id,
-    lookingAtAssetsMessage.message_id,
-    `<b>${baseCoinSymbol}</b> is found in your assets!\n\n` +
-      `Enter the <b>${baseCoinSymbol} amount</b> you want to deposit (<code>0</code> - <code>${maxBaseCoinAmount}` +
-      `</code> <b>${baseCoinSymbol}</b>).\n\nExample: <code>100</code>`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  const amountContext = await conversation.wait();
-  const amountMessage = amountContext.msg?.text;
-  const amountCallbackQueryData = amountContext.callbackQuery?.data;
-
-  if (amountCallbackQueryData === 'close-conversation') {
-    await conversation.skip();
-  }
-  if (amountMessage !== undefined) {
-    const { isValid: amountIsValid, reason } = isValidTokenAmount({
-      amount: amountMessage,
-      maxAvailableAmount: maxBaseCoinAmount,
-      decimals: baseCoinDecimals,
-    });
-
-    if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        {
-          reply_markup: closeConversation,
-        },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-  } else {
-    await ctx.reply(
-      `Please, enter the <b>${baseCoinSymbol} amount</b> you want to deposit.`,
-      { reply_markup: closeConversation, parse_mode: 'HTML' },
-    );
-
-    await conversation.skip({ drop: true });
-  }
-
-  if (amountMessage === undefined) {
-    await ctx.reply(
-      'Cannot process amount you want to add. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  await ctx.reply('Do you want to increase orders count?', {
-    reply_markup: yesOrNo,
-  });
-
-  const increaseOrdersContext = await conversation.waitFor(
-    'callback_query:data',
-  );
-  const increaseOrdersCallbackQueryData =
-    increaseOrdersContext.callbackQuery.data;
-  let addOrdersCount = 0;
-
-  if (increaseOrdersCallbackQueryData === 'no') {
-    await increaseOrdersContext.answerCallbackQuery();
-  }
-  if (increaseOrdersCallbackQueryData === 'yes') {
-    const newBaseBalance = baseBalance.plus(amountMessage);
-    const maxTotalOrdersCount = Math.floor(newBaseBalance.toNumber());
-    const availableToAddOrdersCount = new BigNumber(maxTotalOrdersCount)
-      .minus(currentTotalOrdersCount)
-      .toString();
-
-    await ctx.reply(
-      `How much orders do you want to add?\n\n<b>Min</b>: <code>0</code>\n<b>Max</b>: ` +
-        `<code>${availableToAddOrdersCount}</code>`,
-      { parse_mode: 'HTML' },
-    );
-
-    const totalOrdersContext = await conversation.waitFor('message:text');
-    const totalOrdersMessage = totalOrdersContext.msg.text;
-    const totalOrdersInt = parseInt(totalOrdersMessage);
-
-    if (isNaN(totalOrdersInt)) {
-      await ctx.reply(
-        'Total orders count must be an integer. Please, try again.',
-        { reply_markup: closeConversation },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-
-    const totalOrdersIsValid =
-      totalOrdersInt >= 0 && totalOrdersInt <= +availableToAddOrdersCount;
-    if (!totalOrdersIsValid) {
-      await ctx.reply(
-        `Minimum <b>total orders count</b> to add is <code>0</code>, maximum &#8213; ` +
-          `<code>${availableToAddOrdersCount}</code>.\n\nPlease, try again.`,
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-
-    addOrdersCount = totalOrdersInt;
-  } else {
-    await ctx.reply('Please, choose the button.', {
-      reply_markup: closeConversation,
-    });
-
-    await conversation.skip({ drop: true });
-  }
-
-  const allCoinObjectsList = await conversation.external(async () => {
-    const walletManager = await getWalletManager();
-    const allCoinObjects = await walletManager.getAllCoinObjects({
-      publicKey: ctx.session.publicKey,
-      coinType: baseCoinType,
-    });
-
-    return allCoinObjects;
-  });
-
-  const baseCoinAmountToDepositIntoDCA = new BigNumber(amountMessage)
-    .multipliedBy(10 ** baseCoinDecimals)
-    .toString();
-
-  const baseDepositTransaction = await getTransactionForStructuredResult({
-    conversation,
-    ctx,
-    method: DCAManagerSingleton.createDCADepositBaseTransaction,
-    params: {
-      allCoinObjectsList,
-      baseCoinAmountToDepositIntoDCA,
-      baseCoinType,
-      quoteCoinType,
-      dca: dca.fields.id.id,
-      addOrdersCount,
-    },
-  });
-
-  if (baseDepositTransaction === undefined) {
-    await ctx.reply(
-      'Cannot create transaction to deposit base coin.\n\nPlease, try again or contact support.',
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  const depositResult = await signAndExecuteTransaction({
-    conversation,
-    ctx,
-    transaction: baseDepositTransaction,
-  });
-
-  // TODO: handle result
 
   return;
 }
