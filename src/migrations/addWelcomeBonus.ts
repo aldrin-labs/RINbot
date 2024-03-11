@@ -25,7 +25,6 @@ export function addWelcomeBonus(old: {
       isUserAgreeWithBonus: null,
       // Users who take the bonus, can be false in case of the failure on RPC or welcome bonus account is empty
       isUserClaimedBonus: null,
-
     },
     tradesCount: 0,
     createdAt: Date.now(),
