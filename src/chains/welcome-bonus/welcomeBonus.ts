@@ -32,6 +32,7 @@ export async function welcomeBonusConversation(
 
   if (answer !== "yes") {
     await ctx.reply("Please select either the 'Yes' or 'No' button to proceed with the welcome bonus.")
+    await answerContext.answerCallbackQuery();
     await conversation.skip({ drop: true })
 
     return
