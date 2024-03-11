@@ -791,7 +791,7 @@ export async function withdraw(
   const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus
 
   if (isUserUsedWelcomeBonus) {
-    await ctx.reply(`💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${ctx.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`)
+    await ctx.reply(`💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`)
   }
 
   await ctx.reply(
@@ -844,7 +844,7 @@ export async function withdraw(
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
-    await ctx.reply(`⚠️ Heads up! Your available balance is currently ${ctx.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${ctx.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`, { reply_markup: goHome })
+    await ctx.reply(`⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`, { reply_markup: goHome })
 
     return;
   }
