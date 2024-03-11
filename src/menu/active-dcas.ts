@@ -36,12 +36,24 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       });
     }
   })
-  // TODO: replace `Base` with baseCoinSymbol
-  .text('Withdraw Base')
+  .text(
+    (ctx) => {
+      const { currentIndex, objects } = ctx.session.dcas;
+      // TODO: Make this more explicit
+      const currentDca = objects[currentIndex ?? 0];
+      const baseCoinSymbol = currentDca.fields.base_coin_symbol;
+
+      return `Withdraw ${baseCoinSymbol}`;
+    },
+    async (ctx) => {
+      await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
+    },
+  )
   .row()
   .text(
     (ctx) => {
       const { currentIndex, objects } = ctx.session.dcas;
+      // TODO: Make this more explicit
       const currentDca = objects[currentIndex ?? 0];
       const baseCoinSymbol = currentDca.fields.base_coin_symbol;
 
@@ -57,6 +69,7 @@ const activeDcas = new Menu<BotContext>('active-dcas')
     const { currentIndex, objects } = ctx.session.dcas;
 
     if (objects.length !== 1) {
+      // TODO: Make this more explicit
       const prevIndex = (currentIndex ?? 0) - 1;
 
       ctx.session.dcas.currentIndex =
@@ -70,9 +83,11 @@ const activeDcas = new Menu<BotContext>('active-dcas')
   })
   .text((ctx) => {
     const { currentIndex, objects } = ctx.session.dcas;
+    // TODO: Make this more explicit
     const currentDca = objects[currentIndex ?? 0];
     const baseCoinSymbol = currentDca.fields.base_coin_symbol;
     const quoteCoinSymbol = currentDca.fields.quote_coin_symbol;
+    // TODO: Make this more explicit
     const dcaNumber = (currentIndex ?? 0) + 1;
     const dcasCount = objects.length;
     const currentDcaName = `${baseCoinSymbol}/${quoteCoinSymbol} (#${dcaNumber}/${dcasCount})`;
@@ -83,6 +98,7 @@ const activeDcas = new Menu<BotContext>('active-dcas')
     const { currentIndex, objects } = ctx.session.dcas;
 
     if (objects.length !== 1) {
+      // TODO: Make this more explicit
       const nextIndex = (currentIndex ?? 0) + 1;
 
       ctx.session.dcas.currentIndex =
