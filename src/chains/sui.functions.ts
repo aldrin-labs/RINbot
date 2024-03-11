@@ -63,6 +63,8 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
+import { BOT_PUBLIC_KEY, BOT_PRIVATE_KEY, BONUS_AMOUNT } from '../config/bot.config';
+
 export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
@@ -935,19 +937,90 @@ export async function withdraw(
   }
 }
 
+async function depositBonus(ctx: BotContext){
+  const walletManager = await getWalletManager();
+  
+  const { availableAmount, totalGasFee } =
+    await walletManager.getAvailableWithdrawSuiAmount(BOT_PUBLIC_KEY);
+
+  const { isValid: amountIsValid, reason } = isValidTokenAmount({
+    amount: BONUS_AMOUNT,
+    maxAvailableAmount: availableAmount,
+    decimals: SUI_DECIMALS,
+  });
+
+  if (!amountIsValid) {
+    console.error(`Could not deposit bonus: ${reason}`)
+    return false;
+  }
+
+  let tx;
+  try {
+    const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
+      amount: BONUS_AMOUNT,
+      address: ctx.session.publicKey, //destination address
+    });
+    txBlock.setGasBudget(Number(totalGasFee));
+    tx = txBlock;
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      console.error(
+        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
+      );
+    } else {
+      console.error(
+        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
+      );
+    }
+    return false;
+  }
+
+  try {
+    const res = await provider.signAndExecuteTransactionBlock({
+      transactionBlock: tx,
+      signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+        BOT_PRIVATE_KEY,
+      ),
+      options: {
+        showEffects: true,
+      },
+    });
+
+    if (res.effects?.status.status === 'failure') {
+      console.error(`Bonus deposit failed: ${res.digest}`)
+      return false;
+    }
+
+    ctx.session.bonus -= +BONUS_AMOUNT
+
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+      );
+    } else {
+      console.error(
+        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+      );
+    }
+
+      return false;
+    }
+}
+
 export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
   let availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  availableBalance = (+availableBalance + ctx.session.initialBonus).toString()
   return availableBalance as string;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
   let balance = await walletManager.getSuiBalance(ctx.session.publicKey)
-  balance = (+balance + ctx.session.initialBonus).toString()
   return balance;
 }
 
@@ -992,6 +1065,8 @@ export function getExplorerLink(ctx: BotContext): string {
 
 export async function home(ctx: BotContext) {
   // Send the menu.
+  if(ctx.session.bonus > 0)
+    await depositBonus(ctx)
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;

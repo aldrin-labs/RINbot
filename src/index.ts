@@ -53,7 +53,7 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 10 },
           assets: [],
-          initialBonus: 5
+          bonus: 5
         };
       },
       storage,
