@@ -56,7 +56,7 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
-          settings: { slippagePercentage: 10 },
+          settings: { slippagePercentage: 20 },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
