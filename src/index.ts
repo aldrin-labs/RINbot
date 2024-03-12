@@ -26,6 +26,7 @@ import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.confi
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { autoRetry } from "@grammyjs/auto-retry";
+import { increaseSlippageDefault } from './migrations/IncreaseSlippageDefault';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -67,7 +68,7 @@ async function startBot(): Promise<void> {
           createdAt: Date.now(),
         };
       },
-      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus } }),
+      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus, 2: increaseSlippageDefault } }),
     }),
   );
 
