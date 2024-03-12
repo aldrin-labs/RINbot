@@ -1,22 +1,19 @@
 import { Menu } from '@grammyjs/menu';
 import { SurfdogConversationId } from '../../../chains/launchpad/surfdog/conversations/conversations.config';
 import { showGlobalStats } from '../../../chains/launchpad/surfdog/show-pages/showGlobalStats';
+import { showRules } from '../../../chains/launchpad/surfdog/show-pages/showRules';
 import { showUserTickets } from '../../../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { home } from '../../../chains/sui.functions';
 import { BotContext } from '../../../types';
 import globalStatsMenu from './globalStats';
 import userTicketsMenu from './userTickets';
-import { showRules } from '../../../chains/launchpad/surfdog/show-pages/showRules';
 
 const surfdogMenu = new Menu<BotContext>('surfdog')
   .text('Your Tickets', async (ctx) => {
     await showUserTickets(ctx);
   })
-  .text('Buy Tickets (TBA)', async (ctx) => {
-    // TODO: Uncomment before launch
-    // await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
-
-    await ctx.reply(`Follow @SurfDog_Sui on X for updates on the launch date.`);
+  .text('Buy Tickets', async (ctx) => {
+    await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
   })
   .row()
   .text('Global Stats', async (ctx) => {
