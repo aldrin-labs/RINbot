@@ -1,7 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import { WELCOME_BONUS_AMOUNT } from '../config/bot.config';
 
-export function increaseSlippageDefault(old: {
+export function enlargeDefaultSlippage(old: {
   step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';
   privateKey: string;
   publicKey: string;
