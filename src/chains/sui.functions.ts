@@ -139,6 +139,7 @@ export const getCoinManager = async () => {
     getAftermath(),
     getCetus(),
     getTurbos(),
+    getFlowx(),
   ]);
 
   const coinManager = CoinManagerSingleton.getInstance(
