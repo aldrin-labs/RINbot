@@ -11,8 +11,10 @@ export async function showUserTickets(ctx: BotContext) {
 
   const surfdog = getSurfdogLaunchpad();
   const userTickets = await surfdog.getUserState(ctx.session.publicKey);
+  const userHasNoTickets =
+    userTickets === null || userTickets.allTickets.toString() === '0';
 
-  if (userTickets === null) {
+  if (userHasNoTickets) {
     await ctx.api.editMessageText(
       loadingMessage.chat.id,
       loadingMessage.message_id,
@@ -34,17 +36,18 @@ export async function showUserTickets(ctx: BotContext) {
       new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber(),
   );
   const allTickets = userTickets.allTickets.toString();
-  const wonTickets = userTickets.allTickets.toString();
+  const wonTickets = userTickets.wonTickets.toString();
   const successRate = new BigNumber(wonTickets)
     .dividedBy(allTickets)
     .multipliedBy(100)
     .toFixed(2);
+  const successRateString = isNaN(+successRate) ? `-` : `${successRate}%`;
   const wonPrize = tokensPerTicket.multipliedBy(wonTickets).toFormat();
 
   let userTicketsString = `<b>Your Tickets</b>:\n\n`;
   userTicketsString += `<b>Bought tickets</b>: ${allTickets}\n`;
   userTicketsString += `<b>Winning tickets</b>: ${wonTickets}\n`;
-  userTicketsString += `<b>Success rate</b>: ${successRate}%\n`;
+  userTicketsString += `<b>Success rate</b>: ${successRateString}\n`;
   userTicketsString += `<b>Won prize</b>: ${wonPrize} SURF`;
 
   await ctx.api.editMessageText(
