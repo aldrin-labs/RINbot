@@ -27,6 +27,9 @@ export async function showGlobalStats(ctx: BotContext) {
     .dividedBy(allTickets)
     .multipliedBy(100)
     .toFixed(2);
+  const generalSuccessRateString = isNaN(+generalSuccessRate)
+    ? `-`
+    : `${generalSuccessRate}%`;
   const pricePoolBalance = new BigNumber(globalStats.balanceLeft.toString())
     .dividedBy(
       10 **
@@ -38,7 +41,7 @@ export async function showGlobalStats(ctx: BotContext) {
   globalStatsString += `<b>Ticket price</b>: ${ticketPrice} SUI\n`;
   globalStatsString += `<b>Total tickets played</b>: ${allTickets}\n`;
   globalStatsString += `<b>Total winning tickets</b>: ${winningTickets}\n`;
-  globalStatsString += `<b>General success rate</b>: ${generalSuccessRate}%\n`;
+  globalStatsString += `<b>General success rate</b>: ${generalSuccessRateString}\n`;
   globalStatsString += `<b>Winning ticket value</b>: ${tokensPerTicket} SURF\n`;
   globalStatsString += `<b>Prize Pool Balance</b>: ${pricePoolBalance} SURF`;
 

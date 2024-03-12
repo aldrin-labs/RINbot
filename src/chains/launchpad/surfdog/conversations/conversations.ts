@@ -15,6 +15,7 @@ import {
 import { getWalletManager } from '../../../sui.functions';
 import { sleep } from '../../../utils';
 import { getSurfdogLaunchpad } from '../getSurfdogLaunchpad';
+import { convertBigIntToString } from '../utils/convertBigIntToString';
 import { waitForTicketResult } from '../utils/waitForTicketResult';
 import {
   MAX_TICKETS_TO_BUY,
@@ -32,7 +33,13 @@ export async function buySurfdogTickets(
 
   const ticketPriceMessage = await ctx.reply('Checking ticket price...');
 
-  const globalState = await conversation.external(() => surfdog.getGameState());
+  const globalState = await conversation.external(async () => {
+    const gameState = await surfdog.getGameState();
+
+    // Need to convert all the fields from `bigint` to `string`, because `external` doesn't know, how to
+    // stringify `bigint`s
+    return convertBigIntToString(gameState);
+  });
   const ticketPriceInSui = new BigNumber(globalState.ticketPrice.toString())
     .dividedBy(10 ** SUI_DECIMALS)
     .toString();
@@ -162,9 +169,7 @@ export async function buySurfdogTickets(
   }
   await confirmContext.answerCallbackQuery();
 
-  const checkingMessage = await ctx.reply(
-    'Checking your account is ready to buy tickets...',
-  );
+  await ctx.reply('Checking your account is ready to buy tickets...');
 
   let userState = await conversation.external(() =>
     surfdog.getUserState(ctx.session.publicKey),
@@ -187,11 +192,7 @@ export async function buySurfdogTickets(
     }
   }
 
-  await ctx.api.editMessageText(
-    checkingMessage.chat.id,
-    checkingMessage.message_id,
-    "Account is ready to buy tickets, let's go!",
-  );
+  await ctx.reply("Account is ready to buy tickets, let's go!");
 
   const ticketPrice = globalState.ticketPrice.toString();
 
