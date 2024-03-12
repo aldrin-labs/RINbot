@@ -5,6 +5,8 @@ import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUser
 import { home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
+import { slippagePercentages } from '../chains/slippage/percentages';
+import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
@@ -22,6 +24,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   });
 
   useSurfdogCallbackQueries(bot);
+  useSlippageCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -53,5 +56,16 @@ function useSurfdogCallbackQueries(bot: Bot<BotContext>) {
     await ctx.deleteMessage();
     await showSurfdogPage(ctx);
     await ctx.answerCallbackQuery();
+  });
+}
+
+function useSlippageCallbackQueries(bot: Bot<BotContext>) {
+  slippagePercentages.forEach((percentage) => {
+    bot.callbackQuery(`slippage-${percentage}`, async (ctx) => {
+      ctx.session.settings.slippagePercentage = percentage;
+
+      await showSlippageConfiguration(ctx);
+      await ctx.answerCallbackQuery();
+    });
   });
 }
