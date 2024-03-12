@@ -18,6 +18,7 @@ import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
 import { ConversationId } from '../chains/conversations.config';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
+import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -75,9 +76,10 @@ const menu = new Menu<BotContext>('main')
       !isUserClaimedBonus &&
       (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)
     ) {
-      range.row().text('Claim Free SUI', async (ctx: BotContext) => {
-        await ctx.conversation.enter(ConversationId.WelcomeBonus);
-      });
+      if(ENABLE_WELCOME_BONUS)
+        range.row().text('Claim Free SUI', async (ctx: BotContext) => {
+          await ctx.conversation.enter(ConversationId.WelcomeBonus);
+        });
     }
   });
 
