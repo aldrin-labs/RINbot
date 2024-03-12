@@ -153,6 +153,10 @@ async function startBot(): Promise<void> {
     await home(ctx);
   });
 
+  bot.command('close', async (ctx) => {
+    await ctx.conversation.exit();
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -164,6 +168,7 @@ async function startBot(): Promise<void> {
       command: 'createaftermathpool',
       description: 'Create Aftermath liquidity pool',
     },
+    { command: 'close', description: 'Hard close all conversations' },
     // {
     //   command: 'createcetuspool',
     //   description: 'Create Cetus concentrated liquidity pool',
