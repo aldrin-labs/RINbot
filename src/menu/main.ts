@@ -17,6 +17,7 @@ import wallet_menu from './wallet';
 import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
 import { ConversationId } from '../chains/conversations.config';
+import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -51,6 +52,9 @@ const menu = new Menu<BotContext>('main')
   .text('Launchpad', (ctx) => {
     ctx.menu.nav('launchpad');
   })
+  .text('Slippage', async (ctx) => {
+    await showSlippageConfiguration(ctx);
+  })
   .row()
   .text('User Agreement', async (ctx) => {
     await ctx.reply(
@@ -60,14 +64,21 @@ const menu = new Menu<BotContext>('main')
   })
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
-    const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus
+    const {
+      isUserEligibleToGetBonus,
+      isUserAgreeWithBonus,
+      isUserClaimedBonus,
+    } = ctx.session.welcomeBonus;
 
-    if (isUserEligibleToGetBonus && !isUserClaimedBonus && (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)) {
-      range.row().text("Claim Free SUI", async (ctx: BotContext) => {
-        await ctx.conversation.enter(ConversationId.WelcomeBonus)
-      })
+    if (
+      isUserEligibleToGetBonus &&
+      !isUserClaimedBonus &&
+      (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)
+    ) {
+      range.row().text('Claim Free SUI', async (ctx: BotContext) => {
+        await ctx.conversation.enter(ConversationId.WelcomeBonus);
+      });
     }
-
   });
 
 menu.register(buy_menu);
