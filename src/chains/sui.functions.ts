@@ -171,6 +171,7 @@ export const getRouteManager = async () => {
     getAftermath(),
     getCetus(),
     getTurbos(),
+    getFlowx(),
   ]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
