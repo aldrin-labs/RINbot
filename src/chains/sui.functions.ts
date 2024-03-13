@@ -1070,7 +1070,10 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  return availableBalance as string;
+  const availableBalanceAfterFee = +availableBalance - +TRADE_FEE
+  if(availableBalanceAfterFee < 0)
+    return '0'
+  return availableBalanceAfterFee.toString();
 }
 
 export async function balance(ctx: BotContext): Promise<string> {

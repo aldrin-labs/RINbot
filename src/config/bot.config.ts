@@ -8,3 +8,4 @@ export const WELCOME_BONUS_AMOUNT = process.env.WELCOME_BONUS_AMOUNT && process.
 export const WELCOME_BONUS_MIN_TRADES_LIMIT = 15
 export const TRADE_FEE = process.env.TRADE_FEE || ''
 export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES = process.env.EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES || ''
+export const PRICE_API_URL = process.env.PRICE_API_URL || ''
