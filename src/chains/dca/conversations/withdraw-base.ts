@@ -5,7 +5,7 @@ import {
 import { bold, code, fmt, link, spoiler } from '@grammyjs/parse-mode';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
-import confirm from '../../../inline-keyboards/confirm';
+import confirmWithCloseKeyboard from '../../../inline-keyboards/confirm-with-close';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import showActiveDCAsKeyboard from '../../../inline-keyboards/showActiveDCAs';
 import yesOrNo from '../../../inline-keyboards/yesOrNo';
@@ -299,9 +299,6 @@ export async function withdrawDcaBase(
       await conversation.skip({ drop: true });
     }
   }
-
-  const closeButtons = closeConversation.inline_keyboard[0];
-  const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
 
   const totalOrdersCountAfterWithdrawal = new BigNumber(currentTotalOrdersCount)
     .minus(resRequiredDecreaseOrdersCount)

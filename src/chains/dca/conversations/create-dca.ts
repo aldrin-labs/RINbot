@@ -12,7 +12,7 @@ import {
 import { bold, code, fmt, link } from '@grammyjs/parse-mode';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
-import confirm from '../../../inline-keyboards/confirm';
+import confirmWithCloseKeyboard from '../../../inline-keyboards/confirm-with-close';
 import dcaTimeUnitKeyboard from '../../../inline-keyboards/dcaTimeUnit';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import showActiveDCAsKeyboard from '../../../inline-keyboards/showActiveDCAs';
@@ -569,8 +569,6 @@ export async function createDca(
     ]),
     { reply_markup: closeConversation },
   );
-
-  const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
 
   let totalOrders;
   let userConfirmedTotalOrdersCount = false;
