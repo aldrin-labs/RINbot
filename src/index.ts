@@ -45,6 +45,7 @@ import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { increaseOrders } from './chains/dca/conversations/increase-orders';
 
 const APP_VERSION = '1.1.3';
 
@@ -134,6 +135,11 @@ async function startBot(): Promise<void> {
     createConversation(withdrawDcaBase, { id: ConversationId.WithdrawDcaBase }),
   );
   composer.use(
+    createConversation(increaseOrders, {
+      id: ConversationId.IncreaseDcaOrders,
+    }),
+  );
+  composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
@@ -196,6 +202,11 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
   });
 
+  // TODO: Remove this before merge, that's needed for tests only
+  bot.command('increasedcaorders', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
+  });
+
   bot.command('close', async (ctx) => {
     await ctx.conversation.exit();
   });
@@ -225,9 +236,15 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createdca', description: 'Create DCA' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
+    // TODO: Remove this before merge, that's needed for tests only
     {
       command: 'withdrawdcabase',
       description: 'Withdraw base coin from selected DCA',
+    },
+    // TODO: Remove this before merge, that's needed for tests only
+    {
+      command: 'increasedcaorders',
+      description: 'Increase orders count for selected DCA',
     },
   ]);
 
