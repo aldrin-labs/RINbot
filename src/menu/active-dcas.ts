@@ -63,6 +63,10 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
     },
   )
+  .text('Close DCA', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CloseDca);
+  })
+  .row()
   .text('Increase Orders Count', async (ctx) => {
     await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
   })
