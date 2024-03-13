@@ -69,6 +69,7 @@ import {
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
+import { calculate } from './pnl.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -1039,7 +1040,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
       const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nPrice: ${isCoinAssetDataExtended(el) ? el.price : 0}`,
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nPrice: ${isCoinAssetDataExtended(el) ? calculate(el.balance, el.price) : null}`,
       );
 
       return acc;
