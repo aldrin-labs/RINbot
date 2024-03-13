@@ -1166,7 +1166,7 @@ export async function home(ctx: BotContext) {
       allCoinAssets.forEach(coin1 => {
         coinsPriceApi?.forEach(coin2 => {
           if(coin1.type === coin2.tokenAddress){
-            balance += totalBalanceCalculation(coin1.balance, coin2.price)
+            balance += +coin1.balance * coin2.price
           }
         })
       })
