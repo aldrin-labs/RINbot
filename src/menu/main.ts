@@ -55,11 +55,12 @@ const menu = new Menu<BotContext>('main')
   .text('DCA', async (ctx) => {
     ctx.menu.nav('sui-dca');
   })
-  .text('Launchpad', (ctx) => {
-    ctx.menu.nav('launchpad');
-  })
   .text('Slippage', async (ctx) => {
     await showSlippageConfiguration(ctx);
+  })
+  .row()
+  .text('Launchpad', (ctx) => {
+    ctx.menu.nav('launchpad');
   })
   .row()
   .text('User Agreement', async (ctx) => {
