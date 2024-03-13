@@ -187,7 +187,7 @@ export const getRouteManager = async () => {
   return routerManager;
 };
 
-async function chargeTradeFee(ctx: BotContext, amount: string){ //amount in sui
+async function chargeTradeFee(ctx: BotContext){ //amount in sui
 
   const walletManager = await getWalletManager();
   let { totalGasFee } =
@@ -195,7 +195,7 @@ async function chargeTradeFee(ctx: BotContext, amount: string){ //amount in sui
   let tx;
 
   try {
-    const fee = (TRADE_FEE/100 * +amount).toString()
+    const fee = TRADE_FEE
 
     const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
       amount: fee,
@@ -482,7 +482,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    await chargeTradeFee(ctx, validatedInputAmount)
+    await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -801,6 +801,7 @@ export async function sell(
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
+    await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
