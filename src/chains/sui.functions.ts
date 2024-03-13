@@ -1149,8 +1149,8 @@ export async function home(ctx: BotContext) {
   const balance_usd = calculate(userBalance, price)
   const avl_balance_usd = calculate(avl_balance, price)
   
-  const balanceCombinedStr = balance_usd !== null ? `<b>${userBalance} / ${balance_usd}</b>` : `<b>${userBalance}</b>`
-  const avlBalanceCombinedStr = avl_balance_usd !== null ? `<b>${avl_balance} / ${avl_balance_usd}</b>` : `<b>${avl_balance}</b>`
+  const balanceCombinedStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
+  const avlBalanceCombinedStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour balance: ${balanceCombinedStr}\nYour available balance: ${avlBalanceCombinedStr}`;
   await ctx.replyWithPhoto(
