@@ -621,16 +621,18 @@ export async function createDca(
     if (totalOrders === undefined) {
       await ctx.reply(
         'Cannot process <b>total orders count</b>. Please, try again or contact support.',
-        { parse_mode: 'HTML' },
+        { reply_markup: retryButton, parse_mode: 'HTML' },
       );
 
       return;
     }
 
-    const suiBalance = await conversation.external(async () => {
+    const availableSuiBalance = await conversation.external(async () => {
       const walletManager = await getWalletManager();
       // TODO: Maybe we should add try/catch here as well
-      const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
+      const balance = await walletManager.getAvailableSuiBalance(
+        ctx.session.publicKey,
+      );
 
       return balance;
     });
@@ -640,7 +642,7 @@ export async function createDca(
       .multipliedBy(totalOrders)
       .toString();
 
-    const userHasNotEnoughSui = new BigNumber(suiBalance).isLessThan(
+    const userHasNotEnoughSui = new BigNumber(availableSuiBalance).isLessThan(
       gasAmountForTrades,
     );
 
@@ -648,7 +650,7 @@ export async function createDca(
       await ctx.replyFmt(
         fmt([
           fmt`To set ${code(totalOrders)} ${bold('total orders')}, you need at least ${code(gasAmountForTrades)} ${bold('SUI')}.\n`,
-          fmt`Now your balance is ${code(suiBalance)} ${bold('SUI')}.\n\nPlease, enter another count of ${bold('total orders')} `,
+          fmt`Now your available balance is ${code(availableSuiBalance)} ${bold('SUI')}.\n\nPlease, enter another count of ${bold('total orders')} `,
           fmt`or top up your ${bold('SUI')} balance.`,
         ]),
         { reply_markup: closeConversation },
