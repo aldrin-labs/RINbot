@@ -16,7 +16,11 @@ import {
   signAndExecuteTransaction,
 } from '../../conversations.utils';
 import { TransactionResultStatus, getWalletManager } from '../../sui.functions';
-import { findCoinInAssets, getSuiScanTransactionLink } from '../../utils';
+import {
+  findCoinInAssets,
+  getSuiScanTransactionLink,
+  trimAmount,
+} from '../../utils';
 import { MAX_TOTAL_ORDERS_COUNT } from '../constants';
 
 export async function depositDcaBase(
@@ -86,8 +90,10 @@ export async function depositDcaBase(
     await conversation.skip();
   }
   if (amountMessage !== undefined) {
+    const trimmedAmount = trimAmount(amountMessage, baseCoinDecimals);
+
     const { isValid: amountIsValid, reason } = isValidTokenAmount({
-      amount: amountMessage,
+      amount: trimmedAmount,
       maxAvailableAmount: maxBaseCoinAmount,
       decimals: baseCoinDecimals,
     });
@@ -120,6 +126,8 @@ export async function depositDcaBase(
     return;
   }
 
+  const trimmedAmount = trimAmount(amountMessage, baseCoinDecimals);
+
   await ctx.reply('Do you want to increase orders count?', {
     reply_markup: yesOrNo,
   });
@@ -135,7 +143,7 @@ export async function depositDcaBase(
     await increaseOrdersContext.answerCallbackQuery();
   }
   if (increaseOrdersCallbackQueryData === 'yes') {
-    const newBaseBalance = baseBalance.plus(amountMessage);
+    const newBaseBalance = baseBalance.plus(trimmedAmount);
     const maxTotalOrdersCount = Math.min(
       Math.floor(newBaseBalance.toNumber()),
       MAX_TOTAL_ORDERS_COUNT,
@@ -191,7 +199,7 @@ export async function depositDcaBase(
     addOrdersCount !== 0 ? ` and *add ${addOrdersCount} orders*` : '';
 
   await ctx.reply(
-    `You are about to *deposit ${amountMessage} ${baseCoinSymbol}*${addOrdersCountString}.`,
+    `You are about to *deposit ${trimmedAmount} ${baseCoinSymbol}*${addOrdersCountString}.`,
     { reply_markup: confirmWithCloseKeyboard, parse_mode: 'Markdown' },
   );
 
@@ -217,7 +225,7 @@ export async function depositDcaBase(
     return allCoinObjects;
   });
 
-  const baseCoinAmountToDepositIntoDCA = new BigNumber(amountMessage)
+  const baseCoinAmountToDepositIntoDCA = new BigNumber(trimmedAmount)
     .multipliedBy(10 ** baseCoinDecimals)
     .toString();
 
