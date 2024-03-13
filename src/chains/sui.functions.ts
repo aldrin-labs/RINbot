@@ -774,7 +774,7 @@ export async function sell(
           showEffects: true,
         },
       });
-      await ctx.reply(`${res}`)
+      await ctx.reply(`${res.balanceChanges}`)
       const isTransactionResultSuccessful = isTransactionSuccessful(res);
       const result = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
