@@ -15,9 +15,6 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]){
     try {
         let data: PriceApiPayload = {data: []}
         allCoinsAssets.forEach(coin => {
-            //move to price api
-            if(coin.type === '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI')
-              coin.type = "0x2::sui::SUI"
             data.data.push({chainId: "sui", tokenAddress: coin.type})
           })
           const response = await axios.post<AxiosPriceApiResponsePost>("https://price-api-eight.vercel.app/assets", data)
