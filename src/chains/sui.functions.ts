@@ -32,7 +32,7 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { AxiosPriceApiResponse, BotContext, MyConversation, PriceApiPayload } from '../types';
+import { AxiosPriceApiResponse, BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -1037,8 +1037,9 @@ export async function assets(ctx: BotContext): Promise<void> {
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
+      const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\n`,
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nPrice: ${isCoinAssetDataExtended(el) ? el.price : 0}`,
       );
 
       return acc;
