@@ -1113,7 +1113,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       const balance = isCoinAssetDataExtended(el) ? `<b>${el.balance} ${el.symbol?.toUpperCase}/ ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
 
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nBalance: ${balance}\n\n`,
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
       );
 
       return acc;
