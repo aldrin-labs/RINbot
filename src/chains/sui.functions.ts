@@ -52,7 +52,7 @@ import {
   extractCoinTypeFromLink,
   findCoinInAssets,
   getAftermathPoolLink,
-  getSuiVisionCoinLink,
+  getSuiScanCoinLink,
   getSuitableCoinImageData,
   getTelegramFileUrl,
   imageUrlToBase64,
@@ -64,7 +64,6 @@ import {
 } from './utils';
 
 import {
-  BOT_PRIVATE_KEY,
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
@@ -2548,7 +2547,7 @@ export async function ownedAftermathPools(ctx: BotContext) {
     infoString += 'Balances: ';
 
     poolInfo.coins.forEach((coin) => {
-      const suiVisionCoinLink = getSuiVisionCoinLink(coin.type);
+      const suiVisionCoinLink = getSuiScanCoinLink(coin.type);
       infoString += `<code>${coin.balance}</code> <a href='${suiVisionCoinLink}'>${coin.symbol || coin.type}</a> + `;
     });
 

@@ -1,7 +1,7 @@
 import goHome from '../../../inline-keyboards/goHome';
 import { BotContext } from '../../../types';
 import { getCetus, getCoinManager, provider } from '../../sui.functions';
-import { getCetusPoolUrl, getSuiVisionCoinLink } from '../../utils';
+import { getCetusPoolUrl, getSuiScanCoinLink } from '../../utils';
 
 export async function ownedCetusPools(ctx: BotContext): Promise<void> {
   const loadingMessage = await ctx.reply('<b>Loading...</b>', {
@@ -31,8 +31,8 @@ export async function ownedCetusPools(ctx: BotContext): Promise<void> {
     infoString += `Fee rate: <code>${poolInfo.feeRate}%</code>\n`;
     infoString += 'Liquidity:\n';
 
-    const suiVisionCoinALink = getSuiVisionCoinLink(poolInfo.coinTypeA);
-    const suiVisionCoinBLink = getSuiVisionCoinLink(poolInfo.coinTypeB);
+    const suiVisionCoinALink = getSuiScanCoinLink(poolInfo.coinTypeA);
+    const suiVisionCoinBLink = getSuiScanCoinLink(poolInfo.coinTypeB);
 
     const rawAmountAString = poolInfo.amountAIsRaw ? ` <i>(*raw)</i>` : '';
     const rawAmountBString = poolInfo.amountBIsRaw ? ` <i>(*raw)</i>` : '';

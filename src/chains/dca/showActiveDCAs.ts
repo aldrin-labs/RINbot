@@ -4,7 +4,7 @@ import goHome from '../../inline-keyboards/goHome';
 import activeDcas from '../../menu/active-dcas';
 import { BotContext } from '../../types';
 import { getCoinManager } from '../sui.functions';
-import { getSuiVisionCoinLink } from '../utils';
+import { getSuiScanCoinLink } from '../utils';
 import { ExtendedDcaObject } from './dca.types';
 import { getDCAManager } from './getDCAManager';
 
@@ -110,8 +110,8 @@ export function getDcaInfoString(
 
   // TODO: Parse and print `start_time_ms` & `last_time_ms`
   let dcaInfo = number !== undefined ? `\n\n<b>#${number}</b>\n` : `\n\n`;
-  dcaInfo += `<b><a href="${getSuiVisionCoinLink(baseCoinType)}">${baseCoinSymbol}</a></b> to `;
-  dcaInfo += `<b><a href="${getSuiVisionCoinLink(quoteCoinType)}">${quoteCoinSymbol}</a></b>\n`;
+  dcaInfo += `<b><a href="${getSuiScanCoinLink(baseCoinType)}">${baseCoinSymbol}</a></b> to `;
+  dcaInfo += `<b><a href="${getSuiScanCoinLink(quoteCoinType)}">${quoteCoinSymbol}</a></b>\n`;
   dcaInfo += `<b>Remaining ${baseCoinSymbol} balance</b>: <code>${baseBalance}</code> ${baseCoinSymbol}\n`;
   dcaInfo += `<b>Buy every</b>: ${timeAmount} ${timeUnitName}\n`;
   dcaInfo += `<b>Remaining orders</b>: <code>${remaining_orders}</code>\n`;
