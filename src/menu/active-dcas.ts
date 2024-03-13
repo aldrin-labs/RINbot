@@ -43,10 +43,10 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       const currentDca = objects[currentIndex ?? 0];
       const baseCoinSymbol = currentDca.fields.base_coin_symbol;
 
-      return `Withdraw ${baseCoinSymbol}`;
+      return `Deposit ${baseCoinSymbol}`;
     },
     async (ctx) => {
-      await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
+      await ctx.conversation.enter(ConversationId.DepositDcaBase);
     },
   )
   .row()
@@ -57,13 +57,15 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       const currentDca = objects[currentIndex ?? 0];
       const baseCoinSymbol = currentDca.fields.base_coin_symbol;
 
-      return `Deposit ${baseCoinSymbol}`;
+      return `Withdraw ${baseCoinSymbol}`;
     },
     async (ctx) => {
-      await ctx.conversation.enter(ConversationId.DepositDcaBase);
+      await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
     },
   )
-  .text('Increase Orders')
+  .text('Increase Orders Count', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
+  })
   .row()
   .text('<', async (ctx) => {
     const { currentIndex, objects } = ctx.session.dcas;
