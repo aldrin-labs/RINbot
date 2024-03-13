@@ -1,4 +1,5 @@
 import { conversations, createConversation } from '@grammyjs/conversations';
+import { hydrateReply } from '@grammyjs/parse-mode';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import {
@@ -68,6 +69,8 @@ async function startBot(): Promise<void> {
       storage: enhanceStorage({ storage, migrations: { 1: addDCAsToUser } }),
     }),
   );
+
+  bot.use(hydrateReply);
 
   composer.use(conversations());
 

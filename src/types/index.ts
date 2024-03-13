@@ -3,6 +3,7 @@ import {
   type Conversation,
   type ConversationFlavor,
 } from '@grammyjs/conversations';
+import type { ParseModeFlavor } from '@grammyjs/parse-mode';
 import { Context, SessionFlavor } from 'grammy';
 import { ExtendedDcaObject } from '../chains/dca/dca.types';
 
@@ -25,8 +26,8 @@ export interface SessionData {
   };
 }
 
-export type BotContext = Context &
-  SessionFlavor<SessionData> &
-  ConversationFlavor;
+export type BotContext = ParseModeFlavor<
+  Context & SessionFlavor<SessionData> & ConversationFlavor
+>;
 
 export type MyConversation = Conversation<BotContext>;
