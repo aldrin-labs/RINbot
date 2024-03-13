@@ -382,8 +382,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  await chargeTradeFee(ctx, validatedInputAmount)
-
   // TODO: Re-check args here
   const tx = await conversation.external({
     args: [validatedCoinType, validatedInputAmount],
@@ -484,6 +482,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
+    await chargeTradeFee(ctx, validatedInputAmount)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -706,10 +705,7 @@ export async function sell(
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
-        });
-
-        //console.log(transaction.getDigest());
-        
+        });      
 
         return transaction;
       } catch (error) {
