@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 
 export const MAX_TOTAL_ORDERS_COUNT = 1_000_000;
 export const MIN_TOTAL_ORDERS_COUNT = 2;
+export const MIN_ORDERS_COUNT_TO_ADD = 1;
 
 // Note: This amount has taken from Jupiter.
 // TODO: Research and fix in case it's required.
