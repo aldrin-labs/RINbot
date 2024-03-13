@@ -71,7 +71,7 @@ import {
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
-import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi, totalBalanceCalculation } from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -1166,7 +1166,7 @@ export async function home(ctx: BotContext) {
       allCoinAssets.forEach(coin1 => {
         coinsPriceApi?.forEach(coin2 => {
           if(coin1.type === coin2.tokenAddress){
-            balance += Number(calculate(coin1.balance, coin2.price))
+            balance += totalBalanceCalculation(coin1.balance, coin2.price)
           }
         })
       })

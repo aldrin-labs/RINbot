@@ -9,8 +9,10 @@ export function calculate(balance: string, price: number | undefined){
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(result);
 }
 
-export function totalBalanceCalculation() {
-
+export function totalBalanceCalculation(balance: string, price: number | undefined) {
+    if(price === undefined)
+        return 0
+    return +balance * price
 }
 
 export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
