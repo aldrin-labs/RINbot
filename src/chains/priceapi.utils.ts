@@ -6,7 +6,7 @@ export function calculate(balance: string, price: number | undefined){
     if(price === undefined)
         return null
     const result = +balance * price;
-    return +result.toFixed(2)
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(result);
 }
 
 export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 

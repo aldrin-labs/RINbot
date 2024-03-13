@@ -1148,7 +1148,11 @@ export async function home(ctx: BotContext) {
   }
   const balance_usd = calculate(userBalance, price)
   const avl_balance_usd = calculate(avl_balance, price)
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour balance in USD: <code>${balance_usd}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour available balance in USD: <code>${avl_balance_usd}</code>`;
+  
+  const balanceCombinedStr = balance_usd !== null ? `<b>${userBalance} / ${balance_usd}</b>` : `<b>${userBalance}</b>`
+  const avlBalanceCombinedStr = avl_balance_usd !== null ? `<b>${avl_balance} / ${avl_balance_usd}</b>` : `<b>${avl_balance}</b>`
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour balance: ${balanceCombinedStr}\nYour available balance: ${avlBalanceCombinedStr}`;
   await ctx.replyWithPhoto(
     'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
