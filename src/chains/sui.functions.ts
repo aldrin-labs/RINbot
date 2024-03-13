@@ -1108,7 +1108,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
       
-      const balance = isCoinAssetDataExtended(el) ? `<b>${el.balance} ${el.symbol?.toUpperCase()}/ ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+      const balance = isCoinAssetDataExtended(el) ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
 
       acc = acc.concat(
         `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
@@ -1163,7 +1163,6 @@ export async function home(ctx: BotContext) {
 
       const coinsPriceApi = response?.data.data;
 
-      
       const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
 
       let balance = 0;
