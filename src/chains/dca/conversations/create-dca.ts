@@ -35,6 +35,7 @@ import {
   findCoinInAssets,
   formatPrice,
   getSuiScanCoinLink,
+  getSuiScanTransactionLink,
   isValidCoinLink,
   trimAmount,
 } from '../../utils';
@@ -748,12 +749,6 @@ export async function createDca(
     return allCoinObjects;
   });
 
-  // TODO: Pass this param to `createDCAInitTransaction`
-  const gasAmountForTradesInMist = new BigNumber(ONE_TRADE_GAS_FEE_IN_MIST)
-    .multipliedBy(totalOrders)
-    .toString();
-  console.debug('gasAmountForTradesInMist:', gasAmountForTradesInMist);
-
   const createDCATransaction = await getTransactionFromMethod({
     conversation,
     ctx,
@@ -771,6 +766,7 @@ export async function createDca(
       quoteCoinType: validatedQuoteCoin.type,
       timeScale: timeUnit,
       totalOrders,
+      publicKey: ctx.session.publicKey,
     },
   });
 
@@ -798,18 +794,18 @@ export async function createDca(
       .row()
       .add(...retryButtons);
 
-    await ctx.reply(
-      `<b>DCA</b> is successfully created!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfExecution.digest}`,
-      { reply_markup: showActiveDCAsWithRetryKeyboard, parse_mode: 'HTML' },
+    await ctx.replyFmt(
+      fmt`${bold('DCA')} is ${link('successfully created', getSuiScanTransactionLink(resultOfExecution.digest))}!`,
+      { reply_markup: showActiveDCAsWithRetryKeyboard },
     );
 
     return;
   }
 
   if (resultOfExecution.result === 'failure' && resultOfExecution.digest) {
-    await ctx.reply(
-      `Failed to create <b>DCA</b>.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfExecution.digest}`,
-      { reply_markup: retryButton, parse_mode: 'HTML' },
+    await ctx.replyFmt(
+      fmt`${link('Failed', getSuiScanTransactionLink(resultOfExecution.digest))} to create ${bold('DCA')}.`,
+      { reply_markup: retryButton },
     );
 
     return;

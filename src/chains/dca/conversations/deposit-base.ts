@@ -46,7 +46,7 @@ export async function depositDcaBase(
   } = dca.fields;
   const dcaId = dca.fields.id.id;
   const currentTotalOrdersCount = +dca.fields.remaining_orders;
-  const baseBalance = new BigNumber(dca.fields.base_balance).dividedBy(
+  const baseBalance = new BigNumber(dca.fields.input_balance).dividedBy(
     10 ** baseCoinDecimals,
   );
 
@@ -352,6 +352,7 @@ export async function depositDcaBase(
       quoteCoinType,
       dca: dcaId,
       addOrdersCount,
+      publicKey: ctx.session.publicKey,
     },
   });
 
