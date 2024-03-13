@@ -1,4 +1,4 @@
-import { DCAManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
+import { DCAManagerSingleton, SUI_DECIMALS } from '@avernikoz/rinbot-sui-sdk';
 import { bold, code, fmt, link } from '@grammyjs/parse-mode';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
@@ -12,9 +12,12 @@ import {
   getTransactionFromMethod,
   signAndExecuteTransaction,
 } from '../../conversations.utils';
-import { TransactionResultStatus } from '../../sui.functions';
+import { TransactionResultStatus, getWalletManager } from '../../sui.functions';
 import { getSuiScanTransactionLink } from '../../utils';
-import { MIN_ORDERS_COUNT_TO_ADD } from '../constants';
+import {
+  MIN_ORDERS_COUNT_TO_ADD,
+  ONE_TRADE_GAS_FEE_IN_MIST,
+} from '../constants';
 
 export async function increaseOrders(
   conversation: MyConversation,
@@ -57,35 +60,128 @@ export async function increaseOrders(
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
-  const totalOrdersContext = await conversation.waitFor('message:text');
-  const totalOrdersMessage = totalOrdersContext.msg.text;
-  const totalOrdersInt = parseInt(totalOrdersMessage);
+  let totalOrders;
+  let userConfirmedTotalOrdersCount = false;
 
-  if (isNaN(totalOrdersInt)) {
-    await ctx.reply(
-      'Total orders count must be an integer. Please, try again.',
-      { reply_markup: closeConversation },
+  do {
+    const totalOrdersContext = await conversation.wait();
+    const totalOrdersCallbackQueryData = totalOrdersContext.callbackQuery?.data;
+    const totalOrdersMessage = totalOrdersContext.msg?.text;
+
+    if (totalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    }
+    if (totalOrdersMessage !== undefined) {
+      const totalOrdersInt = parseInt(totalOrdersMessage);
+
+      if (isNaN(totalOrdersInt)) {
+        await ctx.reply(
+          'Total orders count must be an integer. Please, try again.',
+          { reply_markup: closeConversation },
+        );
+
+        await conversation.skip({ drop: true });
+      }
+
+      const totalOrdersIsValid =
+        totalOrdersInt >= MIN_ORDERS_COUNT_TO_ADD &&
+        totalOrdersInt <= +availableToAddOrdersCount;
+
+      if (!totalOrdersIsValid) {
+        await ctx.reply(
+          `Minimum <b>total orders count</b> to add is <code>1</code>, maximum &#8213; ` +
+            `<code>${availableToAddOrdersCount}</code>.\n\nPlease, try again.`,
+          { reply_markup: closeConversation, parse_mode: 'HTML' },
+        );
+
+        await conversation.skip({ drop: true });
+      }
+
+      totalOrders = totalOrdersInt;
+    } else {
+      await ctx.replyFmt(
+        fmt`Please, enter the ${bold('total orders count')} you want to add.`,
+        { reply_markup: closeConversation },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+
+    if (totalOrders === undefined) {
+      await ctx.replyFmt(
+        fmt`Cannot process ${bold('total orders count')}. Please, try again or contact support.`,
+        { reply_markup: retryButton },
+      );
+
+      return;
+    }
+
+    const availableSuiBalance = await conversation.external(async () => {
+      const walletManager = await getWalletManager();
+      // TODO: Maybe we should add try/catch here as well
+      const balance = await walletManager.getAvailableSuiBalance(
+        ctx.session.publicKey,
+      );
+
+      return balance;
+    });
+
+    const gasAmountForTrades = new BigNumber(ONE_TRADE_GAS_FEE_IN_MIST)
+      .dividedBy(10 ** SUI_DECIMALS)
+      .multipliedBy(totalOrders)
+      .toString();
+
+    const userHasNotEnoughSui = new BigNumber(availableSuiBalance).isLessThan(
+      gasAmountForTrades,
     );
 
-    await conversation.skip({ drop: true });
-  }
+    if (userHasNotEnoughSui) {
+      await ctx.replyFmt(
+        fmt([
+          fmt`To add ${code(totalOrders)} ${bold('total orders')}, you need at least ${code(gasAmountForTrades)} ${bold('SUI')}.\n`,
+          fmt`Now your available balance is ${code(availableSuiBalance)} ${bold('SUI')}.\n\nPlease, enter another count of ${bold('total orders')} to add `,
+          fmt`or top up your ${bold('SUI')} balance.`,
+        ]),
+        { reply_markup: closeConversation },
+      );
 
-  const totalOrdersIsValid =
-    totalOrdersInt >= MIN_ORDERS_COUNT_TO_ADD &&
-    totalOrdersInt <= +availableToAddOrdersCount;
+      await conversation.skip({ drop: true });
+    }
 
-  if (!totalOrdersIsValid) {
-    await ctx.reply(
-      `Minimum <b>total orders count</b> to add is <code>1</code>, maximum &#8213; ` +
-        `<code>${availableToAddOrdersCount}</code>.\n\nPlease, try again.`,
-      { reply_markup: closeConversation, parse_mode: 'HTML' },
+    await ctx.replyFmt(
+      fmt([
+        fmt`For ${code(totalOrders)} ${bold('total orders')} ${code(gasAmountForTrades)} ${bold('SUI')} `,
+        fmt`will be deducted from your balance.`,
+      ]),
+      { reply_markup: confirmWithCloseKeyboard },
     );
 
-    await conversation.skip({ drop: true });
-  }
+    const confirmTotalOrdersContext = await conversation.waitFor(
+      'callback_query:data',
+    );
+    const confirmTotalOrdersCallbackQueryData =
+      confirmTotalOrdersContext.callbackQuery.data;
+
+    if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    }
+    if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Confirm) {
+      userConfirmedTotalOrdersCount = true;
+      await confirmTotalOrdersContext.answerCallbackQuery();
+
+      break;
+    } else {
+      await ctx.replyFmt(
+        fmt`Please, confirm specified ${bold('total orders count')} to add.`,
+        { reply_markup: closeConversation },
+      );
+
+      await confirmTotalOrdersContext.answerCallbackQuery();
+    }
+  } while (!userConfirmedTotalOrdersCount);
 
   await ctx.replyFmt(
-    fmt`You are about to ${bold('add')} ${code(totalOrdersInt)} ${bold('orders')}.`,
+    fmt`You are about to ${bold('add')} ${code(totalOrders)} ${bold('orders')}.`,
     { reply_markup: confirmWithCloseKeyboard },
   );
 
@@ -115,7 +211,7 @@ export async function increaseOrders(
       baseCoinType,
       quoteCoinType,
       dca: dcaId,
-      addOrdersCount: totalOrdersInt,
+      addOrdersCount: totalOrders,
     },
   });
 
