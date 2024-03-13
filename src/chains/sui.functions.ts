@@ -1170,7 +1170,7 @@ export async function home(ctx: BotContext) {
           }
         })
       })
-      totalBalanceStr = `Your balance: <b>${balance.toString()} USD</b>`
+      totalBalanceStr = `Your balance: <b>${balance.toFixed(2).toString()} USD</b>`
     
     } catch (error) {
       console.error('Error in calculating total balance: ', error)
