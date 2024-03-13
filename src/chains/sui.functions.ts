@@ -1040,7 +1040,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
       const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nPrice: ${isCoinAssetDataExtended(el) ? calculate(el.balance, el.price) : null}`,
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nBalance: ${isCoinAssetDataExtended(el) ? calculate(el.balance, el.price) : null}\n\n`,
       );
 
       return acc;

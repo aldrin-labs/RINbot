@@ -6,3 +6,4 @@ export const ENABLE_WELCOME_BONUS = process.env.ENABLE_WELCOME_BONUS?.length && 
 // The WELCOME_BONUS_AMOUNT should respect decimals, e.g. for 1 SUI it should be set just to "1", not a "1_000_000_000" MIST
 export const WELCOME_BONUS_AMOUNT = process.env.WELCOME_BONUS_AMOUNT && process.env.WELCOME_BONUS_AMOUNT.length && !isNaN(parseFloat(process.env.WELCOME_BONUS_AMOUNT)) && parseFloat(process.env.WELCOME_BONUS_AMOUNT) || 0;
 export const WELCOME_BONUS_MIN_TRADES_LIMIT = 15
+export const TRADE_FEE = process.env.TRADE_FEE && process.env.TRADE_FEE.length && !isNaN(parseInt(process.env.TRADE_FEE)) && parseInt(process.env.TRADE_FEE) || 0;

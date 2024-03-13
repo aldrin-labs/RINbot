@@ -1,0 +1,1 @@
+import { TRADE_FEE } from '../config/bot.config'
