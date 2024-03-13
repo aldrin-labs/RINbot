@@ -257,3 +257,7 @@ export function formatPrice(price: string): string {
     }
   }
 }
+
+export function trimAmount(amount: string, precision: number) {
+  return parseFloat(parseFloat(amount).toFixed(precision)).toString();
+}
