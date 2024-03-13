@@ -1140,7 +1140,7 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
   let price;
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI"')
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
     price = priceApiGetResponse?.data.data.price
   } catch (error) {
     console.error(error)
