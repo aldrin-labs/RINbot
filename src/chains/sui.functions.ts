@@ -692,6 +692,8 @@ export async function sell(
     return true;
   });
 
+  //await chargeTradeFee(ctx, )
+
   await ctx.reply('Initiating swap...');
 
   const tx = await conversation.external({
@@ -772,7 +774,7 @@ export async function sell(
           showEffects: true,
         },
       });
-
+      await ctx.reply(`${res}`)
       const isTransactionResultSuccessful = isTransactionSuccessful(res);
       const result = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
