@@ -708,7 +708,7 @@ export async function sell(
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
         });
 
-        console.log(transaction.getDigest());
+        //console.log(transaction.getDigest());
         
 
         return transaction;
