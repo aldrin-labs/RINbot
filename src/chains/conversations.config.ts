@@ -11,5 +11,6 @@ export enum ConversationId {
   DepositDcaBase = 'depositDcaBase',
   WithdrawDcaBase = 'withdrawDcaBase',
   IncreaseDcaOrders = 'increaseDcaOrders',
+  CloseDca = 'closeDca',
   WelcomeBonus = 'welcomeBonus',
 }
