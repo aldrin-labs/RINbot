@@ -781,7 +781,8 @@ export async function sell(
         : TransactionResultStatus.Failure;
 
       const balanceChanges = await res.balanceChanges
-      await ctx.reply(`${balanceChanges}`)
+      console.log(balanceChanges);
+      
 
       return { digest: res.digest, result };
     } catch (error) {
