@@ -328,8 +328,10 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     const balance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
-
-    return balance;
+    const availableBalanceAfterFee = +balance - +TRADE_FEE
+    if(availableBalanceAfterFee < 0)
+      return '0'
+    return availableBalanceAfterFee.toString();
   });
 
   await ctx.reply(
