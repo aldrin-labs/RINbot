@@ -41,7 +41,8 @@ export interface PriceApiPayload {
 }
 
 export interface CoinAssetDataExtended extends CoinAssetData{
-  price?: number
+  price?: number;
+  timestamp?: number;
 }
 
 export interface SessionData {
@@ -49,7 +50,7 @@ export interface SessionData {
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
-  assets: CoinAssetData[];
+  assets: CoinAssetDataExtended[];
   welcomeBonus: { amount: number, isUserEligibleToGetBonus: boolean, isUserAgreeWithBonus: boolean | null, isUserClaimedBonus: boolean | null }
   tradesCount: number
   createdAt: number

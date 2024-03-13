@@ -9,6 +9,10 @@ export function calculate(balance: string, price: number | undefined){
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(result);
 }
 
+export function totalBalanceCalculation() {
+
+}
+
 export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
 
 export async function postPriceApi(allCoinsAssets: CoinAssetData[]){

@@ -1148,11 +1148,39 @@ export async function home(ctx: BotContext) {
   }
   const balance_usd = calculate(userBalance, price)
   const avl_balance_usd = calculate(avl_balance, price)
-  
-  const balanceCombinedStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
-  const avlBalanceCombinedStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour balance: ${balanceCombinedStr}\nYour available balance: ${avlBalanceCombinedStr}`;
+  let totalBalanceStr: string;
+
+  try {
+      const data: PriceApiPayload = {data: []}
+      const allCoinAssets = ctx.session.assets
+      allCoinAssets.forEach(coin => {
+        //move to price api
+        data.data.push({chainId: "sui", tokenAddress: coin.type})
+      })
+
+      const response = await postPriceApi(allCoinAssets)
+
+      const coinsPriceApi = response?.data.data
+      let balance = 0;
+      allCoinAssets.forEach(coin1 => {
+        coinsPriceApi?.forEach(coin2 => {
+          if(coin1.type === coin2.tokenAddress){
+            balance += Number(calculate(coin1.balance, coin2.price))
+          }
+        })
+      })
+      totalBalanceStr = `Your balance: <b>${balance.toString()} USD</b>`
+    
+    } catch (error) {
+      console.error('Error in calculating total balance: ', error)
+      totalBalanceStr = ''
+    }
+
+  const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
+  const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
     'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
