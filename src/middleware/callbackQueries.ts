@@ -7,6 +7,8 @@ import { home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
 import { CallbackQueryData } from '../types/callback-queries-data';
+import { slippagePercentages } from '../chains/slippage/percentages';
+import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.Cancel, async (ctx) => {
@@ -25,6 +27,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
 
   useSurfdogCallbackQueries(bot);
   useDcaCallbackQueries(bot);
+  useSlippageCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -69,5 +72,16 @@ function useDcaCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('show-active-dcas', async (ctx) => {
     await ctx.answerCallbackQuery();
     await showActiveDCAs(ctx);
+  });
+}
+
+function useSlippageCallbackQueries(bot: Bot<BotContext>) {
+  slippagePercentages.forEach((percentage) => {
+    bot.callbackQuery(`slippage-${percentage}`, async (ctx) => {
+      ctx.session.settings.slippagePercentage = percentage;
+
+      await showSlippageConfiguration(ctx);
+      await ctx.answerCallbackQuery();
+    });
   });
 }

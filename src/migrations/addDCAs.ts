@@ -8,11 +8,19 @@ export function addDCAsToUser(old: {
     | 'positions'
     | 'wallet'
     | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
+    | 'nft-menu';
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetData[];
+  welcomeBonus: {
+    amount: number;
+    isUserEligibleToGetBonus: boolean;
+    isUserAgreeWithBonus: boolean | null;
+    isUserClaimedBonus: boolean | null;
+  };
+  tradesCount: number;
+  createdAt: number;
 }) {
   return {
     ...old,

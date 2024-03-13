@@ -31,12 +31,20 @@ import {
   sell,
   withdraw,
 } from './chains/sui.functions';
-import { BOT_TOKEN, ENVIRONMENT } from './config/bot.config';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addDCAsToUser } from './migrations/addDCAs';
 import { BotContext, SessionData } from './types';
+import {
+  BOT_TOKEN,
+  ENVIRONMENT,
+  WELCOME_BONUS_AMOUNT,
+} from './config/bot.config';
+import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
+import { autoRetry } from '@grammyjs/auto-retry';
+import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 
 const APP_VERSION = '1.1.3';
 
@@ -61,15 +69,33 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
-          settings: { slippagePercentage: 10 },
+          settings: { slippagePercentage: 20 },
           assets: [],
           dcas: { currentIndex: null, objects: [] },
+          welcomeBonus: {
+            amount: WELCOME_BONUS_AMOUNT,
+            isUserEligibleToGetBonus: true,
+            isUserClaimedBonus: null,
+            isUserAgreeWithBonus: null,
+          },
+          tradesCount: 0,
+          createdAt: Date.now(),
         };
       },
-      storage: enhanceStorage({ storage, migrations: { 1: addDCAsToUser } }),
+      storage: enhanceStorage({
+        storage,
+        migrations: {
+          1: addWelcomeBonus,
+          2: enlargeDefaultSlippage,
+          3: addDCAsToUser,
+        },
+      }),
     }),
   );
 
+  bot.api.config.use(
+    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
+  );
   bot.use(hydrateReply);
 
   composer.use(conversations());
@@ -87,16 +113,16 @@ async function startBot(): Promise<void> {
       id: ConversationId.CreateAftermathPool,
     }),
   );
-  composer.use(
-    createConversation(addCetusLiquidity, {
-      id: ConversationId.AddCetusPoolLiquidity,
-    }),
-  );
-  composer.use(
-    createConversation(createCetusPool, {
-      id: ConversationId.CreateCetusPool,
-    }),
-  );
+  // composer.use(
+  //   createConversation(addCetusLiquidity, {
+  //     id: ConversationId.AddCetusPoolLiquidity,
+  //   }),
+  // );
+  // composer.use(
+  //   createConversation(createCetusPool, {
+  //     id: ConversationId.CreateCetusPool,
+  //   }),
+  // );
   composer.use(
     createConversation(createCoin, { id: ConversationId.CreateCoin }),
   );
@@ -110,6 +136,11 @@ async function startBot(): Promise<void> {
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
+    }),
+  );
+  composer.use(
+    createConversation(welcomeBonusConversation, {
+      id: ConversationId.WelcomeBonus,
     }),
   );
   bot.errorBoundary(boundaryHandler).use(composer);
@@ -160,8 +191,13 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.CreateDca);
   });
 
+  // TODO: Remove this before merge, that's needed for tests only
   bot.command('withdrawdcabase', async (ctx) => {
     await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
+  });
+
+  bot.command('close', async (ctx) => {
+    await ctx.conversation.exit();
   });
 
   // Set commands suggestion
@@ -175,14 +211,15 @@ async function startBot(): Promise<void> {
       command: 'createaftermathpool',
       description: 'Create Aftermath liquidity pool',
     },
-    {
-      command: 'createcetuspool',
-      description: 'Create Cetus concentrated liquidity pool',
-    },
-    {
-      command: 'addcetuspoolliquidity',
-      description: 'Add liquidity to Cetus pool',
-    },
+    { command: 'close', description: 'Hard close all conversations' },
+    // {
+    //   command: 'createcetuspool',
+    //   description: 'Create Cetus concentrated liquidity pool',
+    // },
+    // {
+    //   command: 'addcetuspoolliquidity',
+    //   description: 'Add liquidity to Cetus pool',
+    // },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },

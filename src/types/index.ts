@@ -24,6 +24,14 @@ export interface SessionData {
     currentIndex: number | null;
     objects: ExtendedDcaObject[];
   };
+  welcomeBonus: {
+    amount: number;
+    isUserEligibleToGetBonus: boolean;
+    isUserAgreeWithBonus: boolean | null;
+    isUserClaimedBonus: boolean | null;
+  };
+  tradesCount: number;
+  createdAt: number;
 }
 
 export type BotContext = ParseModeFlavor<

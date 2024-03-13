@@ -6,8 +6,8 @@ import {
   TurbosSingleton,
   clmmMainnet,
 } from '@avernikoz/rinbot-sui-sdk';
-import { getRedisClient } from '../src/config/redis.config';
 import { SUI_PROVIDER_URL } from '../src/chains/sui.config';
+import { getRedisClient } from '../src/config/redis.config';
 
 /**
  * @description Updates the cache of pool providers at regular intervals to minimize the chance of cold starts.

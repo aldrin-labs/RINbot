@@ -63,6 +63,12 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
+import {
+  BOT_PRIVATE_KEY,
+  WELCOME_BONUS_AMOUNT,
+  WELCOME_BONUS_MIN_TRADES_LIMIT,
+} from '../config/bot.config';
+
 export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
@@ -137,6 +143,7 @@ export const getCoinManager = async () => {
     getAftermath(),
     getCetus(),
     getTurbos(),
+    getFlowx(),
   ]);
 
   const coinManager = CoinManagerSingleton.getInstance(
@@ -168,6 +175,7 @@ export const getRouteManager = async () => {
     getAftermath(),
     getCetus(),
     getTurbos(),
+    getFlowx(),
   ]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
@@ -320,7 +328,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           tokenTo: validatedCoinType,
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
-          slippagePercentage: 10,
+          slippagePercentage: ctx.session.settings.slippagePercentage,
         });
 
         return transaction;
@@ -413,6 +421,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
+
+    conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     return;
   }
@@ -626,7 +636,7 @@ export async function sell(
           tokenTo: LONG_SUI_COIN_TYPE,
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
-          slippagePercentage: ctx.session?.settings?.slippagePercentage || 10,
+          slippagePercentage: ctx.session.settings.slippagePercentage || 10,
         });
 
         return transaction;
@@ -724,6 +734,8 @@ export async function sell(
       { reply_markup: retryButton },
     );
 
+    conversation.session.tradesCount = conversation.session.tradesCount + 1;
+
     return;
   }
 
@@ -743,6 +755,24 @@ export async function exportPrivateKey(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const {
+    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
+    tradesCount,
+  } = ctx.session;
+  const isUserNotEligibleToExportPrivateKey =
+    isUserAgreeWithBonus &&
+    isUserClaimedBonus &&
+    tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
+
+  if (isUserNotEligibleToExportPrivateKey) {
+    await ctx.reply(
+      `🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`,
+      { reply_markup: goHome },
+    );
+
+    return;
+  }
+
   await ctx.reply(
     `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -772,6 +802,18 @@ export async function withdraw(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
+  const {
+    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
+    tradesCount,
+  } = ctx.session;
+  const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus;
+
+  if (isUserUsedWelcomeBonus) {
+    await ctx.reply(
+      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`,
+    );
+  }
+
   await ctx.reply(
     `Please, type the address to which you would like to send your SUI.`,
     { reply_markup: closeConversation },
@@ -814,8 +856,23 @@ export async function withdraw(
   }
 
   const walletManager = await getWalletManager();
-  const { availableAmount, totalGasFee } =
+  let { availableAmount, totalGasFee } =
     await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+
+  // Decrease available amount in case user participate in the welcome bonus program
+  availableAmount = isUserUsedWelcomeBonus
+    ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString()
+    : availableAmount;
+
+  // There is no sense to allow user reply with amount in case it's 0 or less than 0
+  if (parseFloat(availableAmount) <= 0) {
+    await ctx.reply(
+      `⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`,
+      { reply_markup: goHome },
+    );
+
+    return;
+  }
 
   await ctx.reply(
     `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -935,7 +992,7 @@ export async function withdraw(
   }
 }
 
-export async function availableBalance(ctx: any): Promise<string> {
+export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
@@ -989,7 +1046,6 @@ export function getExplorerLink(ctx: BotContext): string {
 }
 
 export async function home(ctx: BotContext) {
-  // Send the menu.
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
