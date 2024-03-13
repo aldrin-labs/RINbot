@@ -310,7 +310,8 @@ export async function createDca(
   await ctx.reply(
     `Enter the <b>minimum price</b> at which <b>DCA</b> will buy <b>${quoteCoinSymbol}</b>.\n\n` +
       `Current <b>${quoteCoinSymbol}</b> price: ` +
-      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>`,
+      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>\n\n` +
+      `<b>Note</b>: this parameter cannot be changed in the future.`,
     { reply_markup: closeWithSkipReplyMarkup, parse_mode: 'HTML' },
   );
 
@@ -366,8 +367,9 @@ export async function createDca(
       `Current <b>${quoteCoinSymbol}</b> price: ` +
       `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>` +
       (minPrice === defaultMinPrice
-        ? ''
-        : `\n<b>Min valid price</b>: <code>${minPrice}</code>`),
+        ? '\n\n'
+        : `\n<b>Min valid price</b>: <code>${minPrice}</code>\n\n`) +
+      `<b>Note</b>: this parameter cannot be changed in the future.`,
     { reply_markup: closeWithSkipReplyMarkup, parse_mode: 'HTML' },
   );
 
