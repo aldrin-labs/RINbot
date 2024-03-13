@@ -774,11 +774,14 @@ export async function sell(
           showEffects: true,
         },
       });
-      await ctx.reply(`${res.balanceChanges}`)
+      
       const isTransactionResultSuccessful = isTransactionSuccessful(res);
       const result = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
         : TransactionResultStatus.Failure;
+
+      const balanceChanges = await res.balanceChanges
+      await ctx.reply(`${balanceChanges}`)
 
       return { digest: res.digest, result };
     } catch (error) {
