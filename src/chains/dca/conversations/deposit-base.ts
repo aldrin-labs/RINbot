@@ -208,6 +208,12 @@ export async function depositDcaBase(
   }
   if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
     await confirmContext.answerCallbackQuery();
+  } else {
+    await ctx.reply(`Please, confirm or cancel depositing.`, {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip({ drop: true });
   }
 
   await ctx.reply('Preparing deposit data...');

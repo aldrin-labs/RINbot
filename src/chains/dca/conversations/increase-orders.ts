@@ -97,6 +97,12 @@ export async function increaseOrders(
   }
   if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
     await confirmContext.answerCallbackQuery();
+  } else {
+    await ctx.reply(`Please, confirm or cancel orders count increasing.`, {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip({ drop: true });
   }
 
   await ctx.replyFmt(fmt`${bold('Creating transaction...')}`);
