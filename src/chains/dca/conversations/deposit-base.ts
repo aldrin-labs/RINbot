@@ -198,6 +198,7 @@ export async function depositDcaBase(
 
         const totalOrdersIsValid =
           totalOrdersInt >= 0 && totalOrdersInt <= +availableToAddOrdersCount;
+
         if (!totalOrdersIsValid) {
           await ctx.reply(
             `Minimum <b>total orders count</b> to add is <code>0</code>, maximum &#8213; ` +
