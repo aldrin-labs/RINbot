@@ -66,6 +66,8 @@ import axios from 'axios';
 
 import {
   BOT_PRIVATE_KEY,
+  EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
+  TRADE_FEE,
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
@@ -184,6 +186,67 @@ export const getRouteManager = async () => {
   // console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
   return routerManager;
 };
+
+async function chargeTradeFee(ctx: BotContext, amount: string){ //amount in sui
+
+  const walletManager = await getWalletManager();
+  let { totalGasFee } =
+    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+  let tx;
+
+  try {
+    const fee = (TRADE_FEE/100 * +amount).toString()
+
+    const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
+      amount: fee,
+      address: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
+    });
+    txBlock.setGasBudget(Number(totalGasFee));
+    tx = txBlock;
+  } catch (error) {
+    console.error(error);
+
+    if (error instanceof Error) {
+      console.error(
+        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
+      );
+    } else {
+      console.error(
+        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
+      );
+    }
+
+    return;
+  }
+  try {
+    const res = await provider.signAndExecuteTransactionBlock({
+      transactionBlock: tx,
+      signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+        ctx.session.privateKey,
+      ),
+      options: {
+        showEffects: true,
+      },
+    });
+
+    if (res.effects?.status.status === 'failure') {
+        console.error(`Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
+      return;
+    }
+    console.log(`Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(
+        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+      );
+    } else {
+      console.error(
+        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+      );
+    }
+    return;
+  }
+}
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply(
@@ -318,6 +381,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     return;
   }
+
+  await chargeTradeFee(ctx, validatedInputAmount)
 
   // TODO: Re-check args here
   const tx = await conversation.external({

@@ -7,3 +7,4 @@ export const ENABLE_WELCOME_BONUS = process.env.ENABLE_WELCOME_BONUS?.length && 
 export const WELCOME_BONUS_AMOUNT = process.env.WELCOME_BONUS_AMOUNT && process.env.WELCOME_BONUS_AMOUNT.length && !isNaN(parseFloat(process.env.WELCOME_BONUS_AMOUNT)) && parseFloat(process.env.WELCOME_BONUS_AMOUNT) || 0;
 export const WELCOME_BONUS_MIN_TRADES_LIMIT = 15
 export const TRADE_FEE = process.env.TRADE_FEE && process.env.TRADE_FEE.length && !isNaN(parseInt(process.env.TRADE_FEE)) && parseInt(process.env.TRADE_FEE) || 0;
+export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES = process.env.EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES || ''
