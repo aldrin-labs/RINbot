@@ -200,6 +200,11 @@ async function startBot(): Promise<void> {
   });
 
   // TODO: Remove this before merge, that's needed for tests only
+  bot.command('depositdcabase', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.DepositDcaBase);
+  });
+
+  // TODO: Remove this before merge, that's needed for tests only
   bot.command('withdrawdcabase', async (ctx) => {
     await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
   });
@@ -257,6 +262,11 @@ async function startBot(): Promise<void> {
     {
       command: 'closedca',
       description: 'Close selected DCA',
+    },
+    // TODO: Remove this before merge, that's needed for tests only
+    {
+      command: 'depositdcabase',
+      description: 'Deposit base coin to selected DCA',
     },
   ]);
 
