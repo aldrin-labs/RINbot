@@ -2,11 +2,14 @@ import {
   CommonCoinData,
   DCAManagerSingleton,
   DCATimescale,
+  NoRoutesError,
+  SUI_DECIMALS,
   convertToBNFormat,
   isCommonCoinData,
   isValidTokenAddress,
   isValidTokenAmount,
 } from '@avernikoz/rinbot-sui-sdk';
+import { bold, code, fmt, link } from '@grammyjs/parse-mode';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import confirm from '../../../inline-keyboards/confirm';
@@ -21,7 +24,7 @@ import {
   getTransactionFromMethod,
   signAndExecuteTransaction,
 } from '../../conversations.utils';
-import { USDC_COIN_TYPE } from '../../sui.config';
+import { RINCEL_COIN_TYPE, USDC_COIN_TYPE } from '../../sui.config';
 import {
   getCoinManager,
   getRouteManager,
@@ -31,13 +34,16 @@ import {
   extractCoinTypeFromLink,
   findCoinInAssets,
   formatPrice,
-  getSuiVisionCoinLink,
+  getSuiScanCoinLink,
   isValidCoinLink,
+  trimAmount,
 } from '../../utils';
 import {
   MAX_TOTAL_ORDERS_COUNT,
   MIN_DCA_BASE_AMOUNT,
   MIN_TOTAL_ORDERS_COUNT,
+  ONE_TRADE_GAS_FEE_IN_MIST,
+  ONE_TRADE_GAS_FEE_IN_SUI,
 } from '../constants';
 
 export async function createDca(
@@ -193,13 +199,7 @@ export async function createDca(
         .toString();
       quoteCoinPrice = formatPrice(unformattedCoinPrice);
     } catch (error) {
-      if (
-        // TODO: Use NoRoutesError
-        error instanceof Error &&
-        error.message.includes(
-          `[RouteManager] There is no paths for coins "${baseCoinType}" and "${coinType}" (all outputAmounts = 0)`,
-        )
-      ) {
+      if (error instanceof NoRoutesError) {
         await ctx.api.editMessageText(
           findingRouteMessage.chat.id,
           findingRouteMessage.message_id,
@@ -267,7 +267,7 @@ export async function createDca(
       return false;
     }
 
-    const inputAmount = ctx.msg?.text ?? '';
+    const inputAmount = trimAmount(ctx.msg?.text ?? '', baseCoinDecimals);
 
     const { isValid: amountIsValid, reason } = isValidTokenAmount({
       amount: inputAmount,
@@ -287,10 +287,13 @@ export async function createDca(
 
     return true;
   });
-  const baseCoinAmount: string | undefined = baseCoinAmountContext.msg?.text;
+  const baseCoinAmount: string = trimAmount(
+    baseCoinAmountContext.msg?.text ?? '',
+    baseCoinDecimals,
+  );
 
   // ts check
-  if (baseCoinAmount === undefined) {
+  if (isNaN(+baseCoinAmount)) {
     await ctx.reply(`Invalid base coin amount.\n\nCannot continue.`, {
       reply_markup: retryButton,
     });
@@ -529,121 +532,185 @@ export async function createDca(
   }
 
   // Asking for total orders count
-  // TODO: modify it to calculate maxTotalOrdersCount and print to user without hints like Min: ..., Max: ...
-  // (for your base coin amount).
-  await ctx.reply(
-    'Enter <b>total orders count</b>: how many parts the base coin amount will be splitted into.' +
-      '\n\n<b>Example</b>:\n<b>Base coin amount</b>: <code>100</code> USDC\n<b>Total orders count</b>: <code>' +
-      '4</code>\n<b>Sell per order</b>: <code>100</code> USDC / <code>4</code> = <code>25</code> USDC\n\n' +
-      '<span class="tg-spoiler"><b>Hint</b>: <b>total orders count</b> must be less than <b>base coin amount</b> (' +
-      `<b>${baseCoinAmount}</b>).` +
-      '\n\n<b>Hint</b>: minimum total orders count is <b>2</b>.</span>',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+  await ctx.replyFmt(
+    fmt([
+      fmt`📊 ${bold('Understanding Total Orders Count in DCA')} 📊\n\n`,
+      fmt`${bold('Total Orders Count')} in DCA reflects the total number of orders you've executed within your `,
+      fmt`Dollar-Cost Averaging strategy, considering the division of your allocated funds.\n\n`,
+      fmt`For instance, let's say you allocate ${bold('$700')} to purchase `,
+      fmt`${link('RINCEL', getSuiScanCoinLink(RINCEL_COIN_TYPE))} over the course of a week, with the intention to buy `,
+      fmt`${bold('every day')}. In this scenario, your ${bold('Total Orders Count')} would be ${bold('7')}, as you're executing `,
+      fmt`an order each day for seven days.\n\nAdditionally, with ${bold('$700')} allocated over ${bold('7 days')}, `,
+      fmt`your daily order amount would be ${bold('$100')}. This breakdown helps track how your allocated funds are `,
+      fmt`utilized over time, reflecting your investment frequency and amount per order.`,
+    ]),
   );
 
-  const totalOrdersContext = await conversation.wait();
-  const totalOrdersMessage = totalOrdersContext.msg?.text;
-  const totalOrdersCallbackQueryData = totalOrdersContext.callbackQuery?.data;
+  await ctx.replyFmt(
+    fmt([
+      fmt`🔧 ${bold('Heads up!')} 🔧\n\nEach trade order incurs a ${code(ONE_TRADE_GAS_FEE_IN_MIST.toPrecision())} ${bold('MIST')} `,
+      fmt`gas fee (${code(ONE_TRADE_GAS_FEE_IN_SUI)} ${bold('SUI')}), slightly higher for smooth transactions. `,
+      fmt`Any leftover ${bold('SUI')} after trades will be refunded to you.`,
+    ]),
+  );
+
+  const maxTotalOrdersCount = Math.min(
+    Math.floor(+baseCoinAmount),
+    MAX_TOTAL_ORDERS_COUNT,
+  );
+
+  await ctx.replyFmt(
+    fmt([
+      fmt`Enter the ${bold('total orders count')} for your ${bold('DCA')}.\n\n`,
+      fmt`${bold('Min')}: ${code(MIN_TOTAL_ORDERS_COUNT)}\n${bold('Max')} for specified ${bold(baseCoinSymbol)} amount: `,
+      fmt`${code(maxTotalOrdersCount)}`,
+    ]),
+    { reply_markup: closeConversation },
+  );
+
+  const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
+
   let totalOrders;
+  let userConfirmedTotalOrdersCount = false;
+  do {
+    const totalOrdersContext = await conversation.wait();
+    const totalOrdersMessage = totalOrdersContext.msg?.text;
+    const totalOrdersCallbackQueryData = totalOrdersContext.callbackQuery?.data;
 
-  if (totalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
-    await conversation.skip();
-  }
-  if (totalOrdersMessage !== undefined) {
-    const totalOrdersInt = parseInt(totalOrdersMessage);
+    if (totalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    }
+    if (totalOrdersMessage !== undefined) {
+      const totalOrdersInt = parseInt(totalOrdersMessage);
 
-    if (isNaN(totalOrdersInt)) {
+      if (isNaN(totalOrdersInt)) {
+        await ctx.reply(
+          'Total orders count must be an integer. Please, try again.',
+          { reply_markup: closeConversation },
+        );
+
+        await conversation.skip({ drop: true });
+      }
+
+      const totalOrdersCountIsValid =
+        totalOrdersInt >= MIN_TOTAL_ORDERS_COUNT &&
+        totalOrdersInt <= maxTotalOrdersCount;
+
+      if (!totalOrdersCountIsValid) {
+        await ctx.replyFmt(
+          fmt([
+            fmt`Minimum ${bold('total orders count')} is ${code(MIN_TOTAL_ORDERS_COUNT)}. `,
+            fmt`Maximum — ${code(maxTotalOrdersCount)}.\n\nPlease, try again.`,
+          ]),
+          { reply_markup: closeConversation },
+        );
+
+        await conversation.skip({ drop: true });
+      }
+
+      totalOrders = totalOrdersInt;
+    } else {
+      await ctx.reply('Please, enter <b>total orders count</b>.', {
+        reply_markup: closeConversation,
+        parse_mode: 'HTML',
+      });
+
+      await conversation.skip({ drop: true });
+    }
+
+    if (totalOrders === undefined) {
       await ctx.reply(
-        'Total orders count must be an integer. Please, try again.',
+        'Cannot process <b>total orders count</b>. Please, try again or contact support.',
+        { parse_mode: 'HTML' },
+      );
+
+      return;
+    }
+
+    const suiBalance = await conversation.external(async () => {
+      const walletManager = await getWalletManager();
+      // TODO: Maybe we should add try/catch here as well
+      const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
+
+      return balance;
+    });
+
+    const gasAmountForTrades = new BigNumber(ONE_TRADE_GAS_FEE_IN_MIST)
+      .dividedBy(10 ** SUI_DECIMALS)
+      .multipliedBy(totalOrders)
+      .toString();
+
+    const userHasNotEnoughSui = new BigNumber(suiBalance).isLessThan(
+      gasAmountForTrades,
+    );
+
+    if (userHasNotEnoughSui) {
+      await ctx.replyFmt(
+        fmt([
+          fmt`To set ${code(totalOrders)} ${bold('total orders')}, you need at least ${code(gasAmountForTrades)} ${bold('SUI')}.\n`,
+          fmt`Now your balance is ${code(suiBalance)} ${bold('SUI')}.\n\nPlease, enter another count of ${bold('total orders')} `,
+          fmt`or top up your ${bold('SUI')} balance.`,
+        ]),
         { reply_markup: closeConversation },
       );
 
       await conversation.skip({ drop: true });
     }
 
-    const totalOrdersIsLessOrEqualThanBaseCoinAmount = new BigNumber(
-      totalOrdersInt,
-    ).isLessThanOrEqualTo(new BigNumber(baseCoinAmount));
-    if (!totalOrdersIsLessOrEqualThanBaseCoinAmount) {
-      await ctx.reply(
-        `Total orders count must be less than base coin amount (<code>${baseCoinAmount}</code>), ` +
-          `because minimum sell-per-order amount is <code>1</code> <b>${baseCoinSymbol}</b>.\n\nPlease, try again.`,
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-
-    const totalOrdersCountIsLessThanMin =
-      totalOrdersInt < MIN_TOTAL_ORDERS_COUNT;
-    if (totalOrdersCountIsLessThanMin) {
-      await ctx.reply(
-        `Total orders count cannot be lower than <code>${MIN_TOTAL_ORDERS_COUNT}</code>.`,
-        {
-          reply_markup: closeConversation,
-          parse_mode: 'HTML',
-        },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-
-    const totalOrdersCountIsGreaterThanMax =
-      totalOrdersInt > MAX_TOTAL_ORDERS_COUNT;
-    if (totalOrdersCountIsGreaterThanMax) {
-      await ctx.reply(
-        `Total orders count cannot be greater than <code>${MAX_TOTAL_ORDERS_COUNT.toPrecision()}</code>.`,
-        {
-          reply_markup: closeConversation,
-          parse_mode: 'HTML',
-        },
-      );
-
-      await conversation.skip({ drop: true });
-    }
-
-    totalOrders = totalOrdersInt;
-  } else {
-    await ctx.reply('Please, enter <b>total orders count</b>.', {
-      reply_markup: closeConversation,
-      parse_mode: 'HTML',
-    });
-
-    await conversation.skip({ drop: true });
-  }
-
-  if (totalOrders === undefined) {
-    await ctx.reply(
-      'Cannot process <b>total orders count</b>. Please, try again or contact support.',
-      { parse_mode: 'HTML' },
+    await ctx.replyFmt(
+      fmt([
+        fmt`For ${code(totalOrders)} ${bold('total orders')} ${code(gasAmountForTrades)} ${bold('SUI')} `,
+        fmt`will be deducted from your balance.`,
+      ]),
+      { reply_markup: confirmWithCloseKeyboard },
     );
 
-    return;
-  }
+    const confirmTotalOrdersContext = await conversation.waitFor(
+      'callback_query:data',
+    );
+    const confirmTotalOrdersCallbackQueryData =
+      confirmTotalOrdersContext.callbackQuery.data;
 
-  const oneOrderBaseCoinAmount = new BigNumber(baseCoinAmount)
-    .dividedBy(totalOrders)
-    .toFixed(4);
+    if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    }
+    if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Confirm) {
+      userConfirmedTotalOrdersCount = true;
+      await confirmTotalOrdersContext.answerCallbackQuery();
+
+      break;
+    } else {
+      await ctx.replyFmt(
+        fmt`Please, confirm specified ${bold('total orders count')}.`,
+        { reply_markup: closeConversation },
+      );
+
+      await confirmTotalOrdersContext.answerCallbackQuery();
+    }
+  } while (!userConfirmedTotalOrdersCount);
+
+  const oneOrderBaseCoinAmount = trimAmount(
+    new BigNumber(baseCoinAmount).dividedBy(totalOrders).toString(),
+    baseCoinDecimals,
+  );
   console.debug('totalOrders:', totalOrders);
 
   // Logging all the entered DCA params and asking for confirmation
-  const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
-
   let priceRangeString: string;
   if (minPrice === defaultMinPrice && maxPrice === defaultMaxPrice) {
     priceRangeString = '.';
   } else if (minPrice !== defaultMinPrice && maxPrice === defaultMaxPrice) {
-    priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is greater (or equal) than <b>${minPrice}</b> <b>${baseCoinSymbol}</b>.`;
+    priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is greater than or equal to <b>${minPrice}</b> <b>${baseCoinSymbol}</b>.`;
   } else if (minPrice === defaultMinPrice && maxPrice !== defaultMaxPrice) {
-    priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is less (or equal) than <b>${maxPrice}</b> <b>${baseCoinSymbol}</b>.`;
+    priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is less than or equal to <b>${maxPrice}</b> <b>${baseCoinSymbol}</b>.`;
   } else {
     priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is between <b>${minPrice}</b> and <b>${maxPrice}</b> <b>${baseCoinSymbol}</b>.`;
   }
 
   await ctx.reply(
     'Please, <b>confirm</b> you want to create the next <b>DCA</b>:\n\n' +
-      `Buy <a href="${getSuiVisionCoinLink(validatedQuoteCoin.type)}"><b>${quoteCoinSymbol}</b></a> ` +
-      `for ${oneOrderBaseCoinAmount} <a href="${getSuiVisionCoinLink(baseCoinType)}"><b>${baseCoinSymbol}</b></a> ` +
+      `Buy <a href="${getSuiScanCoinLink(validatedQuoteCoin.type)}"><b>${quoteCoinSymbol}</b></a> ` +
+      `for ${oneOrderBaseCoinAmount} <a href="${getSuiScanCoinLink(baseCoinType)}"><b>${baseCoinSymbol}</b></a> ` +
       `<i><b>${totalOrders} times</b></i> every <i><b>${timeAmount} ${timeUnitName}</b></i>` +
       priceRangeString,
     { reply_markup: confirmWithCloseKeyboard, parse_mode: 'HTML' },
@@ -678,6 +745,12 @@ export async function createDca(
 
     return allCoinObjects;
   });
+
+  // TODO: Pass this param to `createDCAInitTransaction`
+  const gasAmountForTradesInMist = new BigNumber(ONE_TRADE_GAS_FEE_IN_MIST)
+    .multipliedBy(totalOrders)
+    .toString();
+  console.debug('gasAmountForTradesInMist:', gasAmountForTradesInMist);
 
   const createDCATransaction = await getTransactionFromMethod({
     conversation,
