@@ -88,14 +88,14 @@ export function getDcaInfoString(
     base_coin_decimals: baseCoinDecimals,
     quote_coin_type: quoteCoinType,
     quote_coin_symbol: quoteCoinSymbol,
-    base_balance,
+    input_balance,
     every,
     time_scale,
     remaining_orders,
     split_allocation,
   } = dca.fields;
 
-  const baseBalance = new BigNumber(base_balance)
+  const baseBalance = new BigNumber(input_balance)
     .dividedBy(10 ** baseCoinDecimals)
     .toString();
 

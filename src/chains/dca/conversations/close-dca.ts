@@ -35,7 +35,7 @@ export async function closeDca(
   } = dca.fields;
   const dcaId = dca.fields.id.id;
   const currentTotalOrdersCount = +dca.fields.remaining_orders;
-  const baseBalance = new BigNumber(dca.fields.base_balance)
+  const baseBalance = new BigNumber(dca.fields.input_balance)
     .dividedBy(10 ** baseCoinDecimals)
     .toString();
   const timeAmount = every;
@@ -93,6 +93,8 @@ export async function closeDca(
 
     return;
   }
+
+  await ctx.replyFmt(fmt`${bold('Closing and withdrawing...')}`);
 
   const result = await signAndExecuteTransaction({
     conversation,
