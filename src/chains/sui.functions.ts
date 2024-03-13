@@ -1159,18 +1159,22 @@ export async function home(ctx: BotContext) {
         data.data.push({chainId: "sui", tokenAddress: coin.type})
       })
 
-      const response = await postPriceApi(allCoinAssets)
+      const response = await postPriceApi(allCoinAssets);
 
-      const coinsPriceApi = response?.data.data
+      const coinsPriceApi = response?.data.data;
+
+      
+      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+
       let balance = 0;
-      allCoinAssets.forEach(coin1 => {
-        coinsPriceApi?.forEach(coin2 => {
-          if(coin1.type === coin2.tokenAddress){
-            balance += +coin1.balance * coin2.price
-          }
-        })
-      })
-      totalBalanceStr = `Your balance: <b>${balance.toFixed(2).toString()} USD</b>`
+      allCoinAssets.forEach(coin => {
+        const price = priceMap.get(coin.type);
+        if (price !== undefined) {
+          balance += +coin.balance * price;
+        }
+      });
+
+      totalBalanceStr = `Your balance: <b>${balance.toFixed(2)} USD</b>`;
     
     } catch (error) {
       console.error('Error in calculating total balance: ', error)
