@@ -32,7 +32,7 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { BotContext, MyConversation } from '../types';
+import { AxiosPriceApiResponse, BotContext, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -62,6 +62,7 @@ import {
   sleep,
   swapTokenTypesAreEqual,
 } from './utils';
+import axios from 'axios';
 
 import {
   BOT_PRIVATE_KEY,
@@ -1009,7 +1010,7 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    const allCoinsAssets = await walletManager.getAllCoinAssets(
+    let allCoinsAssets = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
 
