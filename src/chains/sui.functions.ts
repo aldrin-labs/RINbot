@@ -32,7 +32,7 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { AxiosPriceApiResponse, BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
+import { AxiosPriceApiResponsePost, BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -71,7 +71,7 @@ import {
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
-import { calculate } from './pnl.utils';
+import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -1094,11 +1094,12 @@ export async function assets(ctx: BotContext): Promise<void> {
       data.data.push({chainId: "sui", tokenAddress: coin.type})
     })
     try {
-      const response = await axios.post<AxiosPriceApiResponse>("https://price-api-eight.vercel.app/assets", data)
-      allCoinsAssets = allCoinsAssets.map((coin, index) => ({
-        ...coin,
-        price: response.data.data[index].price
-      }));
+      const priceApiReponse = await postPriceApi(allCoinsAssets)
+      if(priceApiReponse !== undefined)
+        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+          ...coin,
+          price: priceApiReponse.data.data[index].price
+        }));
     } catch (error) {
       console.error(error)
     }
@@ -1108,7 +1109,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
-      const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset; 
+      
       acc = acc.concat(
         `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\nBalance: ${isCoinAssetDataExtended(el) ? calculate(el.balance, el.price) : null}\n\n`,
       );
@@ -1137,7 +1138,17 @@ export function getExplorerLink(ctx: BotContext): string {
 export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
+  let price;
+  try {
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI"')
+    price = priceApiGetResponse?.data.data.price
+  } catch (error) {
+    console.error(error)
+    price = undefined
+  }
+  const balance_usd = calculate(userBalance, price)
+  const avl_balance_usd = calculate(avl_balance, price)
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour balance in USD: <code>${balance_usd}</code>\nYour available SUI balance: <code>${avl_balance}</code>\nYour available balance in USD: <code>${avl_balance_usd}</code>`;
   await ctx.replyWithPhoto(
     'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
