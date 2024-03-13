@@ -46,6 +46,7 @@ import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { increaseOrders } from './chains/dca/conversations/increase-orders';
+import { closeDca } from './chains/dca/conversations/close-dca';
 
 const APP_VERSION = '1.1.3';
 
@@ -139,6 +140,7 @@ async function startBot(): Promise<void> {
       id: ConversationId.IncreaseDcaOrders,
     }),
   );
+  composer.use(createConversation(closeDca, { id: ConversationId.CloseDca }));
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
@@ -207,6 +209,11 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
   });
 
+  // TODO: Remove this before merge, that's needed for tests only
+  bot.command('closedca', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CloseDca);
+  });
+
   bot.command('close', async (ctx) => {
     await ctx.conversation.exit();
   });
@@ -245,6 +252,11 @@ async function startBot(): Promise<void> {
     {
       command: 'increasedcaorders',
       description: 'Increase orders count for selected DCA',
+    },
+    // TODO: Remove this before merge, that's needed for tests only
+    {
+      command: 'closedca',
+      description: 'Close selected DCA',
     },
   ]);
 
