@@ -1014,6 +1014,22 @@ export async function assets(ctx: BotContext): Promise<void> {
     );
 
     ctx.session.assets = allCoinsAssets;
+    let data: PriceApiPayload = {data: []}
+    allCoinsAssets.forEach(coin => {
+      //move to price api
+      if(coin.type === '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI')
+        coin.type = "0x2::sui::SUI"
+      data.data.push({chainId: "sui", tokenAddress: coin.type})
+    })
+    try {
+      const response = await axios.post<AxiosPriceApiResponse>("https://price-api-eight.vercel.app/assets", data)
+      allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+        ...coin,
+        price: response.data.data[index].price
+      }));
+    } catch (error) {
+      console.error(error)
+    }
 
     if (allCoinsAssets?.length === 0) {
       ctx.reply(`Your have no tokens yet.`, { reply_markup: goHome });
