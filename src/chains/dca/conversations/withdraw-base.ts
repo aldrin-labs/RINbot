@@ -2,6 +2,7 @@ import {
   DCAManagerSingleton,
   isValidTokenAmount,
 } from '@avernikoz/rinbot-sui-sdk';
+import { bold, code, fmt, link, spoiler } from '@grammyjs/parse-mode';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import confirm from '../../../inline-keyboards/confirm';
@@ -15,9 +16,8 @@ import {
   getTransactionFromMethod,
   signAndExecuteTransaction,
 } from '../../conversations.utils';
-import { USDC_COIN_TYPE } from '../../sui.config';
 import { TransactionResultStatus } from '../../sui.functions';
-import { getSuiScanTransactionLink } from '../../utils';
+import { getSuiScanTransactionLink, trimAmount } from '../../utils';
 import { MIN_SELL_USD_PER_ORDER } from '../constants';
 
 export async function withdrawDcaBase(
@@ -28,36 +28,40 @@ export async function withdrawDcaBase(
 
   const { currentIndex, objects } = ctx.session.dcas;
   // TODO: Make this more explicit
-  // const dca = objects[currentIndex ?? 0];
-  // const {
-  //   base_coin_symbol: baseCoinSymbol,
-  //   base_coin_type: baseCoinType,
-  //   base_coin_decimals: baseCoinDecimals,
-  //   quote_coin_type: quoteCoinType,
-  // } = dca.fields;
-  // const dcaId = dca.fields.id.id;
-  // const currentTotalOrdersCount = +dca.fields.remaining_orders;
-  // const baseBalance = new BigNumber(dca.fields.base_balance)
-  //   .dividedBy(10 ** baseCoinDecimals)
-  //   .toString();
-
-  // Test data
-  const baseCoinSymbol = 'USDC';
-  const baseCoinDecimals = 6;
-  const baseBalance = (21.649).toString();
-  const currentTotalOrdersCount = 15;
-  const dcaId = '123';
-  const baseCoinType = USDC_COIN_TYPE;
-  const quoteCoinType = '0x2::sui::SUI';
+  const dca = objects[currentIndex ?? 0];
+  const {
+    base_coin_symbol: baseCoinSymbol,
+    base_coin_type: baseCoinType,
+    base_coin_decimals: baseCoinDecimals,
+    quote_coin_type: quoteCoinType,
+  } = dca.fields;
+  const dcaId = dca.fields.id.id;
+  const currentTotalOrdersCount = +dca.fields.remaining_orders;
+  const baseBalance = new BigNumber(dca.fields.base_balance)
+    .dividedBy(10 ** baseCoinDecimals)
+    .toString();
 
   const maxWithdrawAmount = new BigNumber(baseBalance)
     .minus(MIN_SELL_USD_PER_ORDER)
     .toString();
 
-  await ctx.reply(
-    `Enter the amount of *${baseCoinSymbol}* you want to withdraw from *DCA* (\`0\` - \`${maxWithdrawAmount}\`).\n\n` +
-      `||*Hint*: if you want to withdraw all funds, please use *Close DCA* at *DCA* menu.||`,
-    { reply_markup: closeConversation, parse_mode: 'MarkdownV2' },
+  // This check should never be passed
+  if (new BigNumber(maxWithdrawAmount).isLessThanOrEqualTo(0)) {
+    await ctx.replyFmt(
+      fmt`There is no ${bold(baseCoinSymbol)} to withdraw from this ${bold('DCA')}.`,
+      { reply_markup: showActiveDCAsKeyboard },
+    );
+
+    return;
+  }
+
+  await ctx.replyFmt(
+    fmt([
+      fmt`Enter the amount of ${bold(baseCoinSymbol)} you want to withdraw from ${bold('DCA')} (${code(0)} - `,
+      fmt`${code(maxWithdrawAmount)}).\n\n`,
+      fmt`${spoiler(fmt`${bold('Hint')}: if you want to withdraw all ${bold(baseCoinSymbol)}, please use ${bold('Close DCA')} at ${bold('DCA')} menu.`)}`,
+    ]),
+    { reply_markup: closeConversation },
   );
 
   let userConfirmedAmountAndOrdersCount = false;
@@ -73,8 +77,13 @@ export async function withdrawDcaBase(
     if (withdrawAmountCallbackQueryData === CallbackQueryData.Cancel) {
       await conversation.skip();
     } else if (withdrawAmount !== undefined) {
+      const trimmedWithdrawAmount = trimAmount(
+        withdrawAmount,
+        baseCoinDecimals,
+      );
+
       const { isValid: amountIsValid, reason } = isValidTokenAmount({
-        amount: withdrawAmount,
+        amount: trimmedWithdrawAmount,
         maxAvailableAmount: maxWithdrawAmount,
         decimals: baseCoinDecimals,
       });
@@ -90,11 +99,10 @@ export async function withdrawDcaBase(
         continue;
       }
     } else {
-      await ctx.reply(
-        `Please, enter *${baseCoinSymbol}* amount you want to withdraw from *DCA*.`,
+      await ctx.replyFmt(
+        fmt`Please, enter ${bold(baseCoinSymbol)} amount you want to withdraw from ${bold('DCA')}.`,
         {
           reply_markup: closeConversation,
-          parse_mode: 'MarkdownV2',
         },
       );
 
@@ -109,8 +117,9 @@ export async function withdrawDcaBase(
       continue;
     }
 
+    const trimmedWithdrawAmount = trimAmount(withdrawAmount, baseCoinDecimals);
     const remainingAfterWithdrawBalance = new BigNumber(baseBalance).minus(
-      withdrawAmount,
+      trimmedWithdrawAmount,
     );
     const maxResOrdersCount = Math.floor(
       remainingAfterWithdrawBalance.toNumber(),
@@ -131,18 +140,21 @@ export async function withdrawDcaBase(
       .toNumber();
 
     if (requiredDecreaseOrdersCount === 0) {
-      resWithdrawAmount = withdrawAmount;
+      resWithdrawAmount = trimmedWithdrawAmount;
       resRequiredDecreaseOrdersCount = requiredDecreaseOrdersCount;
       userConfirmedAmountAndOrdersCount = true;
       break;
     }
 
-    await ctx.reply(
-      `You are about to withdraw *${withdrawAmount} ${baseCoinSymbol}*.\n` +
-        `With this withdrawal amount, the *total orders count* will be automatically ` +
-        `reduced by \`${requiredDecreaseOrdersCount}\`.\n\n` +
-        `Do you want to proceed?`,
-      { reply_markup: yesOrNo, parse_mode: 'MarkdownV2' },
+    await ctx.replyFmt(
+      fmt([
+        fmt`You are about to withdraw ${code(trimmedWithdrawAmount)} ${bold(baseCoinSymbol)}. `,
+        fmt`With this withdrawal amount the ${bold('total orders count')} will be automatically `,
+        fmt`reduced by ${code(requiredDecreaseOrdersCount)}.\n\n${bold('DCA')} balance after withdrawal would be `,
+        fmt`${code(remainingAfterWithdrawBalance.toString())} ${bold(baseCoinSymbol)}.\n`,
+        fmt`${bold('Total orders count')} after withdrawal would be ${code(resOrdersCount)}.\n\nDo you want to proceed?`,
+      ]),
+      { reply_markup: yesOrNo },
     );
 
     const confirmAmountAndDecreaseOrdersContext = await conversation.waitFor(
@@ -154,7 +166,7 @@ export async function withdrawDcaBase(
     if (
       confirmAmountAndDecreaseOrdersCallbackQueryData === CallbackQueryData.Yes
     ) {
-      resWithdrawAmount = withdrawAmount;
+      resWithdrawAmount = trimmedWithdrawAmount;
       resRequiredDecreaseOrdersCount = requiredDecreaseOrdersCount;
       userConfirmedAmountAndOrdersCount = true;
 
@@ -166,9 +178,9 @@ export async function withdrawDcaBase(
     if (
       confirmAmountAndDecreaseOrdersCallbackQueryData === CallbackQueryData.No
     ) {
-      await ctx.reply(
-        `Please, enter another *${baseCoinSymbol}* amount to withdraw from *DCA*.`,
-        { reply_markup: closeConversation, parse_mode: 'MarkdownV2' },
+      await ctx.replyFmt(
+        fmt`Please, enter another ${bold(baseCoinSymbol)} amount to withdraw from ${bold('DCA')}.`,
+        { reply_markup: closeConversation },
       );
 
       await confirmAmountAndDecreaseOrdersContext.answerCallbackQuery();
@@ -178,7 +190,7 @@ export async function withdrawDcaBase(
   if (resWithdrawAmount === undefined) {
     await ctx.reply(
       'Cannot process withdraw amount. Please, try again or contact support.',
-      { reply_markup: retryButton, parse_mode: 'MarkdownV2' },
+      { reply_markup: retryButton },
     );
 
     return;
@@ -187,97 +199,134 @@ export async function withdrawDcaBase(
   if (resRequiredDecreaseOrdersCount === undefined) {
     await ctx.reply(
       'Cannot process decreased orders count. Please, try again or contact support.',
-      { reply_markup: retryButton, parse_mode: 'MarkdownV2' },
+      { reply_markup: retryButton },
     );
 
     return;
   }
 
-  // Asking user whether he wants to decrease total orders count
-  await ctx.reply(
-    `Do you want to decrease ${resRequiredDecreaseOrdersCount === 0 ? 'the' : 'more'} *total orders count*?`,
-    {
-      reply_markup: yesOrNo,
-      parse_mode: 'MarkdownV2',
-    },
-  );
+  const maxDecreaseOrdersCount = new BigNumber(currentTotalOrdersCount)
+    .minus(1)
+    .toString();
 
-  const decreaseOrdersCountQuestionContext = await conversation.waitFor(
-    'callback_query:data',
-  );
-  const decreaseOrdersCountCallbackQueryData =
-    decreaseOrdersCountQuestionContext.callbackQuery.data;
-
-  if (decreaseOrdersCountCallbackQueryData === CallbackQueryData.Yes) {
-    const maxDecreaseOrdersCount = new BigNumber(currentTotalOrdersCount)
-      .minus(1)
-      .toString();
-
-    await ctx.reply(
-      `How much do you want to decrease the *total orders count* (\`${resRequiredDecreaseOrdersCount}\` - ` +
-        `\`${maxDecreaseOrdersCount}\`)?`,
-      { reply_markup: closeConversation, parse_mode: 'MarkdownV2' },
+  const thereIsOrdersCountToDecrease =
+    !new BigNumber(maxDecreaseOrdersCount).isEqualTo(0) &&
+    !new BigNumber(maxDecreaseOrdersCount).isEqualTo(
+      resRequiredDecreaseOrdersCount,
     );
 
-    const decreaseOrdersCountContext = await conversation.wait();
-    const decreaseOrdersCount = decreaseOrdersCountContext.msg?.text;
-    const decreaseOrdersCallbackQueryData =
-      decreaseOrdersCountContext.callbackQuery?.data;
+  if (thereIsOrdersCountToDecrease) {
+    // Asking user whether he wants to decrease total orders count
+    await ctx.replyFmt(
+      fmt`Do you want to decrease ${resRequiredDecreaseOrdersCount === 0 ? 'the' : 'more'} ${bold('total orders count')}?`,
+      {
+        reply_markup: yesOrNo,
+      },
+    );
 
-    if (decreaseOrdersCallbackQueryData === CallbackQueryData.Cancel) {
-      await conversation.skip();
-    } else if (decreaseOrdersCount !== undefined) {
-      const decreaseOrdersCountInt = parseInt(decreaseOrdersCount);
+    const decreaseOrdersCountQuestionContext = await conversation.waitFor(
+      'callback_query:data',
+    );
+    const decreaseOrdersCountCallbackQueryData =
+      decreaseOrdersCountQuestionContext.callbackQuery.data;
 
-      if (isNaN(decreaseOrdersCountInt)) {
-        await ctx.reply(
-          'Total orders count must be an integer. Please, try again.',
+    if (decreaseOrdersCountCallbackQueryData === CallbackQueryData.Yes) {
+      await decreaseOrdersCountQuestionContext.answerCallbackQuery();
+
+      await ctx.replyFmt(
+        fmt([
+          fmt`How much do you want to decrease the ${bold('total orders count')} (${code(resRequiredDecreaseOrdersCount)} - `,
+          fmt`${code(maxDecreaseOrdersCount)})?`,
+        ]),
+        { reply_markup: closeConversation },
+      );
+
+      const decreaseOrdersCountContext = await conversation.wait();
+      const decreaseOrdersCount = decreaseOrdersCountContext.msg?.text;
+      const decreaseOrdersCallbackQueryData =
+        decreaseOrdersCountContext.callbackQuery?.data;
+
+      if (decreaseOrdersCallbackQueryData === CallbackQueryData.Cancel) {
+        await conversation.skip();
+      } else if (decreaseOrdersCount !== undefined) {
+        const decreaseOrdersCountInt = parseInt(decreaseOrdersCount);
+
+        if (isNaN(decreaseOrdersCountInt)) {
+          await ctx.reply(
+            'Total orders count must be an integer. Please, try again.',
+            { reply_markup: closeConversation },
+          );
+
+          await conversation.skip({ drop: true });
+        }
+
+        const decreaseOrdersCountIsValid =
+          decreaseOrdersCountInt >= resRequiredDecreaseOrdersCount &&
+          decreaseOrdersCountInt <= +maxDecreaseOrdersCount;
+        if (!decreaseOrdersCountIsValid) {
+          await ctx.replyFmt(
+            fmt([
+              fmt`Minimum ${bold('total orders count')} to decrease is ${code(resRequiredDecreaseOrdersCount)}, `,
+              fmt`maximum — ${code(maxDecreaseOrdersCount)}.\n\nPlease, try again.`,
+            ]),
+            { reply_markup: closeConversation },
+          );
+
+          await conversation.skip({ drop: true });
+        }
+
+        resRequiredDecreaseOrdersCount = decreaseOrdersCountInt;
+      } else {
+        await ctx.replyFmt(
+          fmt`Please, enter ${bold('total orders count')} you want to decrease by.`,
           { reply_markup: closeConversation },
         );
 
         await conversation.skip({ drop: true });
       }
-
-      const decreaseOrdersCountIsValid =
-        decreaseOrdersCountInt >= resRequiredDecreaseOrdersCount &&
-        decreaseOrdersCountInt <= +maxDecreaseOrdersCount;
-      if (!decreaseOrdersCountIsValid) {
-        await ctx.reply(
-          `Minimum <b>total orders count</b> to decrease is <code>${resRequiredDecreaseOrdersCount}</code>, ` +
-            `maximum &#8213; <code>${maxDecreaseOrdersCount}</code>.\n\nPlease, try again.`,
-          { reply_markup: closeConversation, parse_mode: 'HTML' },
-        );
-
-        await conversation.skip({ drop: true });
-      }
-
-      resRequiredDecreaseOrdersCount = decreaseOrdersCountInt;
+    } else if (decreaseOrdersCountCallbackQueryData === CallbackQueryData.No) {
+      await decreaseOrdersCountQuestionContext.answerCallbackQuery();
     } else {
-      await ctx.reply(
-        'Please, enter *total orders count* you want to decrease by.',
-        { parse_mode: 'MarkdownV2' },
+      await decreaseOrdersCountQuestionContext.answerCallbackQuery();
+
+      await ctx.replyFmt(
+        fmt`Please, choose ${bold('Yes')} or ${bold('No')} button.`,
+        {
+          reply_markup: closeConversation,
+        },
       );
 
       await conversation.skip({ drop: true });
     }
-  } else if (decreaseOrdersCountCallbackQueryData === CallbackQueryData.No) {
-    await decreaseOrdersCountQuestionContext.answerCallbackQuery();
-  } else {
-    await ctx.reply('Please, choose *Yes* or *No* button.', {
-      reply_markup: closeConversation,
-      parse_mode: 'MarkdownV2',
-    });
   }
 
   const closeButtons = closeConversation.inline_keyboard[0];
   const confirmWithCloseKeyboard = confirm.clone().add(...closeButtons);
 
-  // Creating transaction, signing & executing it
-  // TODO: Print info about total orders count only when `resRequiredDecreaseOrdersCount` !== 0
-  await ctx.reply(
-    `You are about to withdraw *${resWithdrawAmount} ${baseCoinSymbol}* and decrease *total orders count* ` +
-      `by ${resRequiredDecreaseOrdersCount}.`,
-    { reply_markup: confirmWithCloseKeyboard, parse_mode: 'MarkdownV2' },
+  const totalOrdersCountAfterWithdrawal = new BigNumber(currentTotalOrdersCount)
+    .minus(resRequiredDecreaseOrdersCount)
+    .toString();
+  const remainingAfterWithdrawBalance = new BigNumber(baseBalance)
+    .minus(resWithdrawAmount)
+    .toString();
+
+  const decreaseOrdersString =
+    resRequiredDecreaseOrdersCount !== 0
+      ? fmt` and decrease ${bold('total orders count')} by ${code(resRequiredDecreaseOrdersCount)}`
+      : '';
+  const totalOrdersCountAfterWithdrawalString =
+    resRequiredDecreaseOrdersCount !== 0
+      ? fmt`\n${bold('Total orders count')} after withdrawal would be ${code(totalOrdersCountAfterWithdrawal)}.`
+      : '';
+
+  await ctx.replyFmt(
+    fmt([
+      fmt`You are about to withdraw ${code(resWithdrawAmount)} ${bold(baseCoinSymbol)}`,
+      fmt`${decreaseOrdersString}.\n\n${bold('DCA')} balance after withdrawal would be `,
+      fmt`${code(remainingAfterWithdrawBalance)} ${bold(baseCoinSymbol)}.`,
+      totalOrdersCountAfterWithdrawalString,
+    ]),
+    { reply_markup: confirmWithCloseKeyboard },
   );
 
   const finalConfirmContext = await conversation.waitFor('callback_query:data');
@@ -289,14 +338,15 @@ export async function withdrawDcaBase(
   if (finalConfirmCallbackQueryData === CallbackQueryData.Confirm) {
     await finalConfirmContext.answerCallbackQuery();
   } else {
-    await ctx.reply(
-      `Please, confirm to withdraw *${baseCoinSymbol}* from *DCA*.`,
-      { reply_markup: closeConversation, parse_mode: 'MarkdownV2' },
+    await ctx.replyFmt(
+      fmt`Please, confirm to withdraw ${bold(baseCoinSymbol)} from ${bold('DCA')}.`,
+      { reply_markup: closeConversation },
     );
 
     await conversation.skip({ drop: true });
   }
 
+  // Creating transaction, signing & executing it
   const baseCoinAmountToWithdrawFromDCA = new BigNumber(resWithdrawAmount)
     .multipliedBy(10 ** baseCoinDecimals)
     .toString();
@@ -317,9 +367,9 @@ export async function withdrawDcaBase(
   });
 
   if (transaction === undefined) {
-    await ctx.reply(
-      'Cannot create transaction to withdraw from *DCA*. Please, try again or contact support.',
-      { reply_markup: retryButton, parse_mode: 'MarkdownV2' },
+    await ctx.replyFmt(
+      fmt`Cannot create transaction to withdraw from ${bold('DCA')}. Please, try again or contact support.`,
+      { reply_markup: retryButton },
     );
 
     return;
@@ -343,9 +393,9 @@ export async function withdrawDcaBase(
       .row()
       .add(...retryButtons);
 
-    await ctx.reply(
-      `*${baseCoinSymbol}* is [successfully withdrawed](${getSuiScanTransactionLink(withdrawResult.digest)})!`,
-      { reply_markup: showWithRetryKeyboard, parse_mode: 'MarkdownV2' },
+    await ctx.replyFmt(
+      fmt`${bold(baseCoinSymbol)} is ${link('successfully withdrawed', getSuiScanTransactionLink(withdrawResult.digest))}!`,
+      { reply_markup: showWithRetryKeyboard },
     );
 
     return;
@@ -355,57 +405,17 @@ export async function withdrawDcaBase(
     withdrawResult.result === TransactionResultStatus.Failure &&
     withdrawResult.digest !== undefined
   ) {
-    await ctx.reply(
-      `[Failed](${getSuiScanTransactionLink(withdrawResult.digest)}) to withdraw *${baseCoinSymbol}*.`,
-      { reply_markup: retryButton, parse_mode: 'MarkdownV2' },
+    await ctx.replyFmt(
+      fmt`${link('Failed', getSuiScanTransactionLink(withdrawResult.digest))} to withdraw ${bold(baseCoinSymbol)}.`,
+      { reply_markup: retryButton },
     );
 
     return;
   }
 
-  await ctx.reply(`Failed to withdraw *${baseCoinSymbol}*.`, {
+  await ctx.replyFmt(fmt`Failed to withdraw ${bold(baseCoinSymbol)}.`, {
     reply_markup: retryButton,
-    parse_mode: 'MarkdownV2',
   });
 
   return;
-
-  /**
-   * base_balance = 17.83
-   * cur_remaining_orders = 4
-   * sell_per_order = base_balance / cur_remaining_orders = 4.4575
-   *
-   * withdraw_amount = 5
-   * remaining_base_balance = base_balance - withdraw_amount = 12.83
-   * sell_per_order_after_withdraw = remaining_base_balance / cur_remaining_orders = 3.2075
-   *
-   * withdraw_amount = 14
-   * remaining_base_balance = base_balance - withdraw_amount = 3.83
-   * sell_per_order_after_withdraw = remaining_base_balance / cur_remaining_orders = 0.9575
-   */
-
-  /**
-   * base_balance = 17.83
-   * cur_remaining_orders = 4
-   * withdraw_amount = 16.95
-   * remaining_balance = base_balance - withdraw_amount = 0.88
-   * max_res_orders_count = Math.floor(0.88) = 0
-   * max_res_orders_count < 1, so DCA deactivated/closed. Please, confirm (ask to user)
-   *
-   * base_balance = 17.83
-   * cur_remaining_orders = 17
-   * withdraw_amount = 15.27
-   * remaining_balance = base_balance - withdraw_amount = 2.56
-   * max_res_orders_count = Math.floor(2.56) = 2
-   * res_orders_count = Math.min(max_res_orders_count, cur_remaining_orders) = 2
-   * auto_decrease_orders_count = cur_remaining_orders - res_orders_count = 15
-   *
-   * base_balance = 107.11
-   * cur_remaining_orders = 15
-   * withdraw_amount = 10
-   * remaining_balance = base_balance - withdraw_amount = 97.11
-   * Math.floor(97.11) = 97 (max_res_orders_count)
-   * res_orders_count = Math.min(max_res_orders_count, cur_remaining_orders) = 15
-   * auto_decrease_orders_count = cur_remaining_orders - res_orders_count = 0
-   */
 }
