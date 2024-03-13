@@ -36,6 +36,8 @@ export async function getPriceApi(chainId: string, tokenAddress: string){
                 tokenAddress
             }
         })
+        console.log(response);
+        
         return response
     } catch (error) {
         console.error('Price API error: ',error);
