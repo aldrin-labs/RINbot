@@ -199,26 +199,6 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.CreateDca);
   });
 
-  // TODO: Remove this before merge, that's needed for tests only
-  bot.command('depositdcabase', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.DepositDcaBase);
-  });
-
-  // TODO: Remove this before merge, that's needed for tests only
-  bot.command('withdrawdcabase', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.WithdrawDcaBase);
-  });
-
-  // TODO: Remove this before merge, that's needed for tests only
-  bot.command('increasedcaorders', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
-  });
-
-  // TODO: Remove this before merge, that's needed for tests only
-  bot.command('closedca', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CloseDca);
-  });
-
   bot.command('close', async (ctx) => {
     await ctx.conversation.exit();
   });
@@ -248,26 +228,6 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createdca', description: 'Create DCA' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
-    // TODO: Remove this before merge, that's needed for tests only
-    {
-      command: 'withdrawdcabase',
-      description: 'Withdraw base coin from selected DCA',
-    },
-    // TODO: Remove this before merge, that's needed for tests only
-    {
-      command: 'increasedcaorders',
-      description: 'Increase orders count for selected DCA',
-    },
-    // TODO: Remove this before merge, that's needed for tests only
-    {
-      command: 'closedca',
-      description: 'Close selected DCA',
-    },
-    // TODO: Remove this before merge, that's needed for tests only
-    {
-      command: 'depositdcabase',
-      description: 'Deposit base coin to selected DCA',
-    },
   ]);
 
   useCallbackQueries(bot);
