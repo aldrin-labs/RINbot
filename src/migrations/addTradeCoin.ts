@@ -1,11 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import {
-  type Conversation,
-  type ConversationFlavor,
-} from '@grammyjs/conversations';
-import { Context, SessionFlavor } from 'grammy';
 
-export interface SessionData {
+export function addTradeCoin(old: {
   step:
     | 'main'
     | 'buy'
@@ -13,7 +8,7 @@ export interface SessionData {
     | 'positions'
     | 'wallet'
     | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
+    | 'nft-menu';
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
@@ -26,14 +21,12 @@ export interface SessionData {
   };
   tradesCount: number;
   createdAt: number;
-  tradeCoin: {
-    coinType: string;
-    useSpecifiedCoin: boolean;
+}) {
+  return {
+    ...old,
+    tradeCoin: {
+      coinType: '',
+      useSpecifiedCoin: false,
+    },
   };
 }
-
-export type BotContext = Context &
-  SessionFlavor<SessionData> &
-  ConversationFlavor;
-
-export type MyConversation = Conversation<BotContext>;
