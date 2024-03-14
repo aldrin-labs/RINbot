@@ -31,7 +31,7 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]){
         
         const endTime = Date.now();
         const requestTime = endTime - startTime;
-        console.log(`Price API post request time: ${requestTime}ms`);
+        console.log(`Price API post response time: ${requestTime}ms`);
         return response
     } catch (error) {
         console.error('Price API error: ',error);
@@ -50,7 +50,7 @@ export async function getPriceApi(chainId: string, tokenAddress: string){
         })
         const endTime = Date.now();
         const requestTime = endTime - startTime;
-        console.log(`Price API post request time: ${requestTime}ms`);
+        console.log(`Price API get response time: ${requestTime}ms`);
         return response
     } catch (error) {
         console.error('Price API error: ',error);
