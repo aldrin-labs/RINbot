@@ -67,7 +67,7 @@ import axios from 'axios';
 import {
   BOT_PRIVATE_KEY,
   EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
-  TRADE_FEE,
+  FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
@@ -187,67 +187,6 @@ export const getRouteManager = async () => {
   return routerManager;
 };
 
-// async function chargeTradeFee(ctx: BotContext){ //amount in sui
-
-//   const walletManager = await getWalletManager();
-//   let { totalGasFee } =
-//     await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
-//   let tx;
-
-//   try {
-//     const fee = TRADE_FEE
-
-//     const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
-//       amount: fee,
-//       address: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
-//     });
-//     txBlock.setGasBudget(Number(totalGasFee));
-//     tx = txBlock;
-//   } catch (error) {
-//     console.error(error);
-
-//     if (error instanceof Error) {
-//       console.error(
-//         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-//       );
-//     } else {
-//       console.error(
-//         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-//       );
-//     }
-
-//     return;
-//   }
-//   try {
-//     const res = await provider.signAndExecuteTransactionBlock({
-//       transactionBlock: tx,
-//       signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-//         ctx.session.privateKey,
-//       ),
-//       options: {
-//         showEffects: true,
-//       },
-//     });
-
-//     if (res.effects?.status.status === 'failure') {
-//         console.error(`Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
-//       return;
-//     }
-//     console.log(`Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       console.error(
-//         `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-//       );
-//     } else {
-//       console.error(
-//         `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-//       );
-//     }
-//     return;
-//   }
-// }
-
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply(
     'Which token do you want to buy? Please send a coin type or a link to suiscan.',
@@ -329,7 +268,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       ctx.session.publicKey,
     );
     return balance;
-    // const availableBalanceAfterFee = +balance - +TRADE_FEE
+    // const availableBalanceAfterFee = +balance - +FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT
     // if(availableBalanceAfterFee < 0)
     //   return '0'
     // return availableBalanceAfterFee.toString();
@@ -417,6 +356,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
+          fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });
 
         return transaction;
@@ -505,7 +445,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    //await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -745,6 +684,7 @@ export async function sell(
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
+          fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });      
 
         return transaction;
@@ -841,7 +781,6 @@ export async function sell(
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    //await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -1111,7 +1050,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
     ctx.session.publicKey,
   );
   return availableBalance
-  // const availableBalanceAfterFee = +availableBalance - +TRADE_FEE
+  // const availableBalanceAfterFee = +availableBalance - +FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT
   // if(availableBalanceAfterFee < 0)
   //   return '0'
   // return availableBalanceAfterFee.toString();
