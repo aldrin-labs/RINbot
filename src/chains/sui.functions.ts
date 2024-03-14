@@ -335,9 +335,17 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     // return availableBalanceAfterFee.toString();
   });
   let price = undefined;
-  if(validatedCoinType !== undefined){
-    const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
-    price = calculate("1", priceApiGetResponse?.data.data.price)
+  try {
+    if(validatedCoinType !== undefined){
+      const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
+      price = priceApiGetResponse?.data.data.price
+      price = calculate("1", price)
+    }
+    else{
+      price = undefined
+    }
+  } catch (error) {
+    price = undefined
   }
 
 
