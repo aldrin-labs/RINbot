@@ -1,15 +1,17 @@
 import { Bot } from 'grammy';
+import { showActiveDCAs } from '../chains/dca/showActiveDCAs';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
+import { CallbackQueryData } from '../types/callback-queries-data';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
-  bot.callbackQuery('close-conversation', async (ctx) => {
+  bot.callbackQuery(CallbackQueryData.Cancel, async (ctx) => {
     await ctx.conversation.exit();
     ctx.session.step = 'main';
     await ctx.deleteMessage();
@@ -24,6 +26,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   });
 
   useSurfdogCallbackQueries(bot);
+  useDcaCallbackQueries(bot);
   useSlippageCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
@@ -32,6 +35,12 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
       await ctx.conversation.enter(conversationId);
       await ctx.answerCallbackQuery();
     });
+  });
+
+  // We need this to handle button clicks which are not handled wherever (e.g. in conversations)
+  bot.on('callback_query:data', async (ctx) => {
+    console.log('Unknown button event with payload', ctx.callbackQuery.data);
+    await ctx.answerCallbackQuery();
   });
 }
 
@@ -56,6 +65,13 @@ function useSurfdogCallbackQueries(bot: Bot<BotContext>) {
     await ctx.deleteMessage();
     await showSurfdogPage(ctx);
     await ctx.answerCallbackQuery();
+  });
+}
+
+function useDcaCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery('show-active-dcas', async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showActiveDCAs(ctx);
   });
 }
 

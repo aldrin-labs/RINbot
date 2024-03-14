@@ -9,10 +9,11 @@
     "node": "20"
   },
   "dependencies": {
-    "@avernikoz/rinbot-sui-sdk": "^2.3.7",
+    "@avernikoz/rinbot-sui-sdk": "^2.4.0",
     "@grammyjs/auto-retry": "^1.1.1",
     "@grammyjs/conversations": "^1.2.0",
     "@grammyjs/menu": "^1.2.1",
+    "@grammyjs/parse-mode": "^1.9.0",
     "@grammyjs/storage-redis": "^2.4.1",
     "@vercel/kv": "^1.0.1",
     "@vercel/node": "^3.0.13",

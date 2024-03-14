@@ -200,12 +200,20 @@ export function getSuiVisionCoinLink(coinType: string) {
   return `https://suivision.xyz/coin/${coinType}`;
 }
 
+export function getSuiScanCoinLink(coinType: string) {
+  return `https://suiscan.xyz/mainnet/coin/${coinType}`;
+}
+
 export function getCetusPoolUrl(poolId: string) {
   return `https://app.cetus.zone/liquidity/deposit?poolAddress=${poolId}`;
 }
 
 export function getSuiVisionTransactionLink(digest: string) {
   return `https://suivision.xyz/txblock/${digest}`;
+}
+
+export function getSuiScanTransactionLink(digest: string) {
+  return `https://suiscan.xyz/mainnet/tx/${digest}`;
 }
 
 export function getAftermathPoolLink(poolObjectId: string) {
@@ -221,4 +229,39 @@ export function findCoinInAssets(
       (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) ||
       asset.type === coinType,
   );
+}
+// Move to SDK & add tests for this method
+export function formatPrice(price: string): string {
+  const numericPrice = parseFloat(price);
+
+  if (isNaN(numericPrice)) {
+    throw new Error('Invalid price format');
+  }
+
+  if (numericPrice >= 1) {
+    return numericPrice.toFixed(6);
+  } else {
+    const decimalIndex = price.indexOf('.');
+
+    if (decimalIndex !== -1) {
+      let firstNotNullSymbolIndex = 0;
+
+      for (let i = decimalIndex + 1; i < price.length; i++) {
+        const symbol = price[i];
+
+        if (symbol !== '0') {
+          firstNotNullSymbolIndex = i;
+          break;
+        }
+      }
+
+      return price.substring(0, firstNotNullSymbolIndex + 6);
+    } else {
+      return price;
+    }
+  }
+}
+
+export function trimAmount(amount: string, precision: number) {
+  return parseFloat(parseFloat(amount).toFixed(precision)).toString();
 }

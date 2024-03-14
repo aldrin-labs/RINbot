@@ -2,8 +2,10 @@ import { Menu, MenuRange } from '@grammyjs/menu';
 import { assets, nftHome } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
+import activeDcas from './active-dcas';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
+import dcaMenu from './dca';
 import help_menu from './help';
 import launchpadMenu from './launchpad/launchpad';
 import globalStatsMenu from './launchpad/surfdog/globalStats';
@@ -50,11 +52,15 @@ const menu = new Menu<BotContext>('main')
     await ctx.conversation.enter('createCoin');
   })
   .row()
-  .text('Launchpad', (ctx) => {
-    ctx.menu.nav('launchpad');
+  .text('DCA', async (ctx) => {
+    ctx.menu.nav('sui-dca');
   })
   .text('Slippage', async (ctx) => {
     await showSlippageConfiguration(ctx);
+  })
+  .row()
+  .text('Launchpad', (ctx) => {
+    ctx.menu.nav('launchpad');
   })
   .row()
   .text('User Agreement', async (ctx) => {
@@ -78,7 +84,7 @@ const menu = new Menu<BotContext>('main')
       !isUserClaimedBonus &&
       (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)
     ) {
-      if(ENABLE_WELCOME_BONUS)
+      if (ENABLE_WELCOME_BONUS)
         range.row().text('Claim Free SUI', async (ctx: BotContext) => {
           await ctx.conversation.enter(ConversationId.WelcomeBonus);
         });
@@ -97,6 +103,8 @@ menu.register(settings_menu);
 menu.register(deposit_menu, 'wallet-menu');
 menu.register(withdraw_menu, 'wallet-menu');
 menu.register(poolsMenu);
+menu.register(dcaMenu);
+menu.register(activeDcas);
 menu.register(launchpadMenu);
 
 export default menu;

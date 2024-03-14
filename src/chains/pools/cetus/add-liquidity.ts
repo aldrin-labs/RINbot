@@ -10,6 +10,7 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import skip from '../../../inline-keyboards/skip';
 import yesOrNo from '../../../inline-keyboards/yesOrNo';
 import { BotContext, MyConversation } from '../../../types';
+import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import {
   getTransactionFromMethod,
@@ -55,7 +56,7 @@ export async function addCetusLiquidity(
 
   let foundPool: CetusPool | null = null;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
 
@@ -198,7 +199,7 @@ export async function addCetusLiquidity(
   );
 
   const slippageContext = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === CallbackQueryData.Cancel) {
       return false;
     }
     if (ctx.callbackQuery?.data === 'skip') {
@@ -441,7 +442,7 @@ export async function askForExactAmountToAddInPool({
   const amountA = amountAContext.msg?.text;
   const amountACallbackQueryData = amountAContext.callbackQuery?.data;
 
-  if (amountACallbackQueryData === 'close-conversation') {
+  if (amountACallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   }
   if (amountA !== undefined) {

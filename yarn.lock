@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.3.7":
-  version "2.3.7"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.3.7.tgz#b11c54f56a5546658add60bff0702a3b1eb01e3f"
-  integrity sha512-lXUvsNd/Cl9CXD9U+d4boiMoEnPWBdQNYRonx4lGOcFVH2g3hdPQM9RkE57OEwAEeP1JQYEFvXGJIm0IFI1Uyg==
+"@avernikoz/rinbot-sui-sdk@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.4.0.tgz#80996aa74bc7448a453ec829a6344b7bf91e0701"
+  integrity sha512-lMvAC6B9cAfPO5D/m1ItPsAVjCQwBS4+G+Y+YUCdnOLctw1Zs7tyQkeuy+VOqD5xJuvHlozs6hEIYoo2vxFQoQ==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
@@ -258,6 +258,11 @@
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@grammyjs/menu/-/menu-1.2.1.tgz#4c29c10374ec2974ba9c158fda96f5129fb331fd"
   integrity sha512-0LV9A/UukfF46N0ceSqG1RbdCjhvB2u1MNHNkE7eRD3GVlffOBnR+MS2ESE9mSBleT9OjRV6imA7QZ57QBktOQ==
+
+"@grammyjs/parse-mode@^1.9.0":
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/@grammyjs/parse-mode/-/parse-mode-1.9.0.tgz#f1988d6117ae7d6b55dc3188c8b0487d6cd89e2e"
+  integrity sha512-c5luhtGQVkby+EJ+P/RLuEJH4+PTuw6Mm1feLM2MjoBIzGVGnPigMKvrgzndnJ6ixsyJtUlhMxuuiWreZRT8Qg==
 
 "@grammyjs/storage-redis@^2.4.1":
   version "2.4.1"

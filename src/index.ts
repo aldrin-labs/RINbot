@@ -1,8 +1,21 @@
 import { conversations, createConversation } from '@grammyjs/conversations';
+import { hydrateReply } from '@grammyjs/parse-mode';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
+import {
+  Bot,
+  BotError,
+  Composer,
+  Enhance,
+  GrammyError,
+  HttpError,
+  enhanceStorage,
+  session,
+} from 'grammy';
 import { ConversationId } from './chains/conversations.config';
+import { createDca } from './chains/dca/conversations/create-dca';
+import { depositDcaBase } from './chains/dca/conversations/deposit-base';
+import { withdrawDcaBase } from './chains/dca/conversations/withdraw-base';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
@@ -21,20 +34,21 @@ import {
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addDCAsToUser } from './migrations/addDCAs';
 import { BotContext, SessionData } from './types';
-import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import {
+  BOT_TOKEN,
+  ENVIRONMENT,
+  WELCOME_BONUS_AMOUNT,
+} from './config/bot.config';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
-import { autoRetry } from "@grammyjs/auto-retry";
+import { autoRetry } from '@grammyjs/auto-retry';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { increaseOrders } from './chains/dca/conversations/increase-orders';
+import { closeDca } from './chains/dca/conversations/close-dca';
 
-
-function errorBoundaryHandler(err: BotError) {
-  console.error('[Error Boundary Handler]', err);
-}
-
-
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '1.1.3';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -47,7 +61,8 @@ const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  composer.use(timeoutMiddleware);
+
+  bot.use(timeoutMiddleware);
   bot.use(
     session({
       initial: (): SessionData => {
@@ -58,6 +73,7 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 20 },
           assets: [],
+          dcas: { currentIndex: null, objects: [] },
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
             isUserEligibleToGetBonus: true,
@@ -68,11 +84,21 @@ async function startBot(): Promise<void> {
           createdAt: Date.now(),
         };
       },
-      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus, 2: enlargeDefaultSlippage } }),
+      storage: enhanceStorage({
+        storage,
+        migrations: {
+          1: addWelcomeBonus,
+          2: enlargeDefaultSlippage,
+          3: addDCAsToUser,
+        },
+      }),
     }),
   );
 
-  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }))
+  bot.api.config.use(
+    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
+  );
+  bot.use(hydrateReply);
 
   composer.use(conversations());
 
@@ -99,7 +125,22 @@ async function startBot(): Promise<void> {
   //     id: ConversationId.CreateCetusPool,
   //   }),
   // );
-  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(
+    createConversation(createCoin, { id: ConversationId.CreateCoin }),
+  );
+  composer.use(createConversation(createDca, { id: ConversationId.CreateDca }));
+  composer.use(
+    createConversation(depositDcaBase, { id: ConversationId.DepositDcaBase }),
+  );
+  composer.use(
+    createConversation(withdrawDcaBase, { id: ConversationId.WithdrawDcaBase }),
+  );
+  composer.use(
+    createConversation(increaseOrders, {
+      id: ConversationId.IncreaseDcaOrders,
+    }),
+  );
+  composer.use(createConversation(closeDca, { id: ConversationId.CloseDca }));
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
@@ -108,10 +149,10 @@ async function startBot(): Promise<void> {
   composer.use(
     createConversation(welcomeBonusConversation, {
       id: ConversationId.WelcomeBonus,
-    })
+    }),
   );
+  bot.errorBoundary(boundaryHandler).use(composer);
 
-  bot.errorBoundary(errorBoundaryHandler).use(composer)
   bot.use(menu);
 
   bot.command('version', async (ctx) => {
@@ -154,6 +195,10 @@ async function startBot(): Promise<void> {
     await home(ctx);
   });
 
+  bot.command('createdca', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateDca);
+  });
+
   bot.command('close', async (ctx) => {
     await ctx.conversation.exit();
   });
@@ -181,6 +226,7 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
+    { command: 'createdca', description: 'Create DCA' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
   ]);
 
@@ -205,8 +251,6 @@ async function startBot(): Promise<void> {
     }
   });
 
-  // bot.errorBoundary(errorBoundaryHandler)
-
   ENVIRONMENT === 'local' && bot.start();
 }
 
@@ -216,5 +260,9 @@ startBot();
 // export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
 //   await production(req, res, bot);
 // };
+
+function boundaryHandler(err: BotError) {
+  console.error('[Error Boundary]', err);
+}
 
 export { bot };
