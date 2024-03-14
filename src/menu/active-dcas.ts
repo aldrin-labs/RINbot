@@ -4,16 +4,6 @@ import { getDcaInfoString } from '../chains/dca/showActiveDCAs';
 import { home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 
-/**
- * Steps:
- * +++ 1. Handlecase when there is only 1 dca
- * +++ 2. Add message edit to print only 1 dca when `<` or `>` button is pressed
- * +- 3. Create `Show All` button which appears only after switch-button is clicked once
- * +++ 3. Create buttons `Deposit Base`, `Increase Orders`, `Withdraw Base (and remove orders)` and enter conversations
- *        with corresponding DCA (selected before on menu)
- * 4. Implement conversations for buttons above
- */
-
 const activeDcas = new Menu<BotContext>('active-dcas')
   .dynamic((ctx, range) => {
     const currentIndex = ctx.session.dcas.currentIndex;
@@ -22,7 +12,7 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       range.text('Show All', async (ctx) => {
         const { objects } = ctx.session.dcas;
 
-        let infoString = '<b>Active DCAs:</b>';
+        let infoString = '📊 <b>Active DCAs</b> 📊';
         let i = 1;
         for (const dca of objects) {
           const dcaDataString = getDcaInfoString(dca, i);
@@ -70,6 +60,9 @@ const activeDcas = new Menu<BotContext>('active-dcas')
   .text('Increase Orders Count', async (ctx) => {
     await ctx.conversation.enter(ConversationId.IncreaseDcaOrders);
   })
+  .text('Create DCA', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateDca);
+  })
   .row()
   .text('<', async (ctx) => {
     const { currentIndex, objects } = ctx.session.dcas;
@@ -81,10 +74,7 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       ctx.session.dcas.currentIndex =
         prevIndex < 0 ? objects.length - 1 : prevIndex;
 
-      const currentDca = objects[ctx.session.dcas.currentIndex];
-      const dcaInfoString = getDcaInfoString(currentDca);
-
-      await ctx.editMessageText(dcaInfoString, { parse_mode: 'HTML' });
+      await editDcaStatsMessage(ctx);
     }
   })
   .text((ctx) => {
@@ -110,10 +100,7 @@ const activeDcas = new Menu<BotContext>('active-dcas')
       ctx.session.dcas.currentIndex =
         nextIndex === objects.length ? 0 : nextIndex;
 
-      const currentDca = objects[ctx.session.dcas.currentIndex];
-      const dcaInfoString = getDcaInfoString(currentDca);
-
-      await ctx.editMessageText(dcaInfoString, { parse_mode: 'HTML' });
+      await editDcaStatsMessage(ctx);
     }
   })
   .row()
@@ -123,3 +110,17 @@ const activeDcas = new Menu<BotContext>('active-dcas')
   });
 
 export default activeDcas;
+
+async function editDcaStatsMessage(ctx: BotContext) {
+  const { currentIndex, objects } = ctx.session.dcas;
+  // TODO: Make this more explicit
+  const index = currentIndex ?? 0;
+
+  const currentDca = objects[index];
+  let resultDcaString = '📊 <b>DCA Stats</b> 📊';
+  const dcaInfoString = getDcaInfoString(currentDca, index + 1);
+
+  resultDcaString += dcaInfoString;
+
+  await ctx.editMessageText(resultDcaString, { parse_mode: 'HTML' });
+}
