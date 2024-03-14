@@ -32,7 +32,7 @@ export async function showActiveDCAs(ctx: BotContext) {
 
   const dcaObjectsForSession: ExtendedDcaObject[] = [];
 
-  let infoString = '<b>Active DCAs:</b>';
+  let infoString = '📊 <b>Active DCAs</b> 📊';
   let i = 1;
   for (const dcaData of dcaList) {
     const baseCoinType = dcaData.fields.base_coin_type;
@@ -66,6 +66,7 @@ export async function showActiveDCAs(ctx: BotContext) {
   }
 
   ctx.session.dcas.objects = dcaObjectsForSession;
+  ctx.session.dcas.currentIndex = null;
 
   await ctx.api.editMessageText(
     loadingMessage.chat.id,
@@ -93,6 +94,9 @@ export function getDcaInfoString(
     time_scale,
     remaining_orders,
     split_allocation,
+    trade_params: {
+      fields: { max_price, min_price },
+    },
   } = dca.fields;
 
   const baseBalance = new BigNumber(input_balance)
@@ -108,6 +112,24 @@ export function getDcaInfoString(
     .dividedBy(10 ** baseCoinDecimals)
     .toString();
 
+  let minPriceString = '';
+  let maxPriceString = '';
+
+  if (min_price !== null) {
+    const parsedMinPrice = new BigNumber(min_price)
+      .dividedBy(10 ** baseCoinDecimals)
+      .toString();
+
+    minPriceString = `\n<b>Min ${quoteCoinSymbol} price</b>: <code>${parsedMinPrice}</code> ${baseCoinSymbol}`;
+  }
+  if (max_price !== null) {
+    const parsedMaxPrice = new BigNumber(max_price)
+      .dividedBy(10 ** baseCoinDecimals)
+      .toString();
+
+    maxPriceString = `\n<b>Max ${quoteCoinSymbol} price</b>: <code>${parsedMaxPrice}</code> ${baseCoinSymbol}`;
+  }
+
   // TODO: Parse and print `start_time_ms` & `last_time_ms`
   let dcaInfo = number !== undefined ? `\n\n<b>#${number}</b>\n` : `\n\n`;
   dcaInfo += `<b><a href="${getSuiScanCoinLink(baseCoinType)}">${baseCoinSymbol}</a></b> to `;
@@ -115,7 +137,9 @@ export function getDcaInfoString(
   dcaInfo += `<b>Remaining ${baseCoinSymbol} balance</b>: <code>${baseBalance}</code> ${baseCoinSymbol}\n`;
   dcaInfo += `<b>Buy every</b>: ${timeAmount} ${timeUnitName}\n`;
   dcaInfo += `<b>Remaining orders</b>: <code>${remaining_orders}</code>\n`;
-  dcaInfo += `<b>Sell per order</b>: <code>${sellPerOrder}</code> ${baseCoinSymbol}\n`;
+  dcaInfo += `<b>Sell per order</b>: <code>${sellPerOrder}</code> ${baseCoinSymbol}`;
+  dcaInfo += minPriceString;
+  dcaInfo += maxPriceString;
 
   return dcaInfo;
 }
