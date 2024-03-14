@@ -64,8 +64,8 @@ const menu = new Menu<BotContext>('main')
     );
   })
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
-  .row()
-  .text('Aldrin Bridge')
+  // .row()
+  // .text('Aldrin Bridge')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const {
       isUserEligibleToGetBonus,
