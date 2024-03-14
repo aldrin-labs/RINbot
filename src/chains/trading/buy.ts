@@ -25,6 +25,7 @@ import {
   extractCoinTypeFromLink,
   swapTokenTypesAreEqual,
   isTransactionSuccessful,
+  getPriceOutputData,
 } from '../utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
@@ -113,21 +114,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     //   return '0'
     // return availableBalanceAfterFee.toString();
   });
-  let price = undefined;
   let priceOutput = '';
-  if (validatedCoinType !== undefined) {
-    const priceApiGetResponse = await getPriceApi('sui', validatedCoinType);
-    if (priceApiGetResponse?.data?.data?.price) {
-      price = priceApiGetResponse.data.data.price;
-      priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b> per token\n\n`;
-    } else {
-      // Handle case where price data is not available but the request did not fail
-      priceOutput = `Price information for <code>${validatedCoinType}</code> is currently unavailable.\n\n`;
-    }
-  } else {
-    price = undefined;
-    priceOutput = `Price information could not be found.\n\n`;
-  }
+  if (validatedCoinType !== undefined) 
+    priceOutput = await getPriceOutputData(validatedCoinType)
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,

@@ -5,7 +5,7 @@ import { MyConversation, BotContext } from "../../types";
 import { ConversationId } from "../conversations.config";
 import { getPriceApi } from "../priceapi.utils";
 import { getWalletManager, getCoinManager, getRouteManager, random_uuid, TransactionResultStatus, provider } from "../sui.functions";
-import { isValidCoinLink, extractCoinTypeFromLink, swapTokenTypesAreEqual, findCoinInAssets, isCoinAssetData, isTransactionSuccessful } from "../utils";
+import { isValidCoinLink, extractCoinTypeFromLink, swapTokenTypesAreEqual, findCoinInAssets, isCoinAssetData, isTransactionSuccessful, getPriceOutputData } from "../utils";
 
 export async function sell(
   conversation: MyConversation,
@@ -144,22 +144,10 @@ export async function sell(
 
   const validCoinToSell = validatedCoin as CoinAssetData;
 
-  let price = undefined;
   let priceOutput = '';
 
-  if (validCoinToSell !== undefined) {
-    const priceApiGetResponse = await getPriceApi('sui', validCoinToSell.type);
-    if (priceApiGetResponse?.data?.data?.price) {
-      price = priceApiGetResponse.data.data.price;
-      priceOutput = `You are buying <code>${validCoinToSell.type}</code> for <b>$${price} USD</b> per token\n\n`;
-    } else {
-      // Handle case where price data is not available but the request did not fail
-      priceOutput = `Price information for <code>${validCoinToSell.type}</code> is currently unavailable.\n\n`;
-    }
-  } else {
-    price = undefined;
-    priceOutput = `Price information could not be found.\n\n`;
-  }
+  if (validCoinToSell !== undefined) 
+    priceOutput = await getPriceOutputData(validCoinToSell)
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
