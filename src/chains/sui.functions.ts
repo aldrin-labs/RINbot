@@ -339,7 +339,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     if(validatedCoinType !== undefined){
       const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
       price = priceApiGetResponse?.data.data.price
-      price = calculate("1", price)
+      //price = calculate("1", price)
     }
     else{
       price = undefined
