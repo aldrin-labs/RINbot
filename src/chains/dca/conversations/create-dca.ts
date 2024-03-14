@@ -40,6 +40,7 @@ import {
   trimAmount,
 } from '../../utils';
 import {
+  DEFAULT_MAX_PRICE,
   MAX_TOTAL_ORDERS_COUNT,
   MIN_DCA_BASE_AMOUNT,
   MIN_TOTAL_ORDERS_COUNT,
@@ -201,6 +202,11 @@ export async function createDca(
       quoteCoinPrice = formatPrice(unformattedCoinPrice);
     } catch (error) {
       if (error instanceof NoRoutesError) {
+        console.error(
+          '[askForQuoteDcaCoin.getBestRouteTransaction] NoRoutesError occured:',
+          error.message,
+        );
+
         await ctx.api.editMessageText(
           findingRouteMessage.chat.id,
           findingRouteMessage.message_id,
@@ -305,13 +311,11 @@ export async function createDca(
   // Asking for a min price
   const skipButton = skip.inline_keyboard[0];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
-  const defaultMinPrice = '0';
-  const defaultMaxPrice = (1_000_000_000).toString();
 
   await ctx.reply(
     `Enter the <b>minimum price</b> at which <b>DCA</b> will buy <b>${quoteCoinSymbol}</b>.\n\n` +
       `Current <b>${quoteCoinSymbol}</b> price: ` +
-      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>\n\n` +
+      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${DEFAULT_MAX_PRICE}</code>\n\n` +
       `<b>Note</b>: this parameter cannot be changed in the future.`,
     { reply_markup: closeWithSkipReplyMarkup, parse_mode: 'HTML' },
   );
@@ -331,7 +335,7 @@ export async function createDca(
 
     const { isValid: amountIsValid, reason } = isValidTokenAmount({
       amount: inputAmount,
-      maxAvailableAmount: defaultMaxPrice,
+      maxAvailableAmount: DEFAULT_MAX_PRICE,
       decimals,
     });
 
@@ -349,25 +353,17 @@ export async function createDca(
 
   const minPrice =
     minPriceContext.callbackQuery?.data === 'skip'
-      ? defaultMinPrice
+      ? undefined
       : minPriceContext.msg?.text;
 
-  if (minPrice === undefined) {
-    await ctx.reply(
-      'Something went wrong while getting min price. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
   console.debug('minPrice:', minPrice);
 
   // Asking for a max price
   await ctx.reply(
     `Enter the <b>maximum price</b> at which <b>DCA</b> will buy <b>${quoteCoinSymbol}</b>.\n\n` +
       `Current <b>${quoteCoinSymbol}</b> price: ` +
-      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${defaultMaxPrice}</code>` +
-      (minPrice === defaultMinPrice
+      `<code>${quoteCoinPrice}</code>\n<b>Max valid price</b>: <code>${DEFAULT_MAX_PRICE}</code>` +
+      (minPrice === undefined
         ? '\n\n'
         : `\n<b>Min valid price</b>: <code>${minPrice}</code>\n\n`) +
       `<b>Note</b>: this parameter cannot be changed in the future.`,
@@ -383,7 +379,6 @@ export async function createDca(
   if (arrivedPriceCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   } else if (arrivedPriceCallbackQueryData === 'skip') {
-    maxPrice = defaultMaxPrice;
     await maxPriceContext.answerCallbackQuery();
   } else if (arrivedPriceMessage !== undefined) {
     maxPrice = arrivedPriceMessage;
@@ -391,7 +386,7 @@ export async function createDca(
 
     const { isValid: amountIsValid, reason } = isValidTokenAmount({
       amount: maxPrice,
-      maxAvailableAmount: defaultMaxPrice,
+      maxAvailableAmount: DEFAULT_MAX_PRICE,
       minAvailableAmount: minPrice,
       decimals,
     });
@@ -406,15 +401,6 @@ export async function createDca(
 
       await conversation.skip({ drop: true });
     }
-  }
-
-  if (maxPrice === undefined) {
-    await ctx.reply(
-      'Something went wrong while getting max price. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
-
-    return;
   }
   console.debug('maxPrice:', maxPrice);
 
@@ -700,11 +686,11 @@ export async function createDca(
 
   // Logging all the entered DCA params and asking for confirmation
   let priceRangeString: string;
-  if (minPrice === defaultMinPrice && maxPrice === defaultMaxPrice) {
+  if (minPrice === undefined && maxPrice === undefined) {
     priceRangeString = '.';
-  } else if (minPrice !== defaultMinPrice && maxPrice === defaultMaxPrice) {
+  } else if (minPrice !== undefined && maxPrice === undefined) {
     priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is greater than or equal to <b>${minPrice}</b> <b>${baseCoinSymbol}</b>.`;
-  } else if (minPrice === defaultMinPrice && maxPrice !== defaultMaxPrice) {
+  } else if (minPrice === undefined && maxPrice !== undefined) {
     priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is less than or equal to <b>${maxPrice}</b> <b>${baseCoinSymbol}</b>.`;
   } else {
     priceRangeString = ` when <b>${quoteCoinSymbol}</b> price is between <b>${minPrice}</b> and <b>${maxPrice}</b> <b>${baseCoinSymbol}</b>.`;
@@ -761,8 +747,14 @@ export async function createDca(
       ),
       baseCoinType: baseCoinType,
       every: timeAmount,
-      maxPrice: convertToBNFormat(maxPrice, baseCoinDecimals),
-      minPrice: convertToBNFormat(minPrice, baseCoinDecimals),
+      maxPrice:
+        maxPrice !== undefined
+          ? convertToBNFormat(maxPrice, baseCoinDecimals)
+          : undefined,
+      minPrice:
+        minPrice !== undefined
+          ? convertToBNFormat(minPrice, baseCoinDecimals)
+          : undefined,
       quoteCoinType: validatedQuoteCoin.type,
       timeScale: timeUnit,
       totalOrders,
