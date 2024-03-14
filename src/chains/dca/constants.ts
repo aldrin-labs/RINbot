@@ -1,4 +1,4 @@
-import { SUI_DECIMALS } from '@avernikoz/rinbot-sui-sdk';
+import { DCAManagerSingleton, SUI_DECIMALS } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 
 export const MAX_TOTAL_ORDERS_COUNT = 1_000_000;
@@ -11,8 +11,11 @@ export const MIN_DCA_BASE_AMOUNT = '2';
 
 export const MIN_SELL_USD_PER_ORDER = 1;
 
-// TODO: Get this value from SDK
-export const ONE_TRADE_GAS_FEE_IN_MIST = 25_000_000;
+export const ONE_TRADE_GAS_FEE_IN_MIST =
+  DCAManagerSingleton.DCA_MINIMUM_GAS_FUNDS;
 export const ONE_TRADE_GAS_FEE_IN_SUI = new BigNumber(ONE_TRADE_GAS_FEE_IN_MIST)
   .dividedBy(10 ** SUI_DECIMALS)
   .toString();
+
+export const DEFAULT_MIN_PRICE = '0';
+export const DEFAULT_MAX_PRICE = '1000000000';
