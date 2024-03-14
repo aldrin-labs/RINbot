@@ -290,9 +290,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     price = undefined
     priceOutput = `Price information could not be found.\n\n`
   }
-  
-
-
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -356,7 +353,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
-          fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
+          // fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });
 
         return transaction;
@@ -684,7 +681,7 @@ export async function sell(
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
-          fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
+          // fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });      
 
         return transaction;
