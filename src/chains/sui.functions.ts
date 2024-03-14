@@ -340,7 +340,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     if(validatedCoinType !== undefined){
       const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
       price = priceApiGetResponse?.data.data.price
-      priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b>\n\n`
+      priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b> per token\n\n`
     }
   } catch (error) {
     price = undefined
@@ -663,7 +663,7 @@ export async function sell(
     if(validCoinToSell !== undefined){
       const priceApiGetResponse = await getPriceApi('sui', validCoinToSell.type)
       price = priceApiGetResponse?.data.data.price
-      priceOutput = `You are selling <code>${validCoinToSell.type}</code> for <b>$${price} USD</b>\n\n`
+      priceOutput = `You are selling <code>${validCoinToSell.type}</code> for <b>$${price} USD</b> per token\n\n`
     }
   } catch (error) {
     price = undefined
