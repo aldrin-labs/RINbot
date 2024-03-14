@@ -36,7 +36,7 @@
     "typescript": "^5.3.3"
   },
   "scripts": {
-    "dev": "dotenv -- tsx watch src/index.ts",
+    "dev": "DEBUG=bot* dotenv -- tsx watch src/index.ts",
     "build": "ncc build src/index.ts -o public -m",
     "prettier": "prettier --write 'src/**/*.ts'"
   }
