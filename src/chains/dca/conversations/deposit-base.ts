@@ -276,7 +276,14 @@ export async function depositDcaBase(
           confirmTotalOrdersContext.callbackQuery.data;
 
         if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Cancel) {
-          await conversation.skip();
+          await ctx.replyFmt(
+            fmt`Please, enter another ${bold('total orders count')} you want to add.`,
+            { reply_markup: closeConversation },
+          );
+
+          await confirmTotalOrdersContext.answerCallbackQuery();
+
+          continue;
         }
         if (confirmTotalOrdersCallbackQueryData === CallbackQueryData.Confirm) {
           userConfirmedTotalOrdersCount = true;
