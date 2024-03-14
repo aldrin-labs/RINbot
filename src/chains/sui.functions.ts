@@ -335,10 +335,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     // return availableBalanceAfterFee.toString();
   });
   let price = undefined;
+  let priceOutput = ''
   try {
     if(validatedCoinType !== undefined){
       const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
       price = priceApiGetResponse?.data.data.price
+      priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b>\n\n`
     }
     else{
       price = undefined
@@ -349,7 +351,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
 
   await ctx.reply(
-    `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b>\n\nReply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
