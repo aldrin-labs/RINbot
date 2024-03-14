@@ -187,66 +187,66 @@ export const getRouteManager = async () => {
   return routerManager;
 };
 
-async function chargeTradeFee(ctx: BotContext){ //amount in sui
+// async function chargeTradeFee(ctx: BotContext){ //amount in sui
 
-  const walletManager = await getWalletManager();
-  let { totalGasFee } =
-    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
-  let tx;
+//   const walletManager = await getWalletManager();
+//   let { totalGasFee } =
+//     await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+//   let tx;
 
-  try {
-    const fee = TRADE_FEE
+//   try {
+//     const fee = TRADE_FEE
 
-    const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
-      amount: fee,
-      address: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
-    });
-    txBlock.setGasBudget(Number(totalGasFee));
-    tx = txBlock;
-  } catch (error) {
-    console.error(error);
+//     const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
+//       amount: fee,
+//       address: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
+//     });
+//     txBlock.setGasBudget(Number(totalGasFee));
+//     tx = txBlock;
+//   } catch (error) {
+//     console.error(error);
 
-    if (error instanceof Error) {
-      console.error(
-        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-      );
-    } else {
-      console.error(
-        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-      );
-    }
+//     if (error instanceof Error) {
+//       console.error(
+//         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
+//       );
+//     } else {
+//       console.error(
+//         `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
+//       );
+//     }
 
-    return;
-  }
-  try {
-    const res = await provider.signAndExecuteTransactionBlock({
-      transactionBlock: tx,
-      signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-        ctx.session.privateKey,
-      ),
-      options: {
-        showEffects: true,
-      },
-    });
+//     return;
+//   }
+//   try {
+//     const res = await provider.signAndExecuteTransactionBlock({
+//       transactionBlock: tx,
+//       signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
+//         ctx.session.privateKey,
+//       ),
+//       options: {
+//         showEffects: true,
+//       },
+//     });
 
-    if (res.effects?.status.status === 'failure') {
-        console.error(`Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
-      return;
-    }
-    console.log(`Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(
-        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-      );
-    } else {
-      console.error(
-        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-      );
-    }
-    return;
-  }
-}
+//     if (res.effects?.status.status === 'failure') {
+//         console.error(`Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
+//       return;
+//     }
+//     console.log(`Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`)
+//   } catch (error) {
+//     if (error instanceof Error) {
+//       console.error(
+//         `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
+//       );
+//     } else {
+//       console.error(
+//         `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
+//       );
+//     }
+//     return;
+//   }
+// }
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply(
@@ -328,14 +328,21 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     const balance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
-    const availableBalanceAfterFee = +balance - +TRADE_FEE
-    if(availableBalanceAfterFee < 0)
-      return '0'
-    return availableBalanceAfterFee.toString();
+    return balance;
+    // const availableBalanceAfterFee = +balance - +TRADE_FEE
+    // if(availableBalanceAfterFee < 0)
+    //   return '0'
+    // return availableBalanceAfterFee.toString();
   });
+  let price = undefined;
+  if(validatedCoinType !== undefined){
+    const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
+    price = calculate("1", priceApiGetResponse?.data.data.price)
+  }
+
 
   await ctx.reply(
-    `Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `You are buying <code>${validatedCoinType}</code> for <b>${price}</b>\n\nReply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -484,7 +491,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    await chargeTradeFee(ctx)
+    //await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -803,7 +810,7 @@ export async function sell(
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    await chargeTradeFee(ctx)
+    //await chargeTradeFee(ctx)
     await ctx.reply(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
@@ -1072,10 +1079,11 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  const availableBalanceAfterFee = +availableBalance - +TRADE_FEE
-  if(availableBalanceAfterFee < 0)
-    return '0'
-  return availableBalanceAfterFee.toString();
+  return availableBalance
+  // const availableBalanceAfterFee = +availableBalance - +TRADE_FEE
+  // if(availableBalanceAfterFee < 0)
+  //   return '0'
+  // return availableBalanceAfterFee.toString();
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
