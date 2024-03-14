@@ -336,21 +336,23 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
   let price = undefined;
   let priceOutput = ''
-  try {
-    if(validatedCoinType !== undefined){
-      const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
-      if (priceApiGetResponse?.data?.data?.price) {
-        price = priceApiGetResponse.data.data.price;
-        priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b> per token\n\n`;
-      } else {
-        // Handle case where price data is not available but the request did not fail
-        priceOutput = `Price information for <code>${validatedCoinType}</code> is currently unavailable.\n\n`;
-      }
+  if(validatedCoinType !== undefined){
+    const priceApiGetResponse = await getPriceApi('sui', validatedCoinType)
+    if (priceApiGetResponse?.data?.data?.price) {
+      price = priceApiGetResponse.data.data.price;
+      priceOutput = `You are buying <code>${validatedCoinType}</code> for <b>$${price} USD</b> per token\n\n`;
+    } else {
+      // Handle case where price data is not available but the request did not fail
+      priceOutput = `Price information for <code>${validatedCoinType}</code> is currently unavailable.\n\n`;
     }
-  } catch (error) {
+  }
+  else{
+
     price = undefined
     priceOutput = `Price information could not be found.\n\n`
   }
+  
+
 
 
   await ctx.reply(
@@ -665,18 +667,17 @@ export async function sell(
 
   let price = undefined;
   let priceOutput = ''
-  try {
-    if(validCoinToSell !== undefined){
-      const priceApiGetResponse = await getPriceApi('sui', validCoinToSell.type)
-      if (priceApiGetResponse?.data?.data?.price) {
-        price = priceApiGetResponse.data.data.price;
-        priceOutput = `You are buying <code>${validCoinToSell.type}</code> for <b>$${price} USD</b> per token\n\n`;
-      } else {
-        // Handle case where price data is not available but the request did not fail
-        priceOutput = `Price information for <code>${validCoinToSell.type}</code> is currently unavailable.\n\n`;
-      }
+  
+  if(validCoinToSell !== undefined){
+    const priceApiGetResponse = await getPriceApi('sui', validCoinToSell.type)
+    if (priceApiGetResponse?.data?.data?.price) {
+      price = priceApiGetResponse.data.data.price;
+      priceOutput = `You are buying <code>${validCoinToSell.type}</code> for <b>$${price} USD</b> per token\n\n`;
+    } else {
+      // Handle case where price data is not available but the request did not fail
+      priceOutput = `Price information for <code>${validCoinToSell.type}</code> is currently unavailable.\n\n`;
     }
-  } catch (error) {
+  } else {
     price = undefined
     priceOutput = `Price information could not be found.\n\n`
   }
