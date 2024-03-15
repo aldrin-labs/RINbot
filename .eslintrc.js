@@ -24,11 +24,12 @@ module.exports = {
   ],
   plugins: ["@typescript-eslint", "import", "prettier"],
   rules: {
-    quotes: ["error", "double"],
     "import/no-unresolved": 0,
     indent: "off",
     "max-len": ["error", { code: 120 }],
-    "prettier/prettier": 2, // Means error
+    "prettier/prettier": "error",
+    "require-jsdoc": 0,
+    "valid-jsdoc": 0,
   },
   overrides: [
     {
