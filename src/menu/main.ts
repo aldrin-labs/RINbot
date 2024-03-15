@@ -18,7 +18,7 @@ import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
 import { ConversationId } from '../chains/conversations.config';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
-import { ENABLE_WELCOME_BONUS, FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT } from '../config/bot.config';
+import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {

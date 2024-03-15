@@ -109,10 +109,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       ctx.session.publicKey,
     );
     return balance;
-    // const availableBalanceAfterFee = +balance - +FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT
-    // if(availableBalanceAfterFee < 0)
-    //   return '0'
-    // return availableBalanceAfterFee.toString();
   });
   let priceOutput = '';
   if (validatedCoinType !== undefined) 
@@ -180,7 +176,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
-          // fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });
 
         return transaction;

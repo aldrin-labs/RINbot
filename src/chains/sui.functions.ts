@@ -429,10 +429,6 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
     ctx.session.publicKey,
   );
   return availableBalance
-  // const availableBalanceAfterFee = +availableBalance - +FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT
-  // if(availableBalanceAfterFee < 0)
-  //   return '0'
-  // return availableBalanceAfterFee.toString();
 }
 
 export async function balance(ctx: BotContext): Promise<string> {

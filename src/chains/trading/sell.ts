@@ -212,7 +212,6 @@ export async function sell(
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
-          // fee: FIXED_SIZE_TRADE_FEE_IN_SUI_MIST_AMOUNT,
         });
 
         return transaction;
