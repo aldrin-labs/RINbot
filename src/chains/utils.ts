@@ -228,6 +228,8 @@ export function findCoinInAssets(
   );
 }
 
+// TODO: Pass only coinType as `string`
+// TODO: Entire text should deoend on the param (e.g. `side`, which is buy or sell)
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;
   if (isCoinAssetData(validCoin)){
