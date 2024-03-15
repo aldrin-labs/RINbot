@@ -1,13 +1,21 @@
+import { autoRetry } from '@grammyjs/auto-retry';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
+import {
+  Bot,
+  BotError,
+  Composer,
+  Enhance,
+  GrammyError,
+  HttpError,
+  enhanceStorage,
+  session,
+} from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { addCetusLiquidity } from './chains/pools/cetus/add-liquidity';
-import { createCetusPool } from './chains/pools/cetus/create';
 import {
   createAftermathPool,
   createCoin,
@@ -16,15 +24,19 @@ import {
   home,
   withdraw,
 } from './chains/sui.functions';
+import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
+import {
+  BOT_TOKEN,
+  ENVIRONMENT,
+  WELCOME_BONUS_AMOUNT,
+} from './config/bot.config';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
-import { BotContext, SessionData } from './types';
-import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
-import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
-import { autoRetry } from "@grammyjs/auto-retry";
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { BotContext, SessionData } from './types';
 import { buy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 
@@ -33,8 +45,7 @@ function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
 }
 
-
-const APP_VERSION = '1.1.2';
+const APP_VERSION = '2.0.0';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -66,13 +77,26 @@ async function startBot(): Promise<void> {
           },
           tradesCount: 0,
           createdAt: Date.now(),
+          tradeCoin: {
+            coinType: '',
+            useSpecifiedCoin: false,
+          },
         };
       },
-      storage: enhanceStorage({ storage, migrations: { 1: addWelcomeBonus, 2: enlargeDefaultSlippage } }),
+      storage: enhanceStorage({
+        storage,
+        migrations: {
+          1: addWelcomeBonus,
+          2: enlargeDefaultSlippage,
+          3: addTradeCoin,
+        },
+      }),
     }),
   );
 
-  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }))
+  bot.api.config.use(
+    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
+  );
 
   composer.use(conversations());
 
@@ -99,7 +123,9 @@ async function startBot(): Promise<void> {
   //     id: ConversationId.CreateCetusPool,
   //   }),
   // );
-  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  composer.use(
+    createConversation(createCoin, { id: ConversationId.CreateCoin }),
+  );
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
@@ -108,10 +134,10 @@ async function startBot(): Promise<void> {
   composer.use(
     createConversation(welcomeBonusConversation, {
       id: ConversationId.WelcomeBonus,
-    })
+    }),
   );
 
-  bot.errorBoundary(errorBoundaryHandler).use(composer)
+  bot.errorBoundary(errorBoundaryHandler).use(composer);
   bot.use(menu);
 
   bot.command('version', async (ctx) => {

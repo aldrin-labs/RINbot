@@ -201,6 +201,10 @@ export function getSuiVisionCoinLink(coinType: string) {
   return `https://suivision.xyz/coin/${coinType}`;
 }
 
+export function getSuiScanCoinLink(coinType: string) {
+  return `https://suiscan.xyz/mainnet/coin/${coinType}`;
+}
+
 export function getCetusPoolUrl(poolId: string) {
   return `https://app.cetus.zone/liquidity/deposit?poolAddress=${poolId}`;
 }
@@ -224,10 +228,15 @@ export function findCoinInAssets(
   );
 }
 
+
 function isExponential(num: number): boolean {
   const numStr = num.toString();
   return numStr.includes('e') || numStr.includes('E');
 }
+
+
+// TODO: Pass only coinType as `string`
+// TODO: Entire text should depend on the param (e.g. `side`, which is buy or sell)
 
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;

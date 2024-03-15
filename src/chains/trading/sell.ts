@@ -1,11 +1,34 @@
-import { CoinAssetData, isValidTokenAddress, LONG_SUI_COIN_TYPE, SHORT_SUI_COIN_TYPE, isValidTokenAmount, transactionFromSerializedTransaction, WalletManagerSingleton } from "@avernikoz/rinbot-sui-sdk";
-import closeConversation from "../../inline-keyboards/closeConversation";
-import { retryAndGoHomeButtonsData } from "../../inline-keyboards/retryConversationButtonsFactory";
-import { MyConversation, BotContext } from "../../types";
-import { ConversationId } from "../conversations.config";
-import { getPriceApi } from "../priceapi.utils";
-import { getWalletManager, getCoinManager, getRouteManager, random_uuid, TransactionResultStatus, provider } from "../sui.functions";
-import { isValidCoinLink, extractCoinTypeFromLink, swapTokenTypesAreEqual, findCoinInAssets, isCoinAssetData, isTransactionSuccessful, getPriceOutputData } from "../utils";
+import {
+  CoinAssetData,
+  isValidTokenAddress,
+  LONG_SUI_COIN_TYPE,
+  SHORT_SUI_COIN_TYPE,
+  isValidTokenAmount,
+  transactionFromSerializedTransaction,
+  WalletManagerSingleton,
+} from '@avernikoz/rinbot-sui-sdk';
+import closeConversation from '../../inline-keyboards/closeConversation';
+import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
+import { MyConversation, BotContext } from '../../types';
+import { ConversationId } from '../conversations.config';
+import { getPriceApi } from '../priceapi.utils';
+import {
+  getWalletManager,
+  getCoinManager,
+  getRouteManager,
+  random_uuid,
+  TransactionResultStatus,
+  provider,
+} from '../sui.functions';
+import {
+  isValidCoinLink,
+  extractCoinTypeFromLink,
+  swapTokenTypesAreEqual,
+  findCoinInAssets,
+  isCoinAssetData,
+  isTransactionSuccessful,
+  getPriceOutputData,
+} from '../utils';
 
 export async function sell(
   conversation: MyConversation,
@@ -144,10 +167,7 @@ export async function sell(
 
   const validCoinToSell = validatedCoin as CoinAssetData;
 
-  let priceOutput = '';
-
-  if (validCoinToSell !== undefined) 
-    priceOutput = await getPriceOutputData(validCoinToSell)
+  const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
@@ -197,7 +217,7 @@ export async function sell(
     validatedInputAmount = inputAmount;
     return true;
   });
-  
+
   await ctx.reply('Initiating swap...');
 
   const tx = await conversation.external({
@@ -284,10 +304,8 @@ export async function sell(
         ? TransactionResultStatus.Success
         : TransactionResultStatus.Failure;
 
-      const balanceChanges = await res.balanceChanges;
-      console.log(balanceChanges);
-
       return { digest: res.digest, result };
+
     } catch (error) {
       if (error instanceof Error) {
         console.error(
