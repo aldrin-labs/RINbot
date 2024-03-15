@@ -151,7 +151,6 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
-    await ctx.conversation.exit()
     await home(ctx);
   });
 
