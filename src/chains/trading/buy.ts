@@ -1,145 +1,106 @@
 import {
-  LONG_SUI_COIN_TYPE,
-  RouteManager,
-  SHORT_SUI_COIN_TYPE,
-  SUI_DECIMALS,
-  WalletManagerSingleton,
   isValidTokenAddress,
+  LONG_SUI_COIN_TYPE,
+  SHORT_SUI_COIN_TYPE,
   isValidTokenAmount,
+  SUI_DECIMALS,
   transactionFromSerializedTransaction,
+  WalletManagerSingleton,
 } from '@avernikoz/rinbot-sui-sdk';
-import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import { BotContext, MyConversation } from '../../types';
+import { MyConversation, BotContext } from '../../types';
 import { ConversationId } from '../conversations.config';
-import { getUserFeePercentage } from '../fees/utils';
+import { getPriceApi } from '../priceapi.utils';
 import {
-  TransactionResultStatus,
   getCoinManager,
-  getRouteManager,
   getWalletManager,
-  provider,
   random_uuid,
+  getRouteManager,
+  provider,
+  TransactionResultStatus,
 } from '../sui.functions';
 import {
-  extractCoinTypeFromLink,
-  getPriceOutputData,
-  isTransactionSuccessful,
   isValidCoinLink,
+  extractCoinTypeFromLink,
   swapTokenTypesAreEqual,
+  isTransactionSuccessful,
+  getPriceOutputData,
 } from '../utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
-
   await ctx.reply(
     'What token do you want to buy? Please send a coin type or a link to suiscan.',
     { reply_markup: closeConversation },
-
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
-  const useSpecifiedCoin = await conversation.external(
-    () => ctx.session.tradeCoin.useSpecifiedCoin,
-
   );
-  const coinType = ctx.session.tradeCoin.coinType;
-
 
   await ctx.reply(
     'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
     { parse_mode: 'HTML' },
   );
 
+  const coinManager = await getCoinManager();
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
+
   let validatedCoinType: string | undefined;
+  await conversation.waitUntil(async (ctx) => {
+    if (ctx.callbackQuery?.data === 'close-conversation') {
+      return false;
+    }
 
+    const possibleCoin = (ctx.msg?.text || '').trim();
+    const coinTypeIsValid = isValidTokenAddress(possibleCoin);
+    const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
-  if (useSpecifiedCoin) {
-    validatedCoinType = coinType;
-    ctx.session.tradeCoin.useSpecifiedCoin = false;
-  } else {
-    await ctx.reply(
-      'Which token do you want to buy? Please send a coin type or a link to suiscan.',
-      { reply_markup: closeConversation },
-    );
+    if (!coinTypeIsValid && !suiScanLinkIsValid) {
+      const replyText =
+        'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.';
 
-    await ctx.reply(
-      'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
-      { parse_mode: 'HTML' },
-    );
+      await ctx.reply(replyText, { reply_markup: closeConversation });
 
-    const coinManager = await getCoinManager();
+      return false;
+    }
 
-    await conversation.waitUntil(async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
-        return false;
-      }
+    const coinType: string | null = coinTypeIsValid
+      ? possibleCoin
+      : extractCoinTypeFromLink(possibleCoin);
 
-      const possibleCoin = (ctx.msg?.text || '').trim();
-      const coinTypeIsValid = isValidTokenAddress(possibleCoin);
-      const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
+    // ts check
+    if (coinType === null) {
+      await ctx.reply(
+        'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a token address or a Suiscan link.',
+        { reply_markup: closeConversation },
+      );
+      return false;
+    }
 
-      if (!coinTypeIsValid && !suiScanLinkIsValid) {
-        const replyText =
-          'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.';
+    const fetchedCoin = await coinManager.getCoinByType2(coinType);
 
-        await ctx.reply(replyText, { reply_markup: closeConversation });
+    if (fetchedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
+      );
 
-        return false;
-      }
+      return false;
+    }
 
-      const coinType: string | null = coinTypeIsValid
-        ? possibleCoin
-        : extractCoinTypeFromLink(possibleCoin);
+    const tokenToBuyIsSui: boolean =
+      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
+      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
-      // ts check
-      if (coinType === null) {
-        await ctx.reply(
-          'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a token address or a Suiscan link.',
-          { reply_markup: closeConversation },
-        );
-        return false;
-      }
+    if (tokenToBuyIsSui) {
+      await ctx.reply(
+        `You cannot buy SUI for SUI. Please, specify another token to buy.`,
+        { reply_markup: closeConversation },
+      );
 
-      const fetchedCoin = await coinManager.getCoinByType2(coinType);
+      return false;
+    }
 
-      if (fetchedCoin === null) {
-        await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
-
-      const tokenToBuyIsSui: boolean =
-        swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
-        swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
-
-      if (tokenToBuyIsSui) {
-        await ctx.reply(
-          `You cannot buy SUI for SUI. Please, specify another token to buy.`,
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
-
-      validatedCoinType = fetchedCoin.type;
-
-      return true;
-    });
-  }
-
-  // ts check
-  if (validatedCoinType === undefined) {
-    await ctx.reply(
-      'Cannot process entered coin. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  const resCoinType = validatedCoinType;
+    validatedCoinType = fetchedCoin.type;
+    return true;
+  });
 
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -149,10 +110,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     );
     return balance;
   });
-
-  const priceOutput = await conversation.external(() =>
-    getPriceOutputData(resCoinType),
-  );
+  let priceOutput = '';
+  if (validatedCoinType !== undefined)
+    priceOutput = await getPriceOutputData(validatedCoinType)
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -195,7 +155,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   // ts check
-  if (validatedInputAmount === undefined) {
+  if (!validatedCoinType || !validatedInputAmount) {
     await ctx.reply(
       `Invalid coinType or inputAmount. Please try again or contact support.`,
       { reply_markup: retryButton },
@@ -204,32 +164,18 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  const feePercentage = (
-    await conversation.external(() => getUserFeePercentage(ctx))
-  ).toString();
-
-  const feeAmount = RouteManager.calculateFeeAmountIn({
-    feePercentage,
-    amount: validatedInputAmount,
-    tokenDecimals: SUI_DECIMALS,
-  });
-
   // TODO: Re-check args here
   const tx = await conversation.external({
-    args: [resCoinType, validatedInputAmount],
-    task: async (resCoinType: string, validatedInputAmount: string) => {
+    args: [validatedCoinType, validatedInputAmount],
+    task: async (validatedCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();
         const transaction = await routerManager.getBestRouteTransaction({
           tokenFrom: LONG_SUI_COIN_TYPE,
-          tokenTo: resCoinType,
+          tokenTo: validatedCoinType,
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
-          fee: {
-            feeAmount,
-            feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
-          },
         });
 
         return transaction;
