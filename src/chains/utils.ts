@@ -9,7 +9,7 @@ import { getPriceApi } from "./priceapi.utils";
  * Checks if the given string is a valid suiscan link.
  *
  * @param {string} link - The string to be checked.
- * @returns {boolean} - True if the link is valid, false otherwise.
+ * @return {boolean} - True if the link is valid, false otherwise.
  */
 export function isValidCoinLink(link: string): boolean {
   // Regular expression to match valid suiscan links
@@ -23,7 +23,7 @@ export function isValidCoinLink(link: string): boolean {
  * Extracts the coin type from a valid suiscan link.
  *
  * @param {string} link - The valid suiscan link.
- * @returns {string | null} - The extracted coin type or null if extraction fails.
+ * @return {string | null} - The extracted coin type or null if extraction fails.
  */
 export function extractCoinTypeFromLink(link: string): string | null {
   const suiscanLinkRegex =
@@ -147,7 +147,7 @@ export function getSuitableCoinImageData(imagesData: PhotoSize[]): PhotoSize {
 /**
  * Extracts file extension from Telegram file-path url or throws an error, where cannot do this.
  * @throws {Error} When cannot extract extension from url.
- * @returns {string} File extension from url.
+ * @return {string} File extension from url.
  */
 export function extractFileExtension(url: string): string {
   const parts = url.split("/");

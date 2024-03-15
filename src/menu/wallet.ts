@@ -2,7 +2,7 @@ import { Menu } from "@grammyjs/menu";
 import { getExplorerLink } from "../chains/sui.functions";
 import { BotContext } from "../types";
 
-const wallet_menu = new Menu<BotContext>("wallet-menu")
+const walletMenu = new Menu<BotContext>("wallet-menu")
   .dynamic(async (ctx, range) => {
     range.url("View in explorer", getExplorerLink(ctx));
   })
@@ -15,8 +15,7 @@ const wallet_menu = new Menu<BotContext>("wallet-menu")
       parse_mode: "HTML",
     });
   })
-  .text("Withdraw X amount", async (ctx: any) => {
-    ctx.session.step = "wallet-withdraw";
+  .text("Withdraw X amount", async (ctx: BotContext) => {
     await ctx.conversation.enter("withdraw");
   })
   .row()
@@ -25,4 +24,4 @@ const wallet_menu = new Menu<BotContext>("wallet-menu")
   })
   .row();
 
-export default wallet_menu;
+export default walletMenu;

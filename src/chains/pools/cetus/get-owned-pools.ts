@@ -28,8 +28,8 @@ export async function ownedCetusPools(ctx: BotContext): Promise<void> {
     const suiVisionCoinALink = getSuiVisionCoinLink(poolInfo.coinTypeA);
     const suiVisionCoinBLink = getSuiVisionCoinLink(poolInfo.coinTypeB);
 
-    const rawAmountAString = poolInfo.amountAIsRaw ? ` <i>(*raw)</i>` : "";
-    const rawAmountBString = poolInfo.amountBIsRaw ? ` <i>(*raw)</i>` : "";
+    const rawAmountAString = poolInfo.amountAIsRaw ? " <i>(*raw)</i>" : "";
+    const rawAmountBString = poolInfo.amountBIsRaw ? " <i>(*raw)</i>" : "";
 
     infoString +=
       `<a href='${suiVisionCoinALink}'>${poolInfo.coinSymbolA || poolInfo.coinTypeA}</a>: ` +

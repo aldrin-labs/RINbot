@@ -9,7 +9,7 @@ const debug = createDebug("bot:dev");
 
 const PORT = (process.env.PORT && parseInt(process.env.PORT, 10)) || 3000;
 const VERCEL_URL = `${process.env.VERCEL_URL}`;
-//const VERCEL_URL = 'https://rinbot-dev.vercel.app'
+// const VERCEL_URL = 'https://rinbot-dev.vercel.app'
 
 const production = async (req: VercelRequest, res: VercelResponse, bot: Bot<BotContext>) => {
   debug("Bot runs in production mode");

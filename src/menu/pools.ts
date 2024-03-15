@@ -1,6 +1,5 @@
 import { Menu } from "@grammyjs/menu";
 import { ConversationId } from "../chains/conversations.config";
-import { ownedCetusPools } from "../chains/pools/cetus/get-owned-pools";
 import { ownedAftermathPools } from "../chains/sui.functions";
 import { BotContext } from "../types";
 

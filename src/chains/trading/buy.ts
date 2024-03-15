@@ -20,7 +20,7 @@ import {
   getRouteManager,
   getWalletManager,
   provider,
-  random_uuid,
+  randomUuid,
 } from "../sui.functions";
 import {
   extractCoinTypeFromLink,
@@ -46,7 +46,10 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     });
 
     await ctx.reply(
-      "Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
+      "Example of coin type format:\n" +
+        "<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\n" +
+        "Example of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/" +
+        "0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
       { parse_mode: "HTML" },
     );
 
@@ -63,7 +66,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
       if (!coinTypeIsValid && !suiScanLinkIsValid) {
         const replyText =
-          "Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.";
+          "Token address or suiscan link is not correct. Make sure inputed data is correct.\n\n" +
+          "You can enter a token address or a Suiscan link.";
 
         await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -85,7 +89,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
       if (fetchedCoin === null) {
         await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+          `Coin type not found. Make sure type "${coinType}" is correct.\n\n` +
+            "You can enter a coin type or a Suiscan link.",
           { reply_markup: closeConversation },
         );
 
@@ -97,7 +102,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
       if (tokenToBuyIsSui) {
-        await ctx.reply(`You cannot buy SUI for SUI. Please, specify another token to buy.`, {
+        await ctx.reply("You cannot buy SUI for SUI. Please, specify another token to buy.", {
           reply_markup: closeConversation,
         });
 
@@ -131,7 +136,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const priceOutput = await conversation.external(() => getPriceOutputData(resCoinType));
 
   await ctx.reply(
-    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}` +
+      "</code> SUI).\n\nExample: <code>0.1</code>",
     { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
@@ -161,7 +167,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    await ctx.reply("Initiating swap..." + random_uuid);
+    await ctx.reply("Initiating swap..." + randomUuid);
 
     validatedInputAmount = inputAmount;
     return true;
@@ -169,7 +175,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   // ts check
   if (validatedInputAmount === undefined) {
-    await ctx.reply(`Invalid coinType or inputAmount. Please try again or contact support.`, {
+    await ctx.reply("Invalid coinType or inputAmount. Please try again or contact support.", {
       reply_markup: retryButton,
     });
 
@@ -226,11 +232,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });
@@ -243,7 +249,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  await ctx.reply("Route for swap found, sending transaction..." + random_uuid);
+  await ctx.reply("Route for swap found, sending transaction..." + randomUuid);
 
   const resultOfSwap = await conversation.external(async () => {
     try {

@@ -6,7 +6,7 @@ import {
   transactionFromSerializedTransaction,
 } from "@avernikoz/rinbot-sui-sdk";
 import { BotContext, MyConversation } from "../types";
-import { TransactionResultStatus, provider, random_uuid } from "./sui.functions";
+import { TransactionResultStatus, provider, randomUuid } from "./sui.functions";
 import { SuiTransactionBlockResponse } from "./types";
 import { isTransactionSuccessful } from "./utils";
 
@@ -60,11 +60,11 @@ export async function getTransactionFromMethod<
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });
@@ -115,11 +115,11 @@ export async function getTransactionForStructuredResult<T extends (params: Param
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });

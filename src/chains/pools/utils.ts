@@ -29,7 +29,10 @@ export async function askForCoinInPool({
   );
 
   await ctx.reply(
-    "Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
+    "Example of coin type format:\n" +
+      "<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\n" +
+      "Example of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/" +
+      "0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
     { parse_mode: "HTML" },
   );
 
@@ -45,7 +48,8 @@ export async function askForCoinInPool({
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        "Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.";
+        "Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\n" +
+        "You can enter a coin type or a Suiscan link.";
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -110,7 +114,8 @@ export async function askForCoinInPool({
     return true;
   });
 
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinForPool(validatedCoin)) {
     await ctx.reply("Specified coin cannot be found.\n\nPlease, try again and specify another one.", {
@@ -138,7 +143,7 @@ export async function askForPoolPrice({
   secondCoin: CoinForPool;
 }): Promise<string | undefined> {
   await ctx.reply(
-    `Enter the <b>pool price</b>.\n\n<span class="tg-spoiler"><b>Hint</b>: pool price means how ` +
+    'Enter the <b>pool price</b>.\n\n<span class="tg-spoiler"><b>Hint</b>: pool price means how ' +
       `much <b>${secondCoin.symbol ?? secondCoin.type}</b> is needed to buy ` +
       `<b>1 ${firstCoin.symbol ?? firstCoin.type}</b></span>`,
     { parse_mode: "HTML", reply_markup: closeConversation },
@@ -163,7 +168,8 @@ export async function askForPoolPrice({
     const priceIsValid = priceNumber > 0 && priceNumber < Number.MAX_SAFE_INTEGER;
     if (!priceIsValid) {
       await ctx.reply(
-        "Pool price must meet the following conditions:\n<code>0</code> <b>&lt; price &lt;</b> <code>9007199254740991</code>.\n\nPlease, try again.",
+        "Pool price must meet the following conditions:\n<code>0</code> <b>&lt; price &lt;</b> " +
+          "<code>9007199254740991</code>.\n\nPlease, try again.",
         { reply_markup: closeConversation, parse_mode: "HTML" },
       );
 

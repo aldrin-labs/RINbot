@@ -18,7 +18,7 @@ export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExten
 
 export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
   try {
-    let data: PriceApiPayload = { data: [] };
+    const data: PriceApiPayload = { data: [] };
     allCoinsAssets.forEach((coin) => {
       data.data.push({ chainId: "sui", tokenAddress: coin.type });
     });

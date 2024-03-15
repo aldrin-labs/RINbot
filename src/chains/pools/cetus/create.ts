@@ -161,7 +161,7 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
 
   // ts check
   if (transactionResult === undefined) {
-    await ctx.reply(`Pool creation failed.`, { reply_markup: retryButton });
+    await ctx.reply("Pool creation failed.", { reply_markup: retryButton });
 
     return;
   }
@@ -176,7 +176,7 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
   await ctx.reply(
     `<a href="${getCetusPoolUrl(poolId)}"><b>Pool</b></a> is successfully created!\n\n` +
       `<b>Pool address</b>: <code>${poolId}</code>\n\n<b>Info</b>: trading on your pool will be ` +
-      `available within 5 minutes after adding liquidity to it.`,
+      "available within 5 minutes after adding liquidity to it.",
     { reply_markup: addLiquidityWithRetryButtons, parse_mode: "HTML" },
   );
 

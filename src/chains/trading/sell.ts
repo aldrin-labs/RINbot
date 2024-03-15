@@ -1,33 +1,32 @@
 import {
   CoinAssetData,
-  isValidTokenAddress,
   LONG_SUI_COIN_TYPE,
   SHORT_SUI_COIN_TYPE,
+  WalletManagerSingleton,
+  isValidTokenAddress,
   isValidTokenAmount,
   transactionFromSerializedTransaction,
-  WalletManagerSingleton,
 } from "@avernikoz/rinbot-sui-sdk";
 import closeConversation from "../../inline-keyboards/closeConversation";
 import { retryAndGoHomeButtonsData } from "../../inline-keyboards/retryConversationButtonsFactory";
-import { MyConversation, BotContext } from "../../types";
+import { BotContext, MyConversation } from "../../types";
 import { ConversationId } from "../conversations.config";
-import { getPriceApi } from "../priceapi.utils";
 import {
-  getWalletManager,
+  TransactionResultStatus,
   getCoinManager,
   getRouteManager,
-  random_uuid,
-  TransactionResultStatus,
+  getWalletManager,
   provider,
+  randomUuid,
 } from "../sui.functions";
 import {
-  isValidCoinLink,
   extractCoinTypeFromLink,
-  swapTokenTypesAreEqual,
   findCoinInAssets,
+  getPriceOutputData,
   isCoinAssetData,
   isTransactionSuccessful,
-  getPriceOutputData,
+  isValidCoinLink,
+  swapTokenTypesAreEqual,
 } from "../utils";
 
 export async function sell(conversation: MyConversation, ctx: BotContext): Promise<void> {
@@ -54,7 +53,10 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
   });
 
   await ctx.reply(
-    "Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
+    "Example of coin type format:\n" +
+      "<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\n" +
+      "Example of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/" +
+      "0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
     { parse_mode: "HTML" },
   );
 
@@ -79,7 +81,8 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        "Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.";
+        "Token address or suiscan link is not correct. Make sure inputed data is correct.\n\n" +
+        "You can enter a token address or a Suiscan link.";
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -121,7 +124,7 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
       swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
 
     if (tokenToSellIsSui) {
-      await ctx.reply(`You cannot sell SUI for SUI. Please, specify another token to sell.`, {
+      await ctx.reply("You cannot sell SUI for SUI. Please, specify another token to sell.", {
         reply_markup: closeConversation,
       });
 
@@ -142,7 +145,8 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
     return true;
   });
 
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type
+  // checking for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinAssetData(validatedCoin)) {
     await ctx.reply("Token is not found in your wallet assets. Please, specify another token to sell.", {
@@ -157,7 +161,8 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
   const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell));
 
   await ctx.reply(
-    `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}` +
+      `</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
@@ -240,11 +245,11 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });
@@ -257,7 +262,7 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
     return;
   }
 
-  await ctx.reply("Route for swap found, sending transaction..." + random_uuid);
+  await ctx.reply("Route for swap found, sending transaction..." + randomUuid);
 
   const resultOfSwap: {
     digest?: string;

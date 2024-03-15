@@ -19,7 +19,7 @@ export async function showGlobalStats(ctx: BotContext) {
     .toFormat();
   const winningTickets = globalStats.winningTickets.toString();
   const generalSuccessRate = new BigNumber(winningTickets).dividedBy(allTickets).multipliedBy(100).toFixed(2);
-  const generalSuccessRateString = isNaN(+generalSuccessRate) ? `-` : `${generalSuccessRate}%`;
+  const generalSuccessRateString = isNaN(+generalSuccessRate) ? "-" : `${generalSuccessRate}%`;
   const pricePoolBalance = new BigNumber(globalStats.balanceLeft.toString())
     .dividedBy(10 ** new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber())
     .toFormat();

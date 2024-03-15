@@ -61,7 +61,7 @@ export async function buySurfdogTickets(conversation: MyConversation, ctx: BotCo
       lookingMessage.chat.id,
       lookingMessage.message_id,
       `Your <b>SUI</b> balance is <b>${suiBalance} SUI</b>. You need at least <b>${ticketPriceWithGasBudget} ` +
-        `SUI</b> to buy 1 ticket.\n\nPlease, top up your <b>SUI</b> balance.`,
+        "SUI</b> to buy 1 ticket.\n\nPlease, top up your <b>SUI</b> balance.",
       { reply_markup: retryButton, parse_mode: "HTML" },
     );
 
@@ -98,7 +98,7 @@ export async function buySurfdogTickets(conversation: MyConversation, ctx: BotCo
 
     if (!amountIsValid) {
       await ctx.reply(
-        `<b>Tickets count</b> must be at least <code>1</code>. Maximum available <b>tickets count</b> ` +
+        "<b>Tickets count</b> must be at least <code>1</code>. Maximum available <b>tickets count</b> " +
           `to buy is <code>${maxTicketsCount}</code>.\n\nPlease, try again.`,
         { reply_markup: closeSurfdogConversation, parse_mode: "HTML" },
       );

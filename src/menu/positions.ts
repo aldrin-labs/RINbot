@@ -3,7 +3,7 @@ import { Menu } from "@grammyjs/menu";
 import { home } from "../chains/sui.functions";
 import { BotContext } from "../types";
 
-let currentTokenIndex: number = 0;
+let currentTokenIndex = 0;
 let currentToken: CoinAssetData;
 
 function nextToken(assets: CoinAssetData[]) {
@@ -24,7 +24,7 @@ function prevToken(assets: CoinAssetData[]) {
   currentToken = assets[currentTokenIndex];
 }
 
-const positions_menu = new Menu<BotContext>("positions-menu")
+const positionsMenu = new Menu<BotContext>("positions-menu")
   .text("Sell", async (ctx) => {
     ctx.session.step = "sell";
     await ctx.conversation.enter("sell");
@@ -63,4 +63,4 @@ const positions_menu = new Menu<BotContext>("positions-menu")
     await home(ctx);
   });
 
-export default positions_menu;
+export default positionsMenu;

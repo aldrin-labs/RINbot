@@ -5,7 +5,7 @@ import { SuiTransactionBlockResponse } from "./types";
  * Validates the coin name to be a non-empty string.
  *
  * @param {string} coinName - The coin name to validate.
- * @returns {boolean} - Returns true if the coin name is valid, otherwise false.
+ * @return {boolean} - Returns true if the coin name is valid, otherwise false.
  */
 export function validateCoinName(coinName: string): boolean {
   return typeof coinName === "string" && coinName.trim() !== "";
@@ -27,7 +27,7 @@ export function validateCoinSymbol(coinSymbol: string): boolean {
  * Validates the coin description to be a string.
  *
  * @param {string} coinDescription - The coin description to validate.
- * @returns {boolean} - Returns true if the coin description is a string, otherwise false.
+ * @return {boolean} - Returns true if the coin description is a string, otherwise false.
  */
 export function validateCoinDescription(coinDescription: string): boolean {
   return typeof coinDescription === "string";
@@ -58,7 +58,7 @@ export function validateTotalSupply(totalSupply: string, maxTotalSupply: BigNumb
  * Validates the coin decimals based on the specified pattern.
  *
  * @param {string} coinDecimals - The coin decimals to validate (as a string).
- * @returns {boolean} - Returns true if the coin decimals are a valid integer, otherwise false.
+ * @return {boolean} - Returns true if the coin decimals are a valid integer, otherwise false.
  */
 export function validateCoinDecimals(coinDecimals: string): boolean {
   // Convert the string to an integer
@@ -78,7 +78,7 @@ export function validateCoinDecimals(coinDecimals: string): boolean {
  * Calculate the maximum total supply based on decimals.
  *
  * @param {number} decimals - The number of decimals for the token.
- * @returns {BigNumber} The maximum total supply.
+ * @return {BigNumber} The maximum total supply.
  */
 export function calculateMaxTotalSupply(decimals: string): BigNumber {
   const pow = 19 - parseInt(decimals);
@@ -91,7 +91,7 @@ export function calculateMaxTotalSupply(decimals: string): BigNumber {
  * Retrieves the coin type from the transaction result.
  *
  * @param {SuiTransactionBlockResponse} transactionResult - The transaction result to extract the coin type from.
- * @returns {string} The coin type extracted from the transaction result.
+ * @return {string} The coin type extracted from the transaction result.
  * @throws {Error} Throws an error if the required object changes are not found in the transaction result.
  */
 export function getCoinTypeFromTransactionResult(transactionResult: SuiTransactionBlockResponse): string {

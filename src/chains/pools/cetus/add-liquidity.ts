@@ -79,7 +79,8 @@ export async function addCetusLiquidity(conversation: MyConversation, ctx: BotCo
   });
 
   // TODO: Add type guard
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (foundPool === null) {
     await ctx.reply("Pool address is not valid. Please, try again or contact support.", { reply_markup: retryButton });
@@ -254,7 +255,7 @@ export async function addCetusLiquidity(conversation: MyConversation, ctx: BotCo
     const { amountA, amountB } = exactAmounts;
 
     await ctx.reply(
-      `You are about to add liquidity to the pool with the following assets:` +
+      "You are about to add liquidity to the pool with the following assets:" +
         `\n<code>${amountA}</code> <b>${coinASymbol}</b>\n` +
         `<code>${amountB}</code> <b>${coinBSymbol}</b>?`,
       { reply_markup: yesOrNo, parse_mode: "HTML" },
@@ -351,13 +352,13 @@ export async function addCetusLiquidity(conversation: MyConversation, ctx: BotCo
 
   // ts check
   if (transactionResult === undefined) {
-    await ctx.reply(`Failed to add liquidity.`, { reply_markup: retryButton });
+    await ctx.reply("Failed to add liquidity.", { reply_markup: retryButton });
 
     return;
   }
 
   await ctx.reply(
-    `Liquidity is successfully added to the pool!\n\n<a href=` +
+    "Liquidity is successfully added to the pool!\n\n<a href=" +
       `"${getCetusPoolUrl(poolToAddLiquidity.poolAddress)}"><b>Pool</b></a>\n` +
       `<a href="${getSuiVisionTransactionLink(transactionResult.digest)}"><b>Transaction</b></a>`,
     { reply_markup: retryButton, parse_mode: "HTML" },

@@ -1,4 +1,4 @@
-import { Context, MiddlewareFn } from "grammy";
+import { MiddlewareFn } from "grammy";
 import { TIMEOUT_GRAMMY_MIDDLEWARE, TIMEOUT_MESSAGE } from "../config/timeout.config";
 import { BotContext } from "../types";
 
@@ -25,7 +25,7 @@ async function withTimeout(action: () => Promise<void>, timeout: number, timeout
  * Middleware to control execution time with timeout.
  * @param {Context<BotContext>} ctx - The context object representing the current state of the bot.
  * @param {MiddlewareFn<BotContext>} next - The next middleware or handler in the chain.
- * @returns {Promise<void>} - A Promise that resolves when the middleware completes its execution.
+ * @return {Promise<void>} - A Promise that resolves when the middleware completes its execution.
  */
 export const timeoutMiddleware: MiddlewareFn<BotContext> = async (ctx, next) => {
   try {

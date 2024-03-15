@@ -29,10 +29,10 @@ export async function showUserTickets(ctx: BotContext) {
   const allTickets = userTickets.allTickets.toString();
   const wonTickets = userTickets.wonTickets.toString();
   const successRate = new BigNumber(wonTickets).dividedBy(allTickets).multipliedBy(100).toFixed(2);
-  const successRateString = isNaN(+successRate) ? `-` : `${successRate}%`;
+  const successRateString = isNaN(+successRate) ? "-" : `${successRate}%`;
   const wonPrize = tokensPerTicket.multipliedBy(wonTickets).toFormat();
 
-  let userTicketsString = `<b>Your Tickets</b>:\n\n`;
+  let userTicketsString = "<b>Your Tickets</b>:\n\n";
   userTicketsString += `<b>Bought tickets</b>: ${allTickets}\n`;
   userTicketsString += `<b>Winning tickets</b>: ${wonTickets}\n`;
   userTicketsString += `<b>Success rate</b>: ${successRateString}\n`;
