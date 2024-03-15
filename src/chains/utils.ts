@@ -224,12 +224,19 @@ export function findCoinInAssets(
   );
 }
 
+function isExponential(num: number): boolean {
+  const numStr = num.toString();
+  return numStr.includes('e') || numStr.includes('E');
+}
+
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;
   if (isCoinAssetData(validCoin)){
     const priceApiGetResponse = await getPriceApi('sui', validCoin.type);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
+      if(isExponential(price))
+        price = +price.toFixed(10)
       return `You are selling <code>${validCoin.type}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
       // Handle case where price data is not available but the request did not fail
@@ -240,6 +247,8 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
     const priceApiGetResponse = await getPriceApi('sui', validCoin);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
+      if(isExponential(price))
+        price = +price.toFixed(10)
       return `You are buying <code>${validCoin}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
       // Handle case where price data is not available but the request did not fail
