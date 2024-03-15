@@ -167,10 +167,7 @@ export async function sell(
 
   const validCoinToSell = validatedCoin as CoinAssetData;
 
-  let priceOutput = '';
-
-  if (validCoinToSell !== undefined) 
-    priceOutput = await getPriceOutputData(validCoinToSell)
+  const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
