@@ -1,13 +1,16 @@
 import { Menu, MenuRange } from '@grammyjs/menu';
+import { ConversationId } from '../chains/conversations.config';
+import { showFeesPage } from '../chains/fees/showFeesPage';
+import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 import { assets, nftHome } from '../chains/sui.functions';
+import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
 import alerts_menu from './alerts';
 import buy_menu from './buy';
+import feesMenu from './fees';
 import help_menu from './help';
 import launchpadMenu from './launchpad/launchpad';
-import globalStatsMenu from './launchpad/surfdog/globalStats';
-import surfdogMenu from './launchpad/surfdog/main';
 import { nft_exit_menu, nft_menu } from './nft';
 import poolsMenu from './pools';
 import positions_menu from './positions';
@@ -16,9 +19,6 @@ import settings_menu from './settings';
 import wallet_menu from './wallet';
 import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
-import { ConversationId } from '../chains/conversations.config';
-import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
-import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -63,9 +63,13 @@ const menu = new Menu<BotContext>('main')
       { parse_mode: 'HTML', reply_markup: goHome },
     );
   })
-  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   // .row()
   // .text('Aldrin Bridge')
+  .text('Fees', async (ctx) => {
+    await showFeesPage(ctx);
+  })
+  .row()
+  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const {
       isUserEligibleToGetBonus,
@@ -78,7 +82,7 @@ const menu = new Menu<BotContext>('main')
       !isUserClaimedBonus &&
       (isUserAgreeWithBonus === null || isUserAgreeWithBonus === true)
     ) {
-      if(ENABLE_WELCOME_BONUS)
+      if (ENABLE_WELCOME_BONUS)
         range.row().text('Claim Free SUI', async (ctx: BotContext) => {
           await ctx.conversation.enter(ConversationId.WelcomeBonus);
         });
@@ -98,5 +102,6 @@ menu.register(deposit_menu, 'wallet-menu');
 menu.register(withdraw_menu, 'wallet-menu');
 menu.register(poolsMenu);
 menu.register(launchpadMenu);
+menu.register(feesMenu);
 
 export default menu;

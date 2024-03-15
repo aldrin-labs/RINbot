@@ -21,6 +21,10 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  WELCOME_BONUS_AMOUNT,
+  WELCOME_BONUS_MIN_TRADES_LIMIT,
+} from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -42,6 +46,7 @@ import {
   validateCoinSymbol,
   validateTotalSupply,
 } from './createCoin.utils';
+import { getUserFeePercentage } from './fees/utils';
 import {
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
   SUI_PROVIDER_URL,
@@ -62,10 +67,6 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import {
-  WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT
-} from '../config/bot.config';
 import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
 
 export enum TransactionResultStatus {

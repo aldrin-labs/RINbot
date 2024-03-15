@@ -46,14 +46,30 @@ export interface CoinAssetDataExtended extends CoinAssetData{
 }
 
 export interface SessionData {
-  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';  // which step of the form we are on
+  step:
+    | 'main'
+    | 'buy'
+    | 'sell'
+    | 'positions'
+    | 'wallet'
+    | 'wallet-deposit'
+    | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
-  assets: CoinAssetDataExtended[];
-  welcomeBonus: { amount: number, isUserEligibleToGetBonus: boolean, isUserAgreeWithBonus: boolean | null, isUserClaimedBonus: boolean | null }
-  tradesCount: number
-  createdAt: number
+  assets: CoinAssetData[];
+  welcomeBonus: {
+    amount: number;
+    isUserEligibleToGetBonus: boolean;
+    isUserAgreeWithBonus: boolean | null;
+    isUserClaimedBonus: boolean | null;
+  };
+  tradesCount: number;
+  createdAt: number;
+  tradeCoin: {
+    coinType: string;
+    useSpecifiedCoin: boolean;
+  };
 }
 
 export type BotContext = Context &

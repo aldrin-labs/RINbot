@@ -201,6 +201,10 @@ export function getSuiVisionCoinLink(coinType: string) {
   return `https://suivision.xyz/coin/${coinType}`;
 }
 
+export function getSuiScanCoinLink(coinType: string) {
+  return `https://suiscan.xyz/mainnet/coin/${coinType}`;
+}
+
 export function getCetusPoolUrl(poolId: string) {
   return `https://app.cetus.zone/liquidity/deposit?poolAddress=${poolId}`;
 }
