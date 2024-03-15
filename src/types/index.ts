@@ -1,9 +1,6 @@
-import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import {
-  type Conversation,
-  type ConversationFlavor,
-} from '@grammyjs/conversations';
-import { Context, SessionFlavor } from 'grammy';
+import { CoinAssetData } from "@avernikoz/rinbot-sui-sdk";
+import { type Conversation, type ConversationFlavor } from "@grammyjs/conversations";
+import { Context, SessionFlavor } from "grammy";
 
 export interface AxiosPriceApiResponseGet {
   data: {
@@ -16,11 +13,11 @@ export interface AxiosPriceApiResponseGet {
     priceChange1h: number;
     priceChange24h: number;
     fecthedFrom: string;
-  }
+  };
 }
 
 export interface AxiosPriceApiResponsePost {
-  data : {
+  data: {
     chainId: string;
     tokenAddress: string;
     timestamp: number;
@@ -30,30 +27,23 @@ export interface AxiosPriceApiResponsePost {
     priceChange1h: number;
     priceChange24h: number;
     fecthedFrom: string;
-  }[]
+  }[];
 }
 
 export interface PriceApiPayload {
   data: {
-    chainId: string,
-    tokenAddress: string
-  }[]
+    chainId: string;
+    tokenAddress: string;
+  }[];
 }
 
-export interface CoinAssetDataExtended extends CoinAssetData{
+export interface CoinAssetDataExtended extends CoinAssetData {
   price?: number;
   timestamp?: number;
 }
 
 export interface SessionData {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
+  step: "main" | "buy" | "sell" | "positions" | "wallet" | "wallet-deposit" | "nft-menu"; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
@@ -72,8 +62,6 @@ export interface SessionData {
   };
 }
 
-export type BotContext = Context &
-  SessionFlavor<SessionData> &
-  ConversationFlavor;
+export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
 
 export type MyConversation = Conversation<BotContext>;

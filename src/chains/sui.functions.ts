@@ -17,26 +17,23 @@ import {
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction
-} from '@avernikoz/rinbot-sui-sdk';
-import BigNumber from 'bignumber.js';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT,
-} from '../config/bot.config';
-import { getRedisClient } from '../config/redis.config';
-import closeConversation from '../inline-keyboards/closeConversation';
-import continueKeyboard from '../inline-keyboards/continue';
-import goHome from '../inline-keyboards/goHome';
-import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
-import skip from '../inline-keyboards/skip';
-import yesOrNo from '../inline-keyboards/yesOrNo';
-import menu from '../menu/main';
-import { nft_menu } from '../menu/nft';
-import positions_menu from '../menu/positions';
-import { BotContext, MyConversation, PriceApiPayload } from '../types';
-import { ConversationId } from './conversations.config';
+  transactionFromSerializedTransaction,
+} from "@avernikoz/rinbot-sui-sdk";
+import BigNumber from "bignumber.js";
+import { v4 as uuidv4 } from "uuid";
+import { WELCOME_BONUS_AMOUNT, WELCOME_BONUS_MIN_TRADES_LIMIT } from "../config/bot.config";
+import { getRedisClient } from "../config/redis.config";
+import closeConversation from "../inline-keyboards/closeConversation";
+import continueKeyboard from "../inline-keyboards/continue";
+import goHome from "../inline-keyboards/goHome";
+import { retryAndGoHomeButtonsData } from "../inline-keyboards/retryConversationButtonsFactory";
+import skip from "../inline-keyboards/skip";
+import yesOrNo from "../inline-keyboards/yesOrNo";
+import menu from "../menu/main";
+import { nft_menu } from "../menu/nft";
+import positions_menu from "../menu/positions";
+import { BotContext, MyConversation, PriceApiPayload } from "../types";
+import { ConversationId } from "./conversations.config";
 import {
   calculateMaxTotalSupply,
   getCoinTypeFromTransactionResult,
@@ -45,13 +42,10 @@ import {
   validateCoinName,
   validateCoinSymbol,
   validateTotalSupply,
-} from './createCoin.utils';
-import { getUserFeePercentage } from './fees/utils';
-import {
-  SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
-  SUI_PROVIDER_URL,
-} from './sui.config';
-import { SuiTransactionBlockResponse } from './types';
+} from "./createCoin.utils";
+import { getUserFeePercentage } from "./fees/utils";
+import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from "./sui.config";
+import { SuiTransactionBlockResponse } from "./types";
 import {
   extractCoinTypeFromLink,
   findCoinInAssets,
@@ -65,16 +59,16 @@ import {
   isValidCoinLink,
   sleep,
   swapTokenTypesAreEqual,
-} from './utils';
+} from "./utils";
 
-import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from "./priceapi.utils";
 
 export enum TransactionResultStatus {
-  Success = 'success',
-  Failure = 'failure',
+  Success = "success",
+  Failure = "failure",
 }
 
-export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
+export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : "";
 
 export const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
@@ -139,17 +133,9 @@ export const getAftermath = async () => {
 
 export const getCoinManager = async () => {
   console.time(`CoinManagerSingleton.getInstance ${random_uuid}`);
-  const providers = await Promise.all([
-    getAftermath(),
-    getCetus(),
-    getTurbos(),
-    getFlowx(),
-  ]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
 
-  const coinManager = CoinManagerSingleton.getInstance(
-    providers,
-    SUI_PROVIDER_URL,
-  );
+  const coinManager = CoinManagerSingleton.getInstance(providers, SUI_PROVIDER_URL);
   console.timeEnd(`CoinManagerSingleton.getInstance ${random_uuid}`);
 
   return coinManager;
@@ -159,10 +145,7 @@ export const getWalletManager = async () => {
   // console.time(`WalletManagerSingleton.getInstance.${random_uuid}`)
   const coinManager = await getCoinManager();
 
-  const walletManager = WalletManagerSingleton.getInstance(
-    provider,
-    coinManager,
-  );
+  const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
   // console.timeEnd(`WalletManagerSingleton.getInstance.${random_uuid}`)
 
   return walletManager;
@@ -171,30 +154,20 @@ export const getWalletManager = async () => {
 export const getRouteManager = async () => {
   // console.time(`RouteManager.getInstance.${random_uuid}`)
   const coinManager = await getCoinManager();
-  const providers = await Promise.all([
-    getAftermath(),
-    getCetus(),
-    getTurbos(),
-    getFlowx(),
-  ]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
   // console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
   return routerManager;
 };
 
-export async function exportPrivateKey(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function exportPrivateKey(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const {
     welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
     tradesCount,
   } = ctx.session;
   const isUserNotEligibleToExportPrivateKey =
-    isUserAgreeWithBonus &&
-    isUserClaimedBonus &&
-    tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
+    isUserAgreeWithBonus && isUserClaimedBonus && tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
 
   if (isUserNotEligibleToExportPrivateKey) {
     await ctx.reply(
@@ -205,35 +178,30 @@ export async function exportPrivateKey(
     return;
   }
 
-  await ctx.reply(
-    `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+  await ctx.reply(`Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`, {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
-  const messageData = await conversation.waitFor(':text');
-  const isExportConfirmed = messageData.msg.text === 'CONFIRM';
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
+  const messageData = await conversation.waitFor(":text");
+  const isExportConfirmed = messageData.msg.text === "CONFIRM";
 
   if (!isExportConfirmed) {
-    await ctx.reply(
-      `You've not typed CONFIRM. Ignoring your request of exporting private key.`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`You've not typed CONFIRM. Ignoring your request of exporting private key.`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
   await ctx.reply(
     `Your private key is: <span class="tg-spoiler">${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
-    { parse_mode: 'HTML', reply_markup: goHome },
+    { parse_mode: "HTML", reply_markup: goHome },
   );
 }
 
-export async function withdraw(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function withdraw(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const {
     welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
     tradesCount,
@@ -246,14 +214,13 @@ export async function withdraw(
     );
   }
 
-  await ctx.reply(
-    `Please, type the address to which you would like to send your SUI.`,
-    { reply_markup: closeConversation },
-  );
+  await ctx.reply(`Please, type the address to which you would like to send your SUI.`, {
+    reply_markup: closeConversation,
+  });
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
 
   const messageData = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
@@ -266,10 +233,9 @@ export async function withdraw(
     const addressIsValid = isValidSuiAddress(destinationSuiAddress);
 
     if (!addressIsValid) {
-      await ctx.reply(
-        `Destination wallet address is not correct.\n\nPlease, try again.`,
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply(`Destination wallet address is not correct.\n\nPlease, try again.`, {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -280,16 +246,14 @@ export async function withdraw(
 
   // ts check
   if (destinationSuiAddress === undefined) {
-    await ctx.reply(
-      `Destination wallet address is not correct.\n\nCannot continue.`,
-      { reply_markup: closeConversation },
-    );
+    await ctx.reply(`Destination wallet address is not correct.\n\nCannot continue.`, {
+      reply_markup: closeConversation,
+    });
     return;
   }
 
   const walletManager = await getWalletManager();
-  let { availableAmount, totalGasFee } =
-    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+  let { availableAmount, totalGasFee } = await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
 
   // Decrease available amount in case user participate in the welcome bonus program
   availableAmount = isUserUsedWelcomeBonus
@@ -308,11 +272,11 @@ export async function withdraw(
 
   await ctx.reply(
     `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+    { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
   const amountData = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
@@ -329,10 +293,7 @@ export async function withdraw(
     });
 
     if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, { reply_markup: closeConversation });
 
       return false;
     }
@@ -349,7 +310,7 @@ export async function withdraw(
     return;
   }
 
-  await ctx.reply('Initiating withdrawal...');
+  await ctx.reply("Initiating withdrawal...");
   let tx;
 
   try {
@@ -363,60 +324,48 @@ export async function withdraw(
     console.error(error);
 
     if (error instanceof Error) {
-      console.error(
-        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-      );
+      console.error(`[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`);
     } else {
-      console.error(
-        `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-      );
+      console.error(`[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`);
     }
 
-    await ctx.reply('Transaction creation failed :(', {
+    await ctx.reply("Transaction creation failed :(", {
       reply_markup: retryButton,
     });
 
     return;
   }
 
-  await ctx.reply('Sending withdraw transaction...');
+  await ctx.reply("Sending withdraw transaction...");
 
   try {
     const res = await provider.signAndExecuteTransactionBlock({
       transactionBlock: tx,
-      signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-        ctx.session.privateKey,
-      ),
+      signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
       options: {
         showEffects: true,
       },
     });
 
-    if (res.effects?.status.status === 'failure') {
-      await ctx.reply(
-        `Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`,
-        { reply_markup: retryButton },
-      );
+    if (res.effects?.status.status === "failure") {
+      await ctx.reply(`Withdraw failed :(\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`, {
+        reply_markup: retryButton,
+      });
 
       return;
     }
 
-    await ctx.reply(
-      `Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Withdraw successful!\n\nhttps://suiscan.xyz/mainnet/tx/${res.digest}`, {
+      reply_markup: retryButton,
+    });
   } catch (error) {
     if (error instanceof Error) {
-      console.error(
-        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-      );
+      console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
     } else {
-      console.error(
-        `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-      );
+      console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
     }
 
-    await ctx.reply('Transaction sending failed :(', {
+    await ctx.reply("Transaction sending failed :(", {
       reply_markup: retryButton,
     });
 
@@ -426,10 +375,8 @@ export async function withdraw(
 
 export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
-  const availableBalance = await walletManager.getAvailableSuiBalance(
-    ctx.session.publicKey,
-  );
-  return availableBalance
+  const availableBalance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
+  return availableBalance;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
@@ -441,25 +388,23 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    let allCoinsAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
+    let allCoinsAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
     ctx.session.assets = allCoinsAssets;
-    let data: PriceApiPayload = {data: []}
-    allCoinsAssets.forEach(coin => {
+    let data: PriceApiPayload = { data: [] };
+    allCoinsAssets.forEach((coin) => {
       //move to price api
-      data.data.push({chainId: "sui", tokenAddress: coin.type})
-    })
+      data.data.push({ chainId: "sui", tokenAddress: coin.type });
+    });
     try {
-      const priceApiReponse = await postPriceApi(allCoinsAssets)
-      if(priceApiReponse !== undefined)
+      const priceApiReponse = await postPriceApi(allCoinsAssets);
+      if (priceApiReponse !== undefined)
         allCoinsAssets = allCoinsAssets.map((coin, index) => ({
           ...coin,
-          price: priceApiReponse.data.data[index].price
+          price: priceApiReponse.data.data[index].price,
         }));
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
 
     if (allCoinsAssets?.length === 0) {
@@ -467,21 +412,21 @@ export async function assets(ctx: BotContext): Promise<void> {
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
-      
-      const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+      const balance =
+        isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null
+          ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>`
+          : `<b>${el.balance} ${el.symbol}</b>`;
 
-      acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
-      );
+      acc = acc.concat(`Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`);
 
       return acc;
-    }, '');
+    }, "");
     await ctx.reply(`<b>Your tokens:</b> \n\n${assetsString}`, {
       reply_markup: positions_menu,
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
     });
   } catch (e) {
-    ctx.reply('Failed to fetch assets. Please, try again.', {
+    ctx.reply("Failed to fetch assets. Please, try again.", {
       reply_markup: goHome,
     });
   }
@@ -500,148 +445,140 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
   let price;
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
-    price = priceApiGetResponse?.data.data.price
+    const priceApiGetResponse = await getPriceApi("sui", "0x2::sui::SUI");
+    price = priceApiGetResponse?.data.data.price;
   } catch (error) {
-    console.error(error)
-    price = undefined
+    console.error(error);
+    price = undefined;
   }
-  const balance_usd = calculate(userBalance, price)
-  const avl_balance_usd = calculate(avl_balance, price)
+  const balance_usd = calculate(userBalance, price);
+  const avl_balance_usd = calculate(avl_balance, price);
 
   let totalBalanceStr: string;
 
   try {
-      const data: PriceApiPayload = {data: []}
-      const allCoinAssets = ctx.session.assets
-      allCoinAssets.forEach(coin => {
-        //move to price api
-        data.data.push({chainId: "sui", tokenAddress: coin.type})
-      })
+    const data: PriceApiPayload = { data: [] };
+    const allCoinAssets = ctx.session.assets;
+    allCoinAssets.forEach((coin) => {
+      //move to price api
+      data.data.push({ chainId: "sui", tokenAddress: coin.type });
+    });
 
-      const response = await postPriceApi(allCoinAssets);
+    const response = await postPriceApi(allCoinAssets);
 
-      const coinsPriceApi = response?.data.data;
+    const coinsPriceApi = response?.data.data;
 
-      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]));
 
-      let balance = 0;
-      allCoinAssets.forEach(coin => {
-        const price = priceMap.get(coin.type);
-        if (price !== undefined) {
-          balance += +coin.balance * price;
-        }
-      });
+    let balance = 0;
+    allCoinAssets.forEach((coin) => {
+      const price = priceMap.get(coin.type);
+      if (price !== undefined) {
+        balance += +coin.balance * price;
+      }
+    });
 
-      totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
-    
-    } catch (error) {
-      console.error('Error in calculating total balance: ', error)
-      totalBalanceStr = ''
-    }
+    totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
+  } catch (error) {
+    console.error("Error in calculating total balance: ", error);
+    totalBalanceStr = "";
+  }
 
-  const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
-  const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
+  const balanceSUIdStr =
+    balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`;
+  const avlBalanceSUIdStr =
+    avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`;
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
-  await ctx.replyWithPhoto(
-    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
-    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
-  );
+  await ctx.replyWithPhoto("https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg", {
+    caption: welcome_text,
+    reply_markup: menu,
+    parse_mode: "HTML",
+  });
 }
 export async function nftHome(ctx: BotContext) {
-  await ctx.reply(
-    '<b>Welcome to NFT menu!</b>\n\nPlease check the options below.',
-    { parse_mode: 'HTML', reply_markup: nft_menu },
-  );
+  await ctx.reply("<b>Welcome to NFT menu!</b>\n\nPlease check the options below.", {
+    parse_mode: "HTML",
+    reply_markup: nft_menu,
+  });
 }
 
 // TODO: refactor code to move boilerplate code
-export async function createAftermathPool(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function createAftermathPool(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const closeButton = closeConversation.inline_keyboard[0];
-  const continueWithCloseKeyboard = continueKeyboard
-    .clone()
-    .add(...closeButton);
+  const continueWithCloseKeyboard = continueKeyboard.clone().add(...closeButton);
 
   await ctx.reply(
-    '<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI ' +
-      'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
-      'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
-      'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
-      'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
-      'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
-    { reply_markup: continueWithCloseKeyboard, parse_mode: 'HTML' },
+    "<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI " +
+      "deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to " +
+      "create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your " +
+      "pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be " +
+      "bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, " +
+      "or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.",
+    { reply_markup: continueWithCloseKeyboard, parse_mode: "HTML" },
   );
 
-  const continueContext = await conversation.waitFor('callback_query:data');
+  const continueContext = await conversation.waitFor("callback_query:data");
   const continueCallbackQueryData = continueContext.callbackQuery.data;
 
-  if (continueCallbackQueryData === 'close-conversation') {
+  if (continueCallbackQueryData === "close-conversation") {
     await conversation.skip();
   }
-  if (continueCallbackQueryData === 'continue') {
+  if (continueCallbackQueryData === "continue") {
     await continueContext.answerCallbackQuery();
   } else {
-    await ctx.reply('Please, choose the button.', {
+    await ctx.reply("Please, choose the button.", {
       reply_markup: closeConversation,
     });
 
     await conversation.skip({ drop: true });
   }
 
-  await ctx.reply(
-    'What would be <b>the first coin</b> in pool? Please send a coin type or a link to suiscan.',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+  await ctx.reply("What would be <b>the first coin</b> in pool? Please send a coin type or a link to suiscan.", {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
-    { parse_mode: 'HTML' },
+    "Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
+    { parse_mode: "HTML" },
   );
 
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
-    const coinAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
+    const coinAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
     return coinAssets;
   });
 
   let firstValidatedCoin: CoinAssetData | null = null;
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
-    const possibleCoin = (ctx.msg?.text || '').trim();
+    const possibleCoin = (ctx.msg?.text || "").trim();
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.';
+        "Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.";
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
       return false;
     }
 
-    const coinType: string | null = coinTypeIsValid
-      ? possibleCoin
-      : extractCoinTypeFromLink(possibleCoin);
+    const coinType: string | null = coinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin);
 
     // ts check
     if (coinType === null) {
       await ctx.reply(
-        'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.',
+        "Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.",
         { reply_markup: closeConversation },
       );
       return false;
@@ -661,10 +598,9 @@ export async function createAftermathPool(
     const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
-      await ctx.reply(
-        'Coin is not found in your wallet assets. Please, specify another coin to add in pool.',
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply("Coin is not found in your wallet assets. Please, specify another coin to add in pool.", {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -676,32 +612,29 @@ export async function createAftermathPool(
   // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinAssetData(firstValidatedCoin)) {
-    await ctx.reply(
-      'Coin is not found in your wallet assets. Please, specify another coin to add in pool.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply("Coin is not found in your wallet assets. Please, specify another coin to add in pool.", {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
   const firstValidatedCoinToAdd = firstValidatedCoin as CoinAssetData;
-  console.debug('firstValidatedCoinToAdd:', firstValidatedCoinToAdd);
+  console.debug("firstValidatedCoinToAdd:", firstValidatedCoinToAdd);
   const firstCoinIsSui: boolean =
     swapTokenTypesAreEqual(firstValidatedCoinToAdd.type, LONG_SUI_COIN_TYPE) ||
     swapTokenTypesAreEqual(firstValidatedCoinToAdd.type, SHORT_SUI_COIN_TYPE);
   const firstCoinHasPrice = await conversation.external(async () =>
     AftermathSingleton.coinHasPrice(firstValidatedCoinToAdd.type),
   );
-  console.debug('firstCoinHasPrice:', firstCoinHasPrice);
+  console.debug("firstCoinHasPrice:", firstCoinHasPrice);
 
   let availableFirstCoinMaxAmount: string;
   if (firstCoinIsSui) {
     const availableBalance = await conversation.external(async () => {
       const walletManager = await getWalletManager();
       // TODO: Maybe we should add try/catch here as well
-      const balance = await walletManager.getAvailableSuiBalance(
-        ctx.session.publicKey,
-      );
+      const balance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
 
       return balance;
     });
@@ -710,58 +643,52 @@ export async function createAftermathPool(
   } else {
     availableFirstCoinMaxAmount = firstValidatedCoinToAdd.balance;
   }
-  console.debug('availableFirstCoinMaxAmount:', availableFirstCoinMaxAmount);
+  console.debug("availableFirstCoinMaxAmount:", availableFirstCoinMaxAmount);
 
   await ctx.reply(
     `Reply with the amount you wish to add in pool (<code>0</code> - <code>${availableFirstCoinMaxAmount}</code> ${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type}).\n\nExample: <code>0.1</code>`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+    { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
-  const firstValidatedInputAmountMessage = await conversation.waitUntil(
-    async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
-        return false;
-      }
+  const firstValidatedInputAmountMessage = await conversation.waitUntil(async (ctx) => {
+    if (ctx.callbackQuery?.data === "close-conversation") {
+      return false;
+    }
 
-      const inputAmount = ctx.msg?.text;
+    const inputAmount = ctx.msg?.text;
 
-      // ts check
-      if (inputAmount === undefined) {
-        return false;
-      }
+    // ts check
+    if (inputAmount === undefined) {
+      return false;
+    }
 
-      const decimals = firstValidatedCoinToAdd.decimals;
-      // ts check
-      if (decimals === null) {
-        await ctx.reply(
-          `Coin decimals not found for ${firstValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
-          { reply_markup: closeConversation },
-        );
+    const decimals = firstValidatedCoinToAdd.decimals;
+    // ts check
+    if (decimals === null) {
+      await ctx.reply(
+        `Coin decimals not found for ${firstValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        { reply_markup: closeConversation },
+      );
 
-        return false;
-      }
+      return false;
+    }
 
-      // TODO: Re-check this
-      const { isValid: amountIsValid, reason } = isValidTokenAmount({
-        amount: inputAmount,
-        maxAvailableAmount: availableFirstCoinMaxAmount,
-        decimals,
-      });
+    // TODO: Re-check this
+    const { isValid: amountIsValid, reason } = isValidTokenAmount({
+      amount: inputAmount,
+      maxAvailableAmount: availableFirstCoinMaxAmount,
+      decimals,
+    });
 
-      if (!amountIsValid) {
-        await ctx.reply(
-          `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-          { reply_markup: closeConversation },
-        );
+    if (!amountIsValid) {
+      await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, { reply_markup: closeConversation });
 
-        return false;
-      }
+      return false;
+    }
 
-      return true;
-    },
-  );
-  const firstValidatedInputAmount: string | undefined =
-    firstValidatedInputAmountMessage.msg?.text;
+    return true;
+  });
+  const firstValidatedInputAmount: string | undefined = firstValidatedInputAmountMessage.msg?.text;
 
   // ts check
   if (firstValidatedInputAmount === undefined) {
@@ -770,16 +697,16 @@ export async function createAftermathPool(
     });
     return;
   }
-  console.debug('firstValidatedInputAmount:', firstValidatedInputAmount);
+  console.debug("firstValidatedInputAmount:", firstValidatedInputAmount);
+
+  await ctx.reply("What would be <b>the second coin</b> in pool? Please send a coin type or a link to suiscan.", {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
   await ctx.reply(
-    'What would be <b>the second coin</b> in pool? Please send a coin type or a link to suiscan.',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  await ctx.reply(
-    'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
-    { parse_mode: 'HTML' },
+    "Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI",
+    { parse_mode: "HTML" },
   );
 
   let secondValidatedCoin: CoinAssetData | null = null;
@@ -788,31 +715,29 @@ export async function createAftermathPool(
   let secondCoinMaxAmount: string | undefined;
 
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
-    const possibleCoin = (ctx.msg?.text || '').trim();
+    const possibleCoin = (ctx.msg?.text || "").trim();
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.';
+        "Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.";
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
       return false;
     }
 
-    const coinType: string | null = coinTypeIsValid
-      ? possibleCoin
-      : extractCoinTypeFromLink(possibleCoin);
+    const coinType: string | null = coinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin);
 
     // ts check
     if (coinType === null) {
       await ctx.reply(
-        'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.',
+        "Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.",
         { reply_markup: closeConversation },
       );
       return false;
@@ -830,15 +755,13 @@ export async function createAftermathPool(
     }
 
     const secondCoinIsSui: boolean =
-      swapTokenTypesAreEqual(coinType, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(coinType, SHORT_SUI_COIN_TYPE);
+      swapTokenTypesAreEqual(coinType, LONG_SUI_COIN_TYPE) || swapTokenTypesAreEqual(coinType, SHORT_SUI_COIN_TYPE);
     const firstAndSecondCoinsAreSui = firstCoinIsSui && secondCoinIsSui;
-    const firstAndSecondCoinsAreEqual =
-      firstAndSecondCoinsAreSui || coinType === firstValidatedCoinToAdd.type;
+    const firstAndSecondCoinsAreEqual = firstAndSecondCoinsAreSui || coinType === firstValidatedCoinToAdd.type;
 
     if (firstAndSecondCoinsAreEqual) {
       await ctx.reply(
-        'The second coin in pool must be not the first one. Please, specify another coin to add in pool.',
+        "The second coin in pool must be not the first one. Please, specify another coin to add in pool.",
         { reply_markup: closeConversation },
       );
 
@@ -848,34 +771,32 @@ export async function createAftermathPool(
     const foundCoin = findCoinInAssets(allCoinsAssets, coinType);
 
     if (foundCoin === undefined) {
-      await ctx.reply(
-        'Coin is not found in your wallet assets. Please, specify another coin to add in pool.',
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply("Coin is not found in your wallet assets. Please, specify another coin to add in pool.", {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
 
     secondCoinHasPrice = await AftermathSingleton.coinHasPrice(foundCoin.type);
-    console.debug('secondCoinHasPrice:', secondCoinHasPrice);
+    console.debug("secondCoinHasPrice:", secondCoinHasPrice);
     if (firstCoinHasPrice && secondCoinHasPrice) {
-      const { maxAmountB, minAmountB } =
-        await AftermathSingleton.getMaxAndMinSecondCoinAmount({
-          coinTypeA: firstValidatedCoinToAdd.type,
-          amountA: firstValidatedInputAmount,
-          coinTypeB: foundCoin.type,
-          decimalsB: fetchedCoin.decimals,
-        });
+      const { maxAmountB, minAmountB } = await AftermathSingleton.getMaxAndMinSecondCoinAmount({
+        coinTypeA: firstValidatedCoinToAdd.type,
+        amountA: firstValidatedInputAmount,
+        coinTypeB: foundCoin.type,
+        decimalsB: fetchedCoin.decimals,
+      });
 
       if (foundCoin.balance < minAmountB) {
         await ctx.reply(
-          'You have too small balance of this coin to add it to the pool relative to the amount ' +
+          "You have too small balance of this coin to add it to the pool relative to the amount " +
             `of the first coin you specified.\n\nTo create a pool with <code>${firstValidatedInputAmount}</code> ` +
             `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type} and ` +
             `${foundCoin.symbol || foundCoin.type}, you need at least <code>${minAmountB}</code> ` +
             `${foundCoin.symbol || foundCoin.type}.\n\nPlease, specify another coin to add in pool or top up your ` +
             `${foundCoin.symbol || foundCoin.type} balance.`,
-          { reply_markup: closeConversation, parse_mode: 'HTML' },
+          { reply_markup: closeConversation, parse_mode: "HTML" },
         );
 
         return false;
@@ -884,8 +805,8 @@ export async function createAftermathPool(
       secondCoinMinAmount = minAmountB;
       secondCoinMaxAmount = maxAmountB;
     }
-    console.debug('secondCoinMinAmount:', secondCoinMinAmount);
-    console.debug('secondCoinMaxAmount:', secondCoinMaxAmount);
+    console.debug("secondCoinMinAmount:", secondCoinMinAmount);
+    console.debug("secondCoinMaxAmount:", secondCoinMaxAmount);
 
     secondValidatedCoin = foundCoin;
     return true;
@@ -894,16 +815,15 @@ export async function createAftermathPool(
   // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinAssetData(secondValidatedCoin)) {
-    await ctx.reply(
-      'Coin is not found in your wallet assets. Please, specify another coin to add in pool.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply("Coin is not found in your wallet assets. Please, specify another coin to add in pool.", {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
   const secondValidatedCoinToAdd = secondValidatedCoin as CoinAssetData;
-  console.debug('secondValidatedCoinToAdd:', secondValidatedCoinToAdd);
+  console.debug("secondValidatedCoinToAdd:", secondValidatedCoinToAdd);
   const secondCoinIsSui: boolean =
     swapTokenTypesAreEqual(secondValidatedCoinToAdd.type, LONG_SUI_COIN_TYPE) ||
     swapTokenTypesAreEqual(secondValidatedCoinToAdd.type, SHORT_SUI_COIN_TYPE);
@@ -913,9 +833,7 @@ export async function createAftermathPool(
     const availableBalance = await conversation.external(async () => {
       const walletManager = await getWalletManager();
       // TODO: Maybe we should add try/catch here as well
-      const balance = await walletManager.getAvailableSuiBalance(
-        ctx.session.publicKey,
-      );
+      const balance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
 
       return balance;
     });
@@ -924,7 +842,7 @@ export async function createAftermathPool(
   } else {
     availableSecondCoinMaxAmount = secondValidatedCoinToAdd.balance;
   }
-  console.debug('availableSecondCoinMaxAmount:', availableSecondCoinMaxAmount);
+  console.debug("availableSecondCoinMaxAmount:", availableSecondCoinMaxAmount);
 
   let resultSecondCoinMinAmount: string, resultSecondCoinMaxAmount: string;
   // We need to make sure that in case both tokens from user input have prices,
@@ -932,70 +850,63 @@ export async function createAftermathPool(
   if (secondCoinMinAmount !== undefined && secondCoinMaxAmount !== undefined) {
     resultSecondCoinMinAmount = secondCoinMinAmount;
     resultSecondCoinMaxAmount =
-      new BigNumber(availableSecondCoinMaxAmount) <
-      new BigNumber(secondCoinMaxAmount)
+      new BigNumber(availableSecondCoinMaxAmount) < new BigNumber(secondCoinMaxAmount)
         ? availableSecondCoinMaxAmount
         : secondCoinMaxAmount;
   } else {
     // In case prices for provided tokens are not available (e.g. it's custom/new tokens),
     // we can set min/max amount depending on user's wallet balance of these tokens.
-    resultSecondCoinMinAmount = '0';
+    resultSecondCoinMinAmount = "0";
     resultSecondCoinMaxAmount = availableSecondCoinMaxAmount;
   }
-  console.debug('resultSecondCoinMinAmount:', resultSecondCoinMinAmount);
-  console.debug('resultSecondCoinMaxAmount:', resultSecondCoinMaxAmount);
+  console.debug("resultSecondCoinMinAmount:", resultSecondCoinMinAmount);
+  console.debug("resultSecondCoinMaxAmount:", resultSecondCoinMaxAmount);
 
   await ctx.reply(
     `Reply with the amount you wish to add in pool (<code>${resultSecondCoinMinAmount}</code> - <code>${resultSecondCoinMaxAmount}</code> ${secondValidatedCoinToAdd.symbol || secondValidatedCoinToAdd.type}).\n\nExample: <code>0.1</code>`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+    { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
-  const secondValidatedInputAmountMessage = await conversation.waitUntil(
-    async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
-        return false;
-      }
+  const secondValidatedInputAmountMessage = await conversation.waitUntil(async (ctx) => {
+    if (ctx.callbackQuery?.data === "close-conversation") {
+      return false;
+    }
 
-      const inputAmount = ctx.msg?.text;
+    const inputAmount = ctx.msg?.text;
 
-      // ts check
-      if (inputAmount === undefined) {
-        return false;
-      }
+    // ts check
+    if (inputAmount === undefined) {
+      return false;
+    }
 
-      const decimals = secondValidatedCoinToAdd.decimals;
-      // ts check
-      if (decimals === null) {
-        await ctx.reply(
-          `Coin decimals not found for ${secondValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
-          { reply_markup: closeConversation },
-        );
+    const decimals = secondValidatedCoinToAdd.decimals;
+    // ts check
+    if (decimals === null) {
+      await ctx.reply(
+        `Coin decimals not found for ${secondValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        { reply_markup: closeConversation },
+      );
 
-        return false;
-      }
+      return false;
+    }
 
-      // TODO: Re-check this
-      const { isValid: amountIsValid, reason } = isValidTokenAmount({
-        amount: inputAmount,
-        maxAvailableAmount: resultSecondCoinMaxAmount,
-        minAvailableAmount: resultSecondCoinMinAmount,
-        decimals,
-      });
+    // TODO: Re-check this
+    const { isValid: amountIsValid, reason } = isValidTokenAmount({
+      amount: inputAmount,
+      maxAvailableAmount: resultSecondCoinMaxAmount,
+      minAvailableAmount: resultSecondCoinMinAmount,
+      decimals,
+    });
 
-      if (!amountIsValid) {
-        await ctx.reply(
-          `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-          { reply_markup: closeConversation },
-        );
+    if (!amountIsValid) {
+      await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, { reply_markup: closeConversation });
 
-        return false;
-      }
+      return false;
+    }
 
-      return true;
-    },
-  );
-  const secondValidatedInputAmount: string | undefined =
-    secondValidatedInputAmountMessage.msg?.text;
+    return true;
+  });
+  const secondValidatedInputAmount: string | undefined = secondValidatedInputAmountMessage.msg?.text;
 
   // ts check
   if (secondValidatedInputAmount === undefined) {
@@ -1004,42 +915,42 @@ export async function createAftermathPool(
     });
     return;
   }
-  console.debug('secondValidatedInputAmount:', secondValidatedInputAmount);
+  console.debug("secondValidatedInputAmount:", secondValidatedInputAmount);
 
-  await ctx.reply(
-    'What would be an <b>LP coin name</b>?\n\nExample: <code>My new coin</code>',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+  await ctx.reply("What would be an <b>LP coin name</b>?\n\nExample: <code>My new coin</code>", {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
-  const lpCoinNameMessage = await conversation.waitFor(':text');
+  const lpCoinNameMessage = await conversation.waitFor(":text");
   const lpCoinName = lpCoinNameMessage.msg.text;
-  console.debug('lpCoinName:', lpCoinName);
+  console.debug("lpCoinName:", lpCoinName);
 
-  await ctx.reply(
-    'What would be an <b>LP coin symbol</b>?\n\nExample: <code>MY_NEW_COIN</code>',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+  await ctx.reply("What would be an <b>LP coin symbol</b>?\n\nExample: <code>MY_NEW_COIN</code>", {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
-  const lpCoinSymbolMessage = await conversation.waitFor(':text');
+  const lpCoinSymbolMessage = await conversation.waitFor(":text");
   const lpCoinSymbol = lpCoinSymbolMessage.msg.text;
-  console.debug('lpCoinSymbol:', lpCoinSymbol);
+  console.debug("lpCoinSymbol:", lpCoinSymbol);
 
-  await ctx.reply(
-    'What would be a <b>pool name</b>?\n\nExample: <code>MY_NEW_COIN/USDC</code>',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+  await ctx.reply("What would be a <b>pool name</b>?\n\nExample: <code>MY_NEW_COIN/USDC</code>", {
+    reply_markup: closeConversation,
+    parse_mode: "HTML",
+  });
 
-  const poolNameMessage = await conversation.waitFor(':text');
+  const poolNameMessage = await conversation.waitFor(":text");
   const poolName = poolNameMessage.msg.text;
-  console.debug('poolName:', poolName);
+  console.debug("poolName:", poolName);
 
   await ctx.reply(
     'What would be a <b>trade fee</b> in percents (%)?\n<span class="tg-spoiler">Max: 10\nMin: 0.01</span>\n\nExample: <code>0.25</code>',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+    { reply_markup: closeConversation, parse_mode: "HTML" },
   );
 
   const tradeFeeMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
@@ -1052,7 +963,7 @@ export async function createAftermathPool(
 
     const tradeFeeNumber = parseFloat(tradeFee);
     if (isNaN(tradeFeeNumber)) {
-      await ctx.reply('Invalid trade fee. Please, try again.', {
+      await ctx.reply("Invalid trade fee. Please, try again.", {
         reply_markup: closeConversation,
       });
 
@@ -1062,8 +973,8 @@ export async function createAftermathPool(
     const tradeFeeIsValid = tradeFeeNumber >= 0.01 && tradeFeeNumber <= 10;
     if (!tradeFeeIsValid) {
       await ctx.reply(
-        'Trade fee must be in the range from <code>0.01</code> to <code>10</code>, inclusive. Please, try again.',
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
+        "Trade fee must be in the range from <code>0.01</code> to <code>10</code>, inclusive. Please, try again.",
+        { reply_markup: closeConversation, parse_mode: "HTML" },
       );
 
       return false;
@@ -1082,29 +993,25 @@ export async function createAftermathPool(
     return;
   }
   const tradeFeeIn = new BigNumber(tradeFeeString).dividedBy(100).toNumber();
-  console.debug('tradeFeeIn:', tradeFeeIn);
+  console.debug("tradeFeeIn:", tradeFeeIn);
 
   const lpCoinMetadata = { name: lpCoinName, symbol: lpCoinSymbol };
-  console.debug('lpCoinMetadata:', lpCoinMetadata);
+  console.debug("lpCoinMetadata:", lpCoinMetadata);
   let coinADecimals: number | null = firstValidatedCoinToAdd.decimals;
-  console.debug('coinADecimals:', coinADecimals);
+  console.debug("coinADecimals:", coinADecimals);
   let coinBDecimals: number | null = secondValidatedCoinToAdd.decimals;
-  console.debug('coinBDecimals:', coinBDecimals);
+  console.debug("coinBDecimals:", coinBDecimals);
 
   if (coinADecimals === null) {
-    console.warn(
-      `No decimals for coin ${firstValidatedCoinToAdd.type}, so fetching...`,
-    );
+    console.warn(`No decimals for coin ${firstValidatedCoinToAdd.type}, so fetching...`);
 
     coinADecimals = await conversation.external(async () => {
-      const coinMetadata = await coinManager.fetchCoinMetadata(
-        firstValidatedCoinToAdd.type,
-      );
+      const coinMetadata = await coinManager.fetchCoinMetadata(firstValidatedCoinToAdd.type);
       const decimals = coinMetadata?.decimals;
 
       return decimals ?? null;
     });
-    console.debug('coinADecimals after fetch:', coinADecimals);
+    console.debug("coinADecimals after fetch:", coinADecimals);
 
     if (coinADecimals === null) {
       await ctx.reply(
@@ -1116,19 +1023,15 @@ export async function createAftermathPool(
     }
   }
   if (coinBDecimals === null) {
-    console.warn(
-      `No decimals for coin ${secondValidatedCoinToAdd.type}, so fetching...`,
-    );
+    console.warn(`No decimals for coin ${secondValidatedCoinToAdd.type}, so fetching...`);
 
     coinBDecimals = await conversation.external(async () => {
-      const coinMetadata = await coinManager.fetchCoinMetadata(
-        secondValidatedCoinToAdd.type,
-      );
+      const coinMetadata = await coinManager.fetchCoinMetadata(secondValidatedCoinToAdd.type);
       const decimals = coinMetadata?.decimals;
 
       return decimals ?? null;
     });
-    console.debug('coinBDecimals after fetch:', coinBDecimals);
+    console.debug("coinBDecimals after fetch:", coinBDecimals);
 
     if (coinBDecimals === null) {
       await ctx.reply(
@@ -1140,19 +1043,15 @@ export async function createAftermathPool(
     }
   }
 
-  await ctx.reply('Calculating weights...');
-  const rawAmountA: string = new BigNumber(firstValidatedInputAmount)
-    .multipliedBy(10 ** coinADecimals)
-    .toString();
-  console.debug('rawAmountA:', rawAmountA);
-  const rawAmountB: string = new BigNumber(secondValidatedInputAmount)
-    .multipliedBy(10 ** coinBDecimals)
-    .toString();
-  console.debug('rawAmountB:', rawAmountB);
+  await ctx.reply("Calculating weights...");
+  const rawAmountA: string = new BigNumber(firstValidatedInputAmount).multipliedBy(10 ** coinADecimals).toString();
+  console.debug("rawAmountA:", rawAmountA);
+  const rawAmountB: string = new BigNumber(secondValidatedInputAmount).multipliedBy(10 ** coinBDecimals).toString();
+  console.debug("rawAmountB:", rawAmountB);
   const amountABigInt = BigInt(rawAmountA);
-  console.debug('amountABigInt:', amountABigInt);
+  console.debug("amountABigInt:", amountABigInt);
   const amountBBigInt = BigInt(rawAmountB);
-  console.debug('amountBBigInt:', amountBBigInt);
+  console.debug("amountBBigInt:", amountBBigInt);
 
   const { weightA, weightB } = await conversation.external(() =>
     AftermathSingleton.getWeights({
@@ -1166,8 +1065,8 @@ export async function createAftermathPool(
       },
     }),
   );
-  console.debug('weightA:', weightA);
-  console.debug('weightB:', weightB);
+  console.debug("weightA:", weightA);
+  console.debug("weightB:", weightB);
 
   const coinsInfo = {
     coinA: {
@@ -1185,20 +1084,19 @@ export async function createAftermathPool(
       initialDeposit: amountBBigInt,
     },
   };
-  console.debug('coinsInfo:', coinsInfo);
+  console.debug("coinsInfo:", coinsInfo);
   const lpCoinDecimals = getLpCoinDecimals(coinsInfo);
-  console.debug('lpCoinDecimals:', lpCoinDecimals);
+  console.debug("lpCoinDecimals:", lpCoinDecimals);
 
   // Create LP coin
-  await ctx.reply('Creating LP coin...');
+  await ctx.reply("Creating LP coin...");
   const createLpCoinTransaction = await conversation.external({
     task: async () => {
       try {
-        const createLpCoinTransaction =
-          await AftermathSingleton.getCreateLpCoinTransaction({
-            publicKey: ctx.session.publicKey,
-            lpCoinDecimals,
-          });
+        const createLpCoinTransaction = await AftermathSingleton.getCreateLpCoinTransaction({
+          publicKey: ctx.session.publicKey,
+          lpCoinDecimals,
+        });
 
         return createLpCoinTransaction;
       } catch (error) {
@@ -1229,21 +1127,17 @@ export async function createAftermathPool(
       }
     },
     afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
   });
 
   if (!createLpCoinTransaction) {
-    await ctx.reply('Create LP coin transaction creation failed.', {
+    await ctx.reply("Create LP coin transaction creation failed.", {
       reply_markup: retryButton,
     });
 
@@ -1259,20 +1153,17 @@ export async function createAftermathPool(
     try {
       const createLpCoinResult = await provider.signAndExecuteTransactionBlock({
         transactionBlock: createLpCoinTransaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
+        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
         options: {
           showEvents: true,
           showBalanceChanges: true,
           showEffects: true,
           showObjectChanges: true,
         },
-        requestType: 'WaitForLocalExecution',
+        requestType: "WaitForLocalExecution",
       });
 
-      const isTransactionResultSuccessful =
-        isTransactionSuccessful(createLpCoinResult);
+      const isTransactionResultSuccessful = isTransactionSuccessful(createLpCoinResult);
 
       const resultStatus = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
@@ -1285,38 +1176,30 @@ export async function createAftermathPool(
       };
     } catch (error) {
       if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
       } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
       }
 
       const resultStatus = TransactionResultStatus.Failure;
-      return { resultStatus, reason: 'failed_to_send_transaction' };
+      return { resultStatus, reason: "failed_to_send_transaction" };
     }
   });
 
   if (
-    resultOfCreateLpCoin.resultStatus === 'failure' &&
+    resultOfCreateLpCoin.resultStatus === "failure" &&
     resultOfCreateLpCoin.createLpCoinResult &&
     resultOfCreateLpCoin.digest
   ) {
-    await ctx.reply(
-      `LP coin creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreateLpCoin.digest}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`LP coin creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreateLpCoin.digest}`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
-  if (
-    resultOfCreateLpCoin.resultStatus === 'failure' &&
-    resultOfCreateLpCoin.reason
-  ) {
-    await ctx.reply('Failed to send transaction for LP coin creation.', {
+  if (resultOfCreateLpCoin.resultStatus === "failure" && resultOfCreateLpCoin.reason) {
+    await ctx.reply("Failed to send transaction for LP coin creation.", {
       reply_markup: retryButton,
     });
 
@@ -1332,25 +1215,22 @@ export async function createAftermathPool(
     return;
   }
 
-  await ctx.reply(
-    'Waiting for the LP coin to gain a foothold in the blockchain...',
-  );
+  await ctx.reply("Waiting for the LP coin to gain a foothold in the blockchain...");
   // This is workaround until we are limited by Aftermath API for creating the transactions
   await conversation.external(() => sleep(5000));
 
   // Create pool
-  await ctx.reply('Creating the pool...');
+  await ctx.reply("Creating the pool...");
   const createPoolTransaction = await conversation.external({
     task: async () => {
       try {
-        const createPoolTransaction =
-          await AftermathSingleton.getCreatePoolTransaction({
-            publicKey: ctx.session.publicKey,
-            createLpCoinTransactionResult: createLpCoinResult,
-            poolName,
-            coinsInfo,
-            lpCoinMetadata,
-          });
+        const createPoolTransaction = await AftermathSingleton.getCreatePoolTransaction({
+          publicKey: ctx.session.publicKey,
+          createLpCoinTransactionResult: createLpCoinResult,
+          poolName,
+          coinsInfo,
+          lpCoinMetadata,
+        });
 
         return createPoolTransaction;
       } catch (error) {
@@ -1380,26 +1260,19 @@ export async function createAftermathPool(
       }
     },
     afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
   });
 
   if (!createPoolTransaction) {
-    await ctx.reply(
-      'Create pool transaction creation failed. Try to use different coin amounts or contact support.',
-      {
-        reply_markup: retryButton,
-      },
-    );
+    await ctx.reply("Create pool transaction creation failed. Try to use different coin amounts or contact support.", {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -1413,20 +1286,17 @@ export async function createAftermathPool(
     try {
       const createPoolResult = await provider.signAndExecuteTransactionBlock({
         transactionBlock: createPoolTransaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
+        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
         options: {
           showEvents: true,
           showBalanceChanges: true,
           showEffects: true,
           showObjectChanges: true,
         },
-        requestType: 'WaitForLocalExecution',
+        requestType: "WaitForLocalExecution",
       });
 
-      const isTransactionResultSuccessful =
-        isTransactionSuccessful(createPoolResult);
+      const isTransactionResultSuccessful = isTransactionSuccessful(createPoolResult);
 
       const resultStatus = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
@@ -1439,38 +1309,30 @@ export async function createAftermathPool(
       };
     } catch (error) {
       if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
       } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
       }
 
       const resultStatus = TransactionResultStatus.Failure;
-      return { resultStatus, reason: 'failed_to_send_transaction' };
+      return { resultStatus, reason: "failed_to_send_transaction" };
     }
   });
 
   if (
-    resultOfCreatePool.resultStatus === 'failure' &&
+    resultOfCreatePool.resultStatus === "failure" &&
     resultOfCreatePool.createPoolResult &&
     resultOfCreatePool.digest
   ) {
-    await ctx.reply(
-      `Pool creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreatePool.digest}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Pool creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreatePool.digest}`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
-  if (
-    resultOfCreatePool.resultStatus === 'failure' &&
-    resultOfCreatePool.reason
-  ) {
-    await ctx.reply('Failed to send transaction for pool creation.', {
+  if (resultOfCreatePool.resultStatus === "failure" && resultOfCreatePool.reason) {
+    await ctx.reply("Failed to send transaction for pool creation.", {
       reply_markup: retryButton,
     });
 
@@ -1494,10 +1356,7 @@ export async function createAftermathPool(
   return;
 }
 
-export async function createCoin(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function createCoin(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const skipButton = skip.inline_keyboard[0];
   const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateCoin];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
@@ -1505,9 +1364,8 @@ export async function createCoin(
   const suiBalance = await balance(ctx);
   if (new BigNumber(suiBalance) < new BigNumber(1)) {
     await ctx.reply(
-      'Please, top up your <b>SUI</b> balance. You need at least <code>1</code> ' +
-        '<b>SUI</b> to create a coin.',
-      { reply_markup: retryButton, parse_mode: 'HTML' },
+      "Please, top up your <b>SUI</b> balance. You need at least <code>1</code> " + "<b>SUI</b> to create a coin.",
+      { reply_markup: retryButton, parse_mode: "HTML" },
     );
 
     return;
@@ -1515,19 +1373,19 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin name</b>?\n\nExample: <code>My Awesome Coin</code>\n\n<span class="tg-spoiler">' +
-      '<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>',
-    { parse_mode: 'HTML', reply_markup: closeConversation },
+      "<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>",
+    { parse_mode: "HTML", reply_markup: closeConversation },
   );
 
   const coinNameMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
-    const isCoinNameValid = validateCoinName(ctx.msg?.text ?? '');
+    const isCoinNameValid = validateCoinName(ctx.msg?.text ?? "");
 
     if (!isCoinNameValid) {
-      await ctx.reply('Coin name is not valid. Please, specify valid name.', {
+      await ctx.reply("Coin name is not valid. Please, specify valid name.", {
         reply_markup: closeConversation,
       });
 
@@ -1550,26 +1408,23 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin symbol</b>?\n\nExample: <code>MY_AWESOME_COIN</code>, or just <code>AWESOME</code>\n\n<span class="tg-spoiler">' +
-      '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
-      '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
-      '<u>AWESOME</u> here is the coin symbol.</span>',
-    { parse_mode: 'HTML', reply_markup: closeConversation },
+      "<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf" +
+      "679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n" +
+      "<u>AWESOME</u> here is the coin symbol.</span>",
+    { parse_mode: "HTML", reply_markup: closeConversation },
   );
 
   const coinSymbolMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
-    const isCoinSymbolValid = validateCoinSymbol(ctx.msg?.text ?? '');
+    const isCoinSymbolValid = validateCoinSymbol(ctx.msg?.text ?? "");
 
     if (!isCoinSymbolValid) {
-      await ctx.reply(
-        'Coin symbol is not valid. Please, specify valid symbol.',
-        {
-          reply_markup: closeConversation,
-        },
-      );
+      await ctx.reply("Coin symbol is not valid. Please, specify valid symbol.", {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -1586,36 +1441,31 @@ export async function createCoin(
 
     return;
   }
-  console.debug('coinSymbol:', coinSymbol);
+  console.debug("coinSymbol:", coinSymbol);
 
   await ctx.reply(
-    'What would be a <b>coin description</b>?\n\nExample: <code>Some description about my awesome coin</code>',
+    "What would be a <b>coin description</b>?\n\nExample: <code>Some description about my awesome coin</code>",
     {
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
       reply_markup: closeWithSkipReplyMarkup,
     },
   );
 
   const coinDescriptionMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
-    if (ctx.callbackQuery?.data === 'skip') {
+    if (ctx.callbackQuery?.data === "skip") {
       await ctx.answerCallbackQuery();
       return true;
     }
 
-    const isCoinDescriptionIsValid = validateCoinDescription(
-      ctx.msg?.text ?? '',
-    );
+    const isCoinDescriptionIsValid = validateCoinDescription(ctx.msg?.text ?? "");
 
     if (!isCoinDescriptionIsValid) {
-      await ctx.reply(
-        'Coin description is not valid. Please, specify valid description.',
-        {
-          reply_markup: closeConversation,
-        },
-      );
+      await ctx.reply("Coin description is not valid. Please, specify valid description.", {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -1623,9 +1473,7 @@ export async function createCoin(
     return isCoinDescriptionIsValid;
   });
   const coinDescription =
-    coinDescriptionMessage.callbackQuery?.data === 'skip'
-      ? ''
-      : coinDescriptionMessage.msg?.text?.trim();
+    coinDescriptionMessage.callbackQuery?.data === "skip" ? "" : coinDescriptionMessage.msg?.text?.trim();
 
   // ts-check
   if (coinDescription === undefined) {
@@ -1638,20 +1486,20 @@ export async function createCoin(
   // console.debug('coinDescription:', coinDescription);
 
   await ctx.reply(
-    'Send a <b>coin image</b>.\n\n<b>Suggestions</b>:\n1. The coin image should be ' +
-      'square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your ' +
-      'image does not exceed the size of 320x320 pixels, no quality changes will occur.',
+    "Send a <b>coin image</b>.\n\n<b>Suggestions</b>:\n1. The coin image should be " +
+      "square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your " +
+      "image does not exceed the size of 320x320 pixels, no quality changes will occur.",
     {
       reply_markup: closeWithSkipReplyMarkup,
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
     },
   );
 
   const imagesDataMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
-    if (ctx.callbackQuery?.data === 'skip') {
+    if (ctx.callbackQuery?.data === "skip") {
       await ctx.answerCallbackQuery();
       return true;
     }
@@ -1661,11 +1509,11 @@ export async function createCoin(
     if (imagesData === undefined) {
       await ctx.reply(
         'Invalid coin image. Please, send another image.\n\n<span class="tg-spoiler"><b>Hint</b>: If you are ' +
-          'sending an image as a file (without compression), consider sending it with compression. If your ' +
-          'image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>',
+          "sending an image as a file (without compression), consider sending it with compression. If your " +
+          "image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>",
         {
           reply_markup: closeWithSkipReplyMarkup,
-          parse_mode: 'HTML',
+          parse_mode: "HTML",
         },
       );
 
@@ -1673,13 +1521,10 @@ export async function createCoin(
     }
 
     if (imagesData[0].height !== imagesData[0].width) {
-      await ctx.reply(
-        'The coin image should be square (<b>height = width</b>). Please, send another image.',
-        {
-          reply_markup: closeWithSkipReplyMarkup,
-          parse_mode: 'HTML',
-        },
-      );
+      await ctx.reply("The coin image should be square (<b>height = width</b>). Please, send another image.", {
+        reply_markup: closeWithSkipReplyMarkup,
+        parse_mode: "HTML",
+      });
 
       return false;
     }
@@ -1688,14 +1533,14 @@ export async function createCoin(
   });
 
   let coinImageBase64: string;
-  if (imagesDataMessage.callbackQuery?.data === 'skip') {
-    coinImageBase64 = '';
+  if (imagesDataMessage.callbackQuery?.data === "skip") {
+    coinImageBase64 = "";
   } else {
     const imagesData = imagesDataMessage.msg?.photo;
 
     // ts check
     if (imagesData === undefined) {
-      await ctx.reply('The coin image is not valid.\n\nCannot continue.', {
+      await ctx.reply("The coin image is not valid.\n\nCannot continue.", {
         reply_markup: retryButton,
       });
 
@@ -1711,16 +1556,13 @@ export async function createCoin(
     // console.debug('imageDownloadUrl:', imageDownloadUrl);
 
     try {
-      coinImageBase64 = await conversation.external(() =>
-        imageUrlToBase64(imageDownloadUrl),
-      );
+      coinImageBase64 = await conversation.external(() => imageUrlToBase64(imageDownloadUrl));
     } catch (error) {
       console.error(error);
 
-      await ctx.reply(
-        'Cannot process sent image. Please, use another image or contact support.',
-        { reply_markup: retryButton },
-      );
+      await ctx.reply("Cannot process sent image. Please, use another image or contact support.", {
+        reply_markup: retryButton,
+      });
 
       return;
     }
@@ -1728,44 +1570,41 @@ export async function createCoin(
   // console.debug('coinImageBase64:', coinImageBase64);
 
   await ctx.reply(
-    'Enter <b>coin decimals</b>.\n\n<b>Default</b>: <code>9</code>\n' +
-      '<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n' +
+    "Enter <b>coin decimals</b>.\n\n<b>Default</b>: <code>9</code>\n" +
+      "<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n" +
       '<span class="tg-spoiler"><b>Hint</b>: If you don\'t ' +
-      'know what to enter, just skip this step.</span>\n\n' +
+      "know what to enter, just skip this step.</span>\n\n" +
       '<span class="tg-spoiler">You should be aware, that the higher coin decimals you\'ll choose, the less total ' +
-      'supply you can use.\n\n' +
-      '<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals ' +
-      '&#8213; 999,999,999 total supply</span>',
-    { parse_mode: 'HTML', reply_markup: closeWithSkipReplyMarkup },
+      "supply you can use.\n\n" +
+      "<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals " +
+      "&#8213; 999,999,999 total supply</span>",
+    { parse_mode: "HTML", reply_markup: closeWithSkipReplyMarkup },
   );
 
   const coinDecimalsMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
-    if (ctx.callbackQuery?.data === 'skip') {
+    if (ctx.callbackQuery?.data === "skip") {
       await ctx.answerCallbackQuery();
       return true;
     }
 
-    const isCoinDecimalsIsValid = validateCoinDecimals(ctx.msg?.text ?? '');
+    const isCoinDecimalsIsValid = validateCoinDecimals(ctx.msg?.text ?? "");
 
     if (!isCoinDecimalsIsValid) {
-      await ctx.reply(
-        'Coin decimals are not valid. Please, specify valid decimals.',
-        { reply_markup: closeWithSkipReplyMarkup },
-      );
+      await ctx.reply("Coin decimals are not valid. Please, specify valid decimals.", {
+        reply_markup: closeWithSkipReplyMarkup,
+      });
 
       return false;
     }
 
     return isCoinDecimalsIsValid;
   });
-  const defaultDecimals = '9';
+  const defaultDecimals = "9";
   const coinDecimals =
-    coinDecimalsMessage.callbackQuery?.data === 'skip'
-      ? defaultDecimals
-      : coinDecimalsMessage.msg?.text;
+    coinDecimalsMessage.callbackQuery?.data === "skip" ? defaultDecimals : coinDecimalsMessage.msg?.text;
 
   // ts-check
   if (coinDecimals === undefined) {
@@ -1780,29 +1619,23 @@ export async function createCoin(
   const maxTotalSupply = calculateMaxTotalSupply(coinDecimals);
 
   await ctx.reply(
-    'Enter <b>total supply</b>.\n\n<b>Example</b>: <code>1000000</code>\n\n' +
-      '<b>Hint</b>: Max total supply for selected decimals ' +
+    "Enter <b>total supply</b>.\n\n<b>Example</b>: <code>1000000</code>\n\n" +
+      "<b>Hint</b>: Max total supply for selected decimals " +
       `(<code>${coinDecimals}</code>) is <code>${maxTotalSupply}</code>`,
-    { parse_mode: 'HTML', reply_markup: closeConversation },
+    { parse_mode: "HTML", reply_markup: closeConversation },
   );
 
   const totalSupplyMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
 
-    const isTotalSupplyIsValid = validateTotalSupply(
-      ctx.msg?.text ?? '',
-      maxTotalSupply,
-    );
+    const isTotalSupplyIsValid = validateTotalSupply(ctx.msg?.text ?? "", maxTotalSupply);
 
     if (!isTotalSupplyIsValid) {
-      await ctx.reply(
-        'Coin total supply is not valid. Please, specify valid supply.',
-        {
-          reply_markup: closeConversation,
-        },
-      );
+      await ctx.reply("Coin total supply is not valid. Please, specify valid supply.", {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -1825,24 +1658,24 @@ export async function createCoin(
   const yesOrNoWithCancelReplyMarkup = yesOrNo.clone().add(...closeButton);
   await ctx.reply(
     'Would supply be <b>fixed</b>?\n\n<span class="tg-spoiler"><b>Hint</b>:\nYes &#8213; Treasury Cap ' +
-      'will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>',
-    { parse_mode: 'HTML', reply_markup: yesOrNoWithCancelReplyMarkup },
+      "will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>",
+    { parse_mode: "HTML", reply_markup: yesOrNoWithCancelReplyMarkup },
   );
 
   const fixedSupplyMessage = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    if (ctx.callbackQuery?.data === "close-conversation") {
       return false;
     }
-    if (ctx.callbackQuery?.data === 'yes') {
+    if (ctx.callbackQuery?.data === "yes") {
       await ctx.answerCallbackQuery();
       return true;
     }
-    if (ctx.callbackQuery?.data === 'no') {
+    if (ctx.callbackQuery?.data === "no") {
       await ctx.answerCallbackQuery();
       return true;
     }
 
-    await ctx.reply('Please, click on the button.', {
+    await ctx.reply("Please, click on the button.", {
       reply_markup: closeConversation,
     });
 
@@ -1859,24 +1692,23 @@ export async function createCoin(
     return;
   }
 
-  const fixedSupply = fixedSupplyAnswer === 'yes';
+  const fixedSupply = fixedSupplyAnswer === "yes";
   // console.debug('fixedSupply:', fixedSupply);
 
-  await ctx.reply('Creating the coin transaction...');
+  await ctx.reply("Creating the coin transaction...");
   const createCoinTransaction = await conversation.external({
     task: async () => {
       try {
-        const createCoinTx =
-          await CoinManagerSingleton.getCreateCoinTransaction({
-            name: coinName,
-            symbol: coinSymbol,
-            decimals: coinDecimals,
-            fixedSupply: fixedSupply,
-            description: coinDescription,
-            mintAmount: totalSupply,
-            url: coinImageBase64,
-            signerAddress: ctx.session.publicKey,
-          });
+        const createCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
+          name: coinName,
+          symbol: coinSymbol,
+          decimals: coinDecimals,
+          fixedSupply: fixedSupply,
+          description: coinDescription,
+          mintAmount: totalSupply,
+          url: coinImageBase64,
+          signerAddress: ctx.session.publicKey,
+        });
 
         return createCoinTx;
       } catch (error) {
@@ -1906,26 +1738,19 @@ export async function createCoin(
       }
     },
     afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
   });
 
   if (!createCoinTransaction) {
-    await ctx.reply(
-      'Create coin transaction creation failed. Try to use different coin params or contact support.',
-      {
-        reply_markup: retryButton,
-      },
-    );
+    await ctx.reply("Create coin transaction creation failed. Try to use different coin params or contact support.", {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -1939,47 +1764,33 @@ export async function createCoin(
     try {
       const createCoinResult = await provider.signAndExecuteTransactionBlock({
         transactionBlock: createCoinTransaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
+        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
         options: {
           showEffects: true,
           showObjectChanges: true,
         },
       });
 
-      const isTransactionResultSuccessful =
-        isTransactionSuccessful(createCoinResult);
-      const result = isTransactionResultSuccessful
-        ? TransactionResultStatus.Success
-        : TransactionResultStatus.Failure;
+      const isTransactionResultSuccessful = isTransactionSuccessful(createCoinResult);
+      const result = isTransactionResultSuccessful ? TransactionResultStatus.Success : TransactionResultStatus.Failure;
 
       return { createCoinResult, digest: createCoinResult.digest, result };
     } catch (error) {
       if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
       } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
       }
 
       const result = TransactionResultStatus.Failure;
-      return { result: result, reason: 'failed_to_send_transaction' };
+      return { result: result, reason: "failed_to_send_transaction" };
     }
   });
 
-  if (
-    resultOfCreateCoin.result === 'failure' &&
-    resultOfCreateCoin.createCoinResult &&
-    resultOfCreateCoin.digest
-  ) {
-    await ctx.reply(
-      `Coin creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreateCoin.digest}`,
-      { reply_markup: retryButton },
-    );
+  if (resultOfCreateCoin.result === "failure" && resultOfCreateCoin.createCoinResult && resultOfCreateCoin.digest) {
+    await ctx.reply(`Coin creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreateCoin.digest}`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -1993,45 +1804,36 @@ export async function createCoin(
     return;
   }
 
-  if (resultOfCreateCoin.result === 'success' && resultOfCreateCoin.digest) {
+  if (resultOfCreateCoin.result === "success" && resultOfCreateCoin.digest) {
     const coinType = getCoinTypeFromTransactionResult(createCoinResult);
 
-    await ctx.reply(
-      `Coin created!\n\nhttps://suiscan.xyz/mainnet/coin/${coinType}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Coin created!\n\nhttps://suiscan.xyz/mainnet/coin/${coinType}`, { reply_markup: retryButton });
 
     return;
   }
 
-  await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
+  await ctx.reply("Transaction sending failed.", { reply_markup: retryButton });
 }
 
 export async function ownedAftermathPools(ctx: BotContext) {
-  const loadingMessage = await ctx.reply('<b>Loading...</b>', {
-    parse_mode: 'HTML',
+  const loadingMessage = await ctx.reply("<b>Loading...</b>", {
+    parse_mode: "HTML",
   });
 
   const walletManager = await getWalletManager();
   const coinManager = await getCoinManager();
   const allAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
-  const ownedPoolInfos = await AftermathSingleton.getOwnedPoolsInfo(
-    allAssets,
-    coinManager,
-  );
+  const ownedPoolInfos = await AftermathSingleton.getOwnedPoolsInfo(allAssets, coinManager);
 
   if (ownedPoolInfos.length === 0) {
-    await ctx.api.editMessageText(
-      loadingMessage.chat.id,
-      loadingMessage.message_id,
-      'You have no pools yet.',
-      { reply_markup: goHome },
-    );
+    await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, "You have no pools yet.", {
+      reply_markup: goHome,
+    });
 
     return;
   }
 
-  let infoString = '<b>Owned Pools</b>:';
+  let infoString = "<b>Owned Pools</b>:";
   ownedPoolInfos.forEach((poolInfo) => {
     const poolLink = getAftermathPoolLink(poolInfo.poolObjectId);
 
@@ -2040,7 +1842,7 @@ export async function ownedAftermathPools(ctx: BotContext) {
     infoString += `Volume: <code>${poolInfo.volume}</code>\n`;
     infoString += `APR: <code>${poolInfo.apr}</code>\n`;
     infoString += `Fees: <code>${poolInfo.fees}</code>\n`;
-    infoString += 'Balances: ';
+    infoString += "Balances: ";
 
     poolInfo.coins.forEach((coin) => {
       const suiVisionCoinLink = getSuiVisionCoinLink(coin.type);
@@ -2050,13 +1852,8 @@ export async function ownedAftermathPools(ctx: BotContext) {
     infoString = infoString.substring(0, infoString.length - 3);
   });
 
-  await ctx.api.editMessageText(
-    loadingMessage.chat.id,
-    loadingMessage.message_id,
-    infoString,
-    {
-      reply_markup: goHome,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, infoString, {
+    reply_markup: goHome,
+    parse_mode: "HTML",
+  });
 }

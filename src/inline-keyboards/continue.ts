@@ -1,5 +1,5 @@
-import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from "grammy";
 
-const continueKeyboard = new InlineKeyboard().text('Continue', 'continue');
+const continueKeyboard = new InlineKeyboard().text("Continue", "continue");
 
 export default continueKeyboard;

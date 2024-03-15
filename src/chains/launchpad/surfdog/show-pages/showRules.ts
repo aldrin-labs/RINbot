@@ -1,5 +1,5 @@
-import userTicketsMenu from '../../../../menu/launchpad/surfdog/userTickets';
-import { BotContext } from '../../../../types';
+import userTicketsMenu from "../../../../menu/launchpad/surfdog/userTickets";
+import { BotContext } from "../../../../types";
 
 export async function showRules(ctx: BotContext) {
   let rulesString = `<b>Rules</b>:\n\n`;
@@ -10,6 +10,6 @@ export async function showRules(ctx: BotContext) {
 
   await ctx.reply(rulesString, {
     reply_markup: userTicketsMenu,
-    parse_mode: 'HTML',
+    parse_mode: "HTML",
   });
 }

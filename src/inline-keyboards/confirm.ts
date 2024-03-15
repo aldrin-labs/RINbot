@@ -1,5 +1,5 @@
-import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from "grammy";
 
-const confirm = new InlineKeyboard().text('Confirm', 'confirm');
+const confirm = new InlineKeyboard().text("Confirm", "confirm");
 
 export default confirm;

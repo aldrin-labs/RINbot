@@ -1,10 +1,7 @@
-import { SurfdogLaunchpadSingleton } from '@avernikoz/rinbot-sui-sdk';
-import { BotContext, MyConversation } from '../../../../types';
-import {
-  getTransactionForStructuredResult,
-  signAndExecuteTransaction,
-} from '../../../conversations.utils';
-import { InlineKeyboard } from 'grammy';
+import { SurfdogLaunchpadSingleton } from "@avernikoz/rinbot-sui-sdk";
+import { BotContext, MyConversation } from "../../../../types";
+import { getTransactionForStructuredResult, signAndExecuteTransaction } from "../../../conversations.utils";
+import { InlineKeyboard } from "grammy";
 
 export async function createUserState({
   ctx,
@@ -17,22 +14,19 @@ export async function createUserState({
   surfdog: SurfdogLaunchpadSingleton;
   retryButton: InlineKeyboard;
 }) {
-  await ctx.reply('Preparing account to buy tickets...');
+  await ctx.reply("Preparing account to buy tickets...");
 
   const createUserStateTransaction = await getTransactionForStructuredResult({
     conversation,
     ctx,
-    method: surfdog.createUserState.bind(
-      surfdog,
-    ) as typeof surfdog.createUserState,
+    method: surfdog.createUserState.bind(surfdog) as typeof surfdog.createUserState,
     params: undefined,
   });
 
   if (createUserStateTransaction === undefined) {
-    await ctx.reply(
-      'Failed to create transaction for user state creation. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply("Failed to create transaction for user state creation. Please, try again or contact support.", {
+      reply_markup: retryButton,
+    });
 
     return;
   }

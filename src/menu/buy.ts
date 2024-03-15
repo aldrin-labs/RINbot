@@ -1,10 +1,10 @@
-import { Menu } from '@grammyjs/menu';
-import { home } from '../chains/sui.functions';
-import { BotContext } from '../types';
+import { Menu } from "@grammyjs/menu";
+import { home } from "../chains/sui.functions";
+import { BotContext } from "../types";
 
-const buy_menu = new Menu<BotContext>('buy-menu').back('Home', async (ctx) => {
+const buy_menu = new Menu<BotContext>("buy-menu").back("Home", async (ctx) => {
   await ctx.conversation.exit();
-  ctx.session.step = 'main';
+  ctx.session.step = "main";
   ctx.menu.close();
   await home(ctx);
 });

@@ -1,24 +1,24 @@
-import { Bot } from 'grammy';
-import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
-import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
-import { home } from '../chains/sui.functions';
-import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
-import { BotContext } from '../types';
-import { slippagePercentages } from '../chains/slippage/percentages';
-import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
+import { Bot } from "grammy";
+import { SurfdogConversationId } from "../chains/launchpad/surfdog/conversations/conversations.config";
+import { showSurfdogPage } from "../chains/launchpad/surfdog/show-pages/showSurfdogPage";
+import { showUserTickets } from "../chains/launchpad/surfdog/show-pages/showUserTickets";
+import { home } from "../chains/sui.functions";
+import { retryAndGoHomeButtonsData } from "../inline-keyboards/retryConversationButtonsFactory";
+import { BotContext } from "../types";
+import { slippagePercentages } from "../chains/slippage/percentages";
+import { showSlippageConfiguration } from "../chains/slippage/showSlippageConfiguration";
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
-  bot.callbackQuery('close-conversation', async (ctx) => {
+  bot.callbackQuery("close-conversation", async (ctx) => {
     await ctx.conversation.exit();
-    ctx.session.step = 'main';
+    ctx.session.step = "main";
     await ctx.deleteMessage();
     await home(ctx);
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('go-home', async (ctx) => {
-    ctx.session.step = 'main';
+  bot.callbackQuery("go-home", async (ctx) => {
+    ctx.session.step = "main";
     await home(ctx);
     await ctx.answerCallbackQuery();
   });
@@ -36,22 +36,22 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
 }
 
 function useSurfdogCallbackQueries(bot: Bot<BotContext>) {
-  bot.callbackQuery('buy-more-surfdog-tickets', async (ctx) => {
+  bot.callbackQuery("buy-more-surfdog-tickets", async (ctx) => {
     await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('user-surfdog-tickets', async (ctx) => {
+  bot.callbackQuery("user-surfdog-tickets", async (ctx) => {
     await showUserTickets(ctx);
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('surfdog-home', async (ctx) => {
+  bot.callbackQuery("surfdog-home", async (ctx) => {
     await showSurfdogPage(ctx);
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('close-surfdog-conversation', async (ctx) => {
+  bot.callbackQuery("close-surfdog-conversation", async (ctx) => {
     await ctx.conversation.exit();
     await ctx.deleteMessage();
     await showSurfdogPage(ctx);

@@ -1,5 +1,5 @@
-import { InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from "grammy";
 
-const goHome = new InlineKeyboard().text('Home', 'go-home');
+const goHome = new InlineKeyboard().text("Home", "go-home");
 
 export default goHome;

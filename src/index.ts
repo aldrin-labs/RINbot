@@ -1,21 +1,12 @@
-import { autoRetry } from '@grammyjs/auto-retry';
-import { conversations, createConversation } from '@grammyjs/conversations';
-import { RedisAdapter } from '@grammyjs/storage-redis';
-import { kv as instance } from '@vercel/kv';
-import {
-  Bot,
-  BotError,
-  Composer,
-  Enhance,
-  GrammyError,
-  HttpError,
-  enhanceStorage,
-  session,
-} from 'grammy';
-import { ConversationId } from './chains/conversations.config';
-import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
-import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
-import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { autoRetry } from "@grammyjs/auto-retry";
+import { conversations, createConversation } from "@grammyjs/conversations";
+import { RedisAdapter } from "@grammyjs/storage-redis";
+import { kv as instance } from "@vercel/kv";
+import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from "grammy";
+import { ConversationId } from "./chains/conversations.config";
+import { buySurfdogTickets } from "./chains/launchpad/surfdog/conversations/conversations";
+import { SurfdogConversationId } from "./chains/launchpad/surfdog/conversations/conversations.config";
+import { showSurfdogPage } from "./chains/launchpad/surfdog/show-pages/showSurfdogPage";
 import {
   createAftermathPool,
   createCoin,
@@ -23,32 +14,27 @@ import {
   generateWallet,
   home,
   withdraw,
-} from './chains/sui.functions';
-import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
-import {
-  BOT_TOKEN,
-  ENVIRONMENT,
-  WELCOME_BONUS_AMOUNT,
-} from './config/bot.config';
-import menu from './menu/main';
-import { useCallbackQueries } from './middleware/callbackQueries';
-import { timeoutMiddleware } from './middleware/timeoutMiddleware';
-import { addTradeCoin } from './migrations/addTradeCoin';
-import { addWelcomeBonus } from './migrations/addWelcomeBonus';
-import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
-import { BotContext, SessionData } from './types';
-import { buy } from './chains/trading/buy';
-import { sell } from './chains/trading/sell';
-
+} from "./chains/sui.functions";
+import { welcomeBonusConversation } from "./chains/welcome-bonus/welcomeBonus";
+import { BOT_TOKEN, ENVIRONMENT, WELCOME_BONUS_AMOUNT } from "./config/bot.config";
+import menu from "./menu/main";
+import { useCallbackQueries } from "./middleware/callbackQueries";
+import { timeoutMiddleware } from "./middleware/timeoutMiddleware";
+import { addTradeCoin } from "./migrations/addTradeCoin";
+import { addWelcomeBonus } from "./migrations/addWelcomeBonus";
+import { enlargeDefaultSlippage } from "./migrations/enlargeDefaultSlippage";
+import { BotContext, SessionData } from "./types";
+import { buy } from "./chains/trading/buy";
+import { sell } from "./chains/trading/sell";
 
 function errorBoundaryHandler(err: BotError) {
-  console.error('[Error Boundary Handler]', err);
+  console.error("[Error Boundary Handler]", err);
 }
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = "2.0.0";
 
-if (instance && instance['opts']) {
-  instance['opts'].automaticDeserialization = false;
+if (instance && instance["opts"]) {
+  instance["opts"].automaticDeserialization = false;
 }
 
 const storage = new RedisAdapter<Enhance<SessionData>>({ instance });
@@ -57,14 +43,14 @@ const bot = new Bot<BotContext>(BOT_TOKEN);
 const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
-  console.debug('[startBot] triggered');
+  console.debug("[startBot] triggered");
   composer.use(timeoutMiddleware);
   bot.use(
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
         return {
-          step: 'main',
+          step: "main",
           privateKey,
           publicKey,
           settings: { slippagePercentage: 20 },
@@ -78,7 +64,7 @@ async function startBot(): Promise<void> {
           tradesCount: 0,
           createdAt: Date.now(),
           tradeCoin: {
-            coinType: '',
+            coinType: "",
             useSpecifiedCoin: false,
           },
         };
@@ -94,9 +80,7 @@ async function startBot(): Promise<void> {
     }),
   );
 
-  bot.api.config.use(
-    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
-  );
+  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }));
 
   composer.use(conversations());
 
@@ -123,9 +107,7 @@ async function startBot(): Promise<void> {
   //     id: ConversationId.CreateCetusPool,
   //   }),
   // );
-  composer.use(
-    createConversation(createCoin, { id: ConversationId.CreateCoin }),
-  );
+  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
@@ -140,62 +122,62 @@ async function startBot(): Promise<void> {
   bot.errorBoundary(errorBoundaryHandler).use(composer);
   bot.use(menu);
 
-  bot.command('version', async (ctx) => {
+  bot.command("version", async (ctx) => {
     await ctx.reply(`Version ${APP_VERSION}`);
   });
 
-  bot.command('buy', async (ctx) => {
+  bot.command("buy", async (ctx) => {
     await ctx.conversation.enter(ConversationId.Buy);
   });
 
-  bot.command('sell', async (ctx) => {
+  bot.command("sell", async (ctx) => {
     await ctx.conversation.enter(ConversationId.Sell);
   });
 
-  bot.command('withdrawal', async (ctx) => {
+  bot.command("withdrawal", async (ctx) => {
     await ctx.conversation.enter(ConversationId.Withdraw);
   });
 
-  bot.command('createaftermathpool', async (ctx) => {
+  bot.command("createaftermathpool", async (ctx) => {
     await ctx.conversation.enter(ConversationId.CreateAftermathPool);
   });
 
-  bot.command('createcetuspool', async (ctx) => {
+  bot.command("createcetuspool", async (ctx) => {
     await ctx.conversation.enter(ConversationId.CreateCetusPool);
   });
 
-  bot.command('addcetuspoolliquidity', async (ctx) => {
+  bot.command("addcetuspoolliquidity", async (ctx) => {
     await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
   });
 
-  bot.command('createcoin', async (ctx) => {
+  bot.command("createcoin", async (ctx) => {
     await ctx.conversation.enter(ConversationId.CreateCoin);
   });
 
-  bot.command('surfdog', async (ctx) => {
+  bot.command("surfdog", async (ctx) => {
     await showSurfdogPage(ctx);
   });
 
-  bot.command('start', async (ctx) => {
+  bot.command("start", async (ctx) => {
     await home(ctx);
   });
 
-  bot.command('close', async (ctx) => {
+  bot.command("close", async (ctx) => {
     await ctx.conversation.exit();
   });
 
   // Set commands suggestion
   await bot.api.setMyCommands([
-    { command: 'start', description: 'Start the bot' },
-    { command: 'version', description: 'Show the bot version' },
-    { command: 'buy', description: 'Show buy menu' },
-    { command: 'sell', description: 'Show sell menu' },
-    { command: 'withdrawal', description: 'Show withdrawal menu' },
+    { command: "start", description: "Start the bot" },
+    { command: "version", description: "Show the bot version" },
+    { command: "buy", description: "Show buy menu" },
+    { command: "sell", description: "Show sell menu" },
+    { command: "withdrawal", description: "Show withdrawal menu" },
     {
-      command: 'createaftermathpool',
-      description: 'Create Aftermath liquidity pool',
+      command: "createaftermathpool",
+      description: "Create Aftermath liquidity pool",
     },
-    { command: 'close', description: 'Hard close all conversations' },
+    { command: "close", description: "Hard close all conversations" },
     // {
     //   command: 'createcetuspool',
     //   description: 'Create Cetus concentrated liquidity pool',
@@ -204,15 +186,15 @@ async function startBot(): Promise<void> {
     //   command: 'addcetuspoolliquidity',
     //   description: 'Add liquidity to Cetus pool',
     // },
-    { command: 'createcoin', description: 'Create coin' },
-    { command: 'createpool', description: 'Create liquidity pool' },
-    { command: 'createcoin', description: 'Create coin' },
-    { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
+    { command: "createcoin", description: "Create coin" },
+    { command: "createpool", description: "Create liquidity pool" },
+    { command: "createcoin", description: "Create coin" },
+    { command: "surfdog", description: "Enter into $SURFDOG launchpad" },
   ]);
 
   useCallbackQueries(bot);
 
-  bot.callbackQuery('add-cetus-liquidity', async (ctx) => {
+  bot.callbackQuery("add-cetus-liquidity", async (ctx) => {
     await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
     await ctx.answerCallbackQuery();
   });
@@ -221,19 +203,19 @@ async function startBot(): Promise<void> {
     const ctx = err.ctx;
     console.error(`Error while handling update ${ctx.update.update_id}:`);
     const e = err.error;
-    ctx.session.step = 'main';
+    ctx.session.step = "main";
     if (e instanceof GrammyError) {
-      console.error('Error in request:', e.description);
+      console.error("Error in request:", e.description);
     } else if (e instanceof HttpError) {
-      console.error('Could not contact Telegram:', e);
+      console.error("Could not contact Telegram:", e);
     } else {
-      console.error('Unknown error:', e);
+      console.error("Unknown error:", e);
     }
   });
 
   // bot.errorBoundary(errorBoundaryHandler)
 
-  ENVIRONMENT === 'local' && bot.start();
+  ENVIRONMENT === "local" && bot.start();
 }
 
 startBot();

@@ -4,20 +4,14 @@ import {
   WalletManagerSingleton,
   isTransactionBlock,
   transactionFromSerializedTransaction,
-} from '@avernikoz/rinbot-sui-sdk';
-import { BotContext, MyConversation } from '../types';
-import {
-  TransactionResultStatus,
-  provider,
-  random_uuid,
-} from './sui.functions';
-import { SuiTransactionBlockResponse } from './types';
-import { isTransactionSuccessful } from './utils';
+} from "@avernikoz/rinbot-sui-sdk";
+import { BotContext, MyConversation } from "../types";
+import { TransactionResultStatus, provider, random_uuid } from "./sui.functions";
+import { SuiTransactionBlockResponse } from "./types";
+import { isTransactionSuccessful } from "./utils";
 
 export async function getTransactionFromMethod<
-  T extends (
-    params: Parameters<T>[0],
-  ) => Promise<TransactionBlock> | GetTransactionType,
+  T extends (params: Parameters<T>[0]) => Promise<TransactionBlock> | GetTransactionType,
 >({
   conversation,
   ctx,
@@ -49,9 +43,7 @@ export async function getTransactionFromMethod<
             `[getTransactionForPlainResult(${method.name})] failed to create transaction: ${error.message}`,
           );
         } else {
-          console.error(
-            `[getTransactionForPlainResult(${method.name})] failed to create transaction: ${error}`,
-          );
+          console.error(`[getTransactionForPlainResult(${method.name})] failed to create transaction: ${error}`);
         }
 
         return;
@@ -68,15 +60,11 @@ export async function getTransactionFromMethod<
       }
     },
     afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
   });
@@ -85,9 +73,7 @@ export async function getTransactionFromMethod<
 }
 
 // TODO: Remove this method after replacing and testing with `getTransactionFromMethod`
-export async function getTransactionForStructuredResult<
-  T extends (params: Parameters<T>[0]) => GetTransactionType,
->({
+export async function getTransactionForStructuredResult<T extends (params: Parameters<T>[0]) => GetTransactionType>({
   conversation,
   ctx,
   method,
@@ -112,9 +98,7 @@ export async function getTransactionForStructuredResult<
             `[getTransactionForStructuredResult(${method.name})] failed to create transaction: ${error.message}`,
           );
         } else {
-          console.error(
-            `[getTransactionForStructuredResult(${method.name})] failed to create transaction: ${error}`,
-          );
+          console.error(`[getTransactionForStructuredResult(${method.name})] failed to create transaction: ${error}`);
         }
 
         return;
@@ -131,15 +115,11 @@ export async function getTransactionForStructuredResult<
       }
     },
     afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
       console.error(error);
     },
   });
@@ -156,7 +136,7 @@ export async function signAndExecuteTransaction({
   conversation: MyConversation;
   ctx: BotContext;
   transaction: TransactionBlock;
-  signerPrivateKey?: string,
+  signerPrivateKey?: string;
 }): Promise<{
   digest?: string;
   result: TransactionResultStatus;
@@ -170,33 +150,25 @@ export async function signAndExecuteTransaction({
     try {
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          signerPrivateKey,
-        ),
+        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(signerPrivateKey),
         options: {
           showEffects: true,
         },
       });
 
       const isTransactionResultSuccessful = isTransactionSuccessful(res);
-      const result = isTransactionResultSuccessful
-        ? TransactionResultStatus.Success
-        : TransactionResultStatus.Failure;
+      const result = isTransactionResultSuccessful ? TransactionResultStatus.Success : TransactionResultStatus.Failure;
 
       return { digest: res.digest, result };
     } catch (error) {
       if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
       } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
       }
 
       const result = TransactionResultStatus.Failure;
-      return { result: result, reason: 'failed_to_send_transaction' };
+      return { result: result, reason: "failed_to_send_transaction" };
     }
   });
 
@@ -221,20 +193,17 @@ export async function signAndExecuteTransactionAndReturnResult({
     try {
       const transactionResult = await provider.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
+        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(ctx.session.privateKey),
         options: {
           showEvents: true,
           showBalanceChanges: true,
           showEffects: true,
           showObjectChanges: true,
         },
-        requestType: 'WaitForLocalExecution',
+        requestType: "WaitForLocalExecution",
       });
 
-      const isTransactionResultSuccessful =
-        isTransactionSuccessful(transactionResult);
+      const isTransactionResultSuccessful = isTransactionSuccessful(transactionResult);
 
       const resultStatus = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
@@ -247,17 +216,13 @@ export async function signAndExecuteTransactionAndReturnResult({
       };
     } catch (error) {
       if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`);
       } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
+        console.error(`[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`);
       }
 
       const resultStatus = TransactionResultStatus.Failure;
-      return { resultStatus, reason: 'failed_to_send_transaction' };
+      return { resultStatus, reason: "failed_to_send_transaction" };
     }
   });
 

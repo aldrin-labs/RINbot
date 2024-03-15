@@ -1,7 +1,7 @@
-import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import { Menu } from '@grammyjs/menu';
-import { home } from '../chains/sui.functions';
-import { BotContext } from '../types';
+import { CoinAssetData } from "@avernikoz/rinbot-sui-sdk";
+import { Menu } from "@grammyjs/menu";
+import { home } from "../chains/sui.functions";
+import { BotContext } from "../types";
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
@@ -24,20 +24,20 @@ function prevToken(assets: CoinAssetData[]) {
   currentToken = assets[currentTokenIndex];
 }
 
-const positions_menu = new Menu<BotContext>('positions-menu')
-  .text('Sell', async (ctx) => {
-    ctx.session.step = 'sell';
-    await ctx.conversation.enter('sell');
+const positions_menu = new Menu<BotContext>("positions-menu")
+  .text("Sell", async (ctx) => {
+    ctx.session.step = "sell";
+    await ctx.conversation.enter("sell");
   })
   .row()
-  .text('<', (ctx) => {
+  .text("<", (ctx) => {
     prevToken(ctx.session.assets);
 
     const newMessage = currentToken.symbol
       ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
       : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
 
-    ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+    ctx.editMessageText(newMessage, { parse_mode: "HTML" });
   })
   .text((ctx) => {
     const assets = ctx.session.assets;
@@ -46,7 +46,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     return tokenToUse.symbol ?? tokenToUse.type;
   })
   .text(
-    '>',
+    ">",
     (ctx) => {
       nextToken(ctx.session.assets);
 
@@ -54,12 +54,12 @@ const positions_menu = new Menu<BotContext>('positions-menu')
         ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
         : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
 
-      ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+      ctx.editMessageText(newMessage, { parse_mode: "HTML" });
     },
     (ctx) => ctx.menu.update(),
   )
   .row()
-  .text('Home', async (ctx) => {
+  .text("Home", async (ctx) => {
     await home(ctx);
   });
 
