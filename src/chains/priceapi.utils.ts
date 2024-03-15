@@ -27,7 +27,7 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]){
         
         const startTime = Date.now();
         
-        const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data)
+        const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data, {timeout: 200})
         
         const endTime = Date.now();
         const requestTime = endTime - startTime;
@@ -43,6 +43,7 @@ export async function getPriceApi(chainId: string, tokenAddress: string){
     try {
         const startTime = Date.now();
         const response = await axios.get<AxiosPriceApiResponseGet>(`${PRICE_API_URL}/api/assets`, {
+            timeout: 200,
             params: {
                 chainId,
                 tokenAddress
