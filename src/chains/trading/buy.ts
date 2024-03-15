@@ -30,12 +30,12 @@ import {
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply(
-    'Which token do you want to buy? Please send a coin type or a link to suiscan.',
+    'What token do you want to buy? Please send a coin type or a link to suiscan.',
     { reply_markup: closeConversation },
   );
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
+    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
     { parse_mode: 'HTML' },
   );
 

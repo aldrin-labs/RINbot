@@ -3,6 +3,11 @@ import axios from "axios";
 import { AxiosPriceApiResponsePost, AxiosPriceApiResponseGet, CoinAssetDataExtended, PriceApiPayload } from "../types";
 import {PRICE_API_URL} from '../config/bot.config'
 
+function isExponential(num: number): boolean {
+    const numStr = num.toString();
+    return numStr.includes('e') || numStr.includes('E');
+  }
+
 export function calculate(balance: string, price: number | undefined){
     if(price === undefined)
         return null
@@ -13,6 +18,8 @@ export function calculate(balance: string, price: number | undefined){
 export function totalBalanceCalculation(balance: string, price: number | undefined) {
     if(price === undefined)
         return 0
+    if(isExponential(price))
+        price = +price.toFixed(10)
     return +balance * price
 }
 
