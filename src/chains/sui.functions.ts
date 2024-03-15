@@ -17,12 +17,11 @@ import {
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction,
+  transactionFromSerializedTransaction
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
 } from '../config/bot.config';
@@ -36,7 +35,7 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { BotContext, MyConversation } from '../types';
+import { BotContext, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -67,6 +66,8 @@ import {
   sleep,
   swapTokenTypesAreEqual,
 } from './utils';
+
+import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -428,7 +429,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  return availableBalance as string;
+  return availableBalance
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
@@ -440,19 +441,37 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    const allCoinsAssets = await walletManager.getAllCoinAssets(
+    let allCoinsAssets = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
 
     ctx.session.assets = allCoinsAssets;
+    let data: PriceApiPayload = {data: []}
+    allCoinsAssets.forEach(coin => {
+      //move to price api
+      data.data.push({chainId: "sui", tokenAddress: coin.type})
+    })
+    try {
+      const priceApiReponse = await postPriceApi(allCoinsAssets)
+      if(priceApiReponse !== undefined)
+        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+          ...coin,
+          price: priceApiReponse.data.data[index].price
+        }));
+    } catch (error) {
+      console.error(error)
+    }
 
     if (allCoinsAssets?.length === 0) {
       ctx.reply(`Your have no tokens yet.`, { reply_markup: goHome });
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
+      
+      const balance = isCoinAssetDataExtended(el) ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: <code>${el.balance}</code>\n\n`,
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
       );
 
       return acc;
@@ -479,7 +498,52 @@ export function getExplorerLink(ctx: BotContext): string {
 export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \nYour SUI balance: <code>${userBalance}</code>\nYour available SUI balance: <code>${avl_balance}</code>`;
+  let price;
+  try {
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
+    price = priceApiGetResponse?.data.data.price
+  } catch (error) {
+    console.error(error)
+    price = undefined
+  }
+  const balance_usd = calculate(userBalance, price)
+  const avl_balance_usd = calculate(avl_balance, price)
+
+  let totalBalanceStr: string;
+
+  try {
+      const data: PriceApiPayload = {data: []}
+      const allCoinAssets = ctx.session.assets
+      allCoinAssets.forEach(coin => {
+        //move to price api
+        data.data.push({chainId: "sui", tokenAddress: coin.type})
+      })
+
+      const response = await postPriceApi(allCoinAssets);
+
+      const coinsPriceApi = response?.data.data;
+
+      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+
+      let balance = 0;
+      allCoinAssets.forEach(coin => {
+        const price = priceMap.get(coin.type);
+        if (price !== undefined) {
+          balance += +coin.balance * price;
+        }
+      });
+
+      totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
+    
+    } catch (error) {
+      console.error('Error in calculating total balance: ', error)
+      totalBalanceStr = ''
+    }
+
+  const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
+  const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
     'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },

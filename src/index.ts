@@ -17,13 +17,11 @@ import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conv
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import {
-  buy,
   createAftermathPool,
   createCoin,
   exportPrivateKey,
   generateWallet,
   home,
-  sell,
   withdraw,
 } from './chains/sui.functions';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -39,6 +37,9 @@ import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
+import { buy } from './chains/trading/buy';
+import { sell } from './chains/trading/sell';
+
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);

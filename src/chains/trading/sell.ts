@@ -167,8 +167,13 @@ export async function sell(
 
   const validCoinToSell = validatedCoin as CoinAssetData;
 
+  let priceOutput = '';
+
+  if (validCoinToSell !== undefined) 
+    priceOutput = await getPriceOutputData(validCoinToSell)
+
   await ctx.reply(
-    `Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -303,6 +308,7 @@ export async function sell(
         : TransactionResultStatus.Failure;
 
       return { digest: res.digest, result };
+
     } catch (error) {
       if (error instanceof Error) {
         console.error(

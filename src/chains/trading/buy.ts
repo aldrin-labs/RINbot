@@ -6,12 +6,12 @@ import {
   SUI_DECIMALS,
   transactionFromSerializedTransaction,
   WalletManagerSingleton,
+  RouteManager,
 } from '@avernikoz/rinbot-sui-sdk';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
 import { MyConversation, BotContext } from '../../types';
 import { ConversationId } from '../conversations.config';
-import { getPriceApi } from '../priceapi.utils';
 import {
   getCoinManager,
   getWalletManager,
@@ -27,6 +27,8 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
+import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
+import { getUserFeePercentage } from '../fees/utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -140,12 +142,14 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     const balance = await walletManager.getAvailableSuiBalance(
       ctx.session.publicKey,
     );
-
     return balance;
   });
+  let priceOutput = '';
+  if (validatedCoinType !== undefined) 
+    priceOutput = await getPriceOutputData(validatedCoinType)
 
   await ctx.reply(
-    `Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
