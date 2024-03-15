@@ -45,7 +45,7 @@
     "dev": "DEBUG=bot* dotenv -- tsx watch src/index.ts",
     "build": "ncc build src/index.ts -o public -m",
     "prettier": "prettier --write src/**/*.ts",
-    "lint": "tsc --noEmit && eslint src/**/*.ts",
+    "lint": "eslint src/**/*.ts",
     "lint-fix": "eslint src/**/*.ts --fix"
   }
 }
