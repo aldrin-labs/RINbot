@@ -5,15 +5,71 @@ import {
 } from '@grammyjs/conversations';
 import { Context, SessionFlavor } from 'grammy';
 
+export interface AxiosPriceApiResponseGet {
+  data: {
+    chainId: string;
+    tokenAddress: string;
+    timestamp: number;
+    price: number;
+    mcap: number | null;
+    totalVolume: number | null;
+    priceChange1h: number;
+    priceChange24h: number;
+    fecthedFrom: string;
+  }
+}
+
+export interface AxiosPriceApiResponsePost {
+  data : {
+    chainId: string;
+    tokenAddress: string;
+    timestamp: number;
+    price: number;
+    mcap: number | null;
+    totalVolume: number | null;
+    priceChange1h: number;
+    priceChange24h: number;
+    fecthedFrom: string;
+  }[]
+}
+
+export interface PriceApiPayload {
+  data: {
+    chainId: string,
+    tokenAddress: string
+  }[]
+}
+
+export interface CoinAssetDataExtended extends CoinAssetData{
+  price?: number;
+  timestamp?: number;
+}
+
 export interface SessionData {
-  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';  // which step of the form we are on
+  step:
+    | 'main'
+    | 'buy'
+    | 'sell'
+    | 'positions'
+    | 'wallet'
+    | 'wallet-deposit'
+    | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetData[];
-  welcomeBonus: { amount: number, isUserEligibleToGetBonus: boolean, isUserAgreeWithBonus: boolean | null, isUserClaimedBonus: boolean | null }
-  tradesCount: number
-  createdAt: number
+  welcomeBonus: {
+    amount: number;
+    isUserEligibleToGetBonus: boolean;
+    isUserAgreeWithBonus: boolean | null;
+    isUserClaimedBonus: boolean | null;
+  };
+  tradesCount: number;
+  createdAt: number;
+  tradeCoin: {
+    coinType: string;
+    useSpecifiedCoin: boolean;
+  };
 }
 
 export type BotContext = Context &
