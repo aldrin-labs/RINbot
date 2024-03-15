@@ -1,34 +1,34 @@
 import {
-  isValidTokenAddress,
   LONG_SUI_COIN_TYPE,
-  SHORT_SUI_COIN_TYPE,
-  isValidTokenAmount,
-  SUI_DECIMALS,
-  transactionFromSerializedTransaction,
-  WalletManagerSingleton,
   RouteManager,
+  SHORT_SUI_COIN_TYPE,
+  SUI_DECIMALS,
+  WalletManagerSingleton,
+  isValidTokenAddress,
+  isValidTokenAmount,
+  transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
+import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import { MyConversation, BotContext } from '../../types';
+import { BotContext, MyConversation } from '../../types';
 import { ConversationId } from '../conversations.config';
+import { getUserFeePercentage } from '../fees/utils';
 import {
-  getCoinManager,
-  getWalletManager,
-  random_uuid,
-  getRouteManager,
-  provider,
   TransactionResultStatus,
+  getCoinManager,
+  getRouteManager,
+  getWalletManager,
+  provider,
+  random_uuid,
 } from '../sui.functions';
 import {
-  isValidCoinLink,
   extractCoinTypeFromLink,
-  swapTokenTypesAreEqual,
-  isTransactionSuccessful,
   getPriceOutputData,
+  isTransactionSuccessful,
+  isValidCoinLink,
+  swapTokenTypesAreEqual,
 } from '../utils';
-import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
-import { getUserFeePercentage } from '../fees/utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -38,28 +38,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const coinType = ctx.session.tradeCoin.coinType;
 
   let validatedCoinType: string | undefined;
-  let coinDecimals: number | undefined;
 
   if (useSpecifiedCoin) {
-    const fetchedCoin = await conversation.external(async () => {
-      const coinManager = await getCoinManager();
-      const coinData = await coinManager.getCoinByType2(coinType);
-
-      return coinData;
-    });
-
-    if (fetchedCoin === null) {
-      await ctx.reply(
-        `Specified coin is not found. Please, try again later or contact support.`,
-        { reply_markup: retryButton },
-      );
-
-      return;
-    }
-
     validatedCoinType = coinType;
-    coinDecimals = fetchedCoin.decimals;
-
     ctx.session.tradeCoin.useSpecifiedCoin = false;
   } else {
     await ctx.reply(
@@ -130,11 +111,22 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       }
 
       validatedCoinType = fetchedCoin.type;
-      coinDecimals = fetchedCoin.decimals;
 
       return true;
     });
   }
+
+  // ts check
+  if (validatedCoinType === undefined) {
+    await ctx.reply(
+      'Cannot process entered coin. Please, try again or contact support.',
+      { reply_markup: retryButton },
+    );
+
+    return;
+  }
+
+  const resCoinType = validatedCoinType;
 
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -144,9 +136,10 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     );
     return balance;
   });
-  let priceOutput = '';
-  if (validatedCoinType !== undefined) 
-    priceOutput = await getPriceOutputData(validatedCoinType)
+
+  const priceOutput = await conversation.external(() =>
+    getPriceOutputData(resCoinType),
+  );
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -189,19 +182,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   // ts check
-  if (!validatedCoinType || !validatedInputAmount) {
+  if (validatedInputAmount === undefined) {
     await ctx.reply(
       `Invalid coinType or inputAmount. Please try again or contact support.`,
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  // ts check
-  if (coinDecimals === undefined) {
-    await ctx.reply(
-      'Cannot process coin decimals. Please, try again or contact support.',
       { reply_markup: retryButton },
     );
 
@@ -215,18 +198,18 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const feeAmount = RouteManager.calculateFeeAmountIn({
     feePercentage,
     amount: validatedInputAmount,
-    tokenDecimals: coinDecimals,
+    tokenDecimals: SUI_DECIMALS,
   });
 
   // TODO: Re-check args here
   const tx = await conversation.external({
-    args: [validatedCoinType, validatedInputAmount],
-    task: async (validatedCoinType: string, validatedInputAmount: string) => {
+    args: [resCoinType, validatedInputAmount],
+    task: async (resCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();
         const transaction = await routerManager.getBestRouteTransaction({
           tokenFrom: LONG_SUI_COIN_TYPE,
-          tokenTo: validatedCoinType,
+          tokenTo: resCoinType,
           amount: validatedInputAmount,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
