@@ -9,13 +9,11 @@ import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfd
 import { addCetusLiquidity } from './chains/pools/cetus/add-liquidity';
 import { createCetusPool } from './chains/pools/cetus/create';
 import {
-  buy,
   createAftermathPool,
   createCoin,
   exportPrivateKey,
   generateWallet,
   home,
-  sell,
   withdraw,
 } from './chains/sui.functions';
 import menu from './menu/main';
@@ -27,6 +25,8 @@ import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { autoRetry } from "@grammyjs/auto-retry";
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { buy } from './chains/trading/buy';
+import { sell } from './chains/trading/sell';
 
 
 function errorBoundaryHandler(err: BotError) {
