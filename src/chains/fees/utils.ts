@@ -3,7 +3,7 @@ import { BotContext } from '../../types';
 import { RINCEL_COIN_TYPE } from '../sui.config';
 import { getWalletManager } from '../sui.functions';
 import { findCoinInAssets } from '../utils';
-import { DEFAULT_FEE_PERCENTAGE, RINCEL_TO_FEES_MAP } from './constants';
+import { DEFAULT_FEE_PERCENTAGE, RINCEL_TO_FEES_MAP } from './config';
 
 export async function getUserRincelBalance(ctx: BotContext) {
   const walletManager = await getWalletManager();
