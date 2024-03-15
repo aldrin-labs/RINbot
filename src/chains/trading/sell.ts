@@ -197,9 +197,7 @@ export async function sell(
     validatedInputAmount = inputAmount;
     return true;
   });
-
-  //await chargeTradeFee(ctx, )
-
+  
   await ctx.reply('Initiating swap...');
 
   const tx = await conversation.external({
