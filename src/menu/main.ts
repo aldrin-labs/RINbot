@@ -63,12 +63,13 @@ const menu = new Menu<BotContext>('main')
       { parse_mode: 'HTML', reply_markup: goHome },
     );
   })
-  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   // .row()
   // .text('Aldrin Bridge')
   .text('Fees', async (ctx) => {
     await showFeesPage(ctx);
   })
+  .row()
+  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const {
       isUserEligibleToGetBonus,
