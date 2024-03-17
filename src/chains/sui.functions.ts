@@ -553,7 +553,7 @@ export async function home(ctx: BotContext) {
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
-    new InputFile("../img/aldrin1.jpg"),
+    new InputFile('src/img/aldrin2.jpg'),
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
