@@ -8,10 +8,3 @@ export const WELCOME_BONUS_AMOUNT = process.env.WELCOME_BONUS_AMOUNT && process.
 export const WELCOME_BONUS_MIN_TRADES_LIMIT = 15
 export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES = process.env.EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES || ''
 export const PRICE_API_URL = process.env.PRICE_API_URL || ''
-
-export const imgs = [
-    'src/img/aldrin1.jpg',
-    'src/img/aldrin2.jpg',
-    'src/img/rincel1.jpg',
-    'src/img/rincel2.jpg'
-]

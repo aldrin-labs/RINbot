@@ -23,8 +23,7 @@ import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
 import {
   WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT,
-  imgs,
+  WELCOME_BONUS_MIN_TRADES_LIMIT
 } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
@@ -74,6 +73,13 @@ export enum TransactionResultStatus {
   Success = 'success',
   Failure = 'failure',
 }
+
+const imgs = [
+  '../img/aldrin1.jpg',
+  '../img/aldrin2.jpg',
+  '../img/rincel1.jpg',
+  '../img/rincel2.jpg'
+]
 
 export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
 
@@ -546,7 +552,7 @@ export async function home(ctx: BotContext) {
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
-    imgs[Math.floor(Math.random() * 4)],
+    imgs[0],
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
