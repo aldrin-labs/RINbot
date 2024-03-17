@@ -24,6 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
+  imgs,
 } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
@@ -446,14 +447,14 @@ export async function assets(ctx: BotContext): Promise<void> {
     );
 
     ctx.session.assets = allCoinsAssets;
-    let data: PriceApiPayload = {data: []}
+    let data: PriceApiPayload = { data: [] }
     allCoinsAssets.forEach(coin => {
       //move to price api
-      data.data.push({chainId: "sui", tokenAddress: coin.type})
+      data.data.push({ chainId: "sui", tokenAddress: coin.type })
     })
     try {
       const priceApiReponse = await postPriceApi(allCoinsAssets)
-      if(priceApiReponse !== undefined)
+      if (priceApiReponse !== undefined)
         allCoinsAssets = allCoinsAssets.map((coin, index) => ({
           ...coin,
           price: priceApiReponse.data.data[index].price
@@ -467,7 +468,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
-      
+
       const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
 
       acc = acc.concat(
@@ -512,40 +513,40 @@ export async function home(ctx: BotContext) {
   let totalBalanceStr: string;
 
   try {
-      const data: PriceApiPayload = {data: []}
-      const allCoinAssets = ctx.session.assets
-      allCoinAssets.forEach(coin => {
-        //move to price api
-        data.data.push({chainId: "sui", tokenAddress: coin.type})
-      })
+    const data: PriceApiPayload = { data: [] }
+    const allCoinAssets = ctx.session.assets
+    allCoinAssets.forEach(coin => {
+      //move to price api
+      data.data.push({ chainId: "sui", tokenAddress: coin.type })
+    })
 
-      const response = await postPriceApi(allCoinAssets);
+    const response = await postPriceApi(allCoinAssets);
 
-      const coinsPriceApi = response?.data.data;
+    const coinsPriceApi = response?.data.data;
 
-      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
 
-      let balance = 0;
-      allCoinAssets.forEach(coin => {
-        const price = priceMap.get(coin.type);
-        if (price !== undefined) {
-          balance += +coin.balance * price;
-        }
-      });
+    let balance = 0;
+    allCoinAssets.forEach(coin => {
+      const price = priceMap.get(coin.type);
+      if (price !== undefined) {
+        balance += +coin.balance * price;
+      }
+    });
 
-      totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
-    
-    } catch (error) {
-      console.error('Error in calculating total balance: ', error)
-      totalBalanceStr = ''
-    }
+    totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
+
+  } catch (error) {
+    console.error('Error in calculating total balance: ', error)
+    totalBalanceStr = ''
+  }
 
   const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
   const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
-    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    imgs[Math.floor(Math.random() * 4)],
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
@@ -568,11 +569,11 @@ export async function createAftermathPool(
 
   await ctx.reply(
     '<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI ' +
-      'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
-      'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
-      'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
-      'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
-      'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
+    'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
+    'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
+    'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
+    'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
+    'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
     { reply_markup: continueWithCloseKeyboard, parse_mode: 'HTML' },
   );
 
@@ -870,11 +871,11 @@ export async function createAftermathPool(
       if (foundCoin.balance < minAmountB) {
         await ctx.reply(
           'You have too small balance of this coin to add it to the pool relative to the amount ' +
-            `of the first coin you specified.\n\nTo create a pool with <code>${firstValidatedInputAmount}</code> ` +
-            `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type} and ` +
-            `${foundCoin.symbol || foundCoin.type}, you need at least <code>${minAmountB}</code> ` +
-            `${foundCoin.symbol || foundCoin.type}.\n\nPlease, specify another coin to add in pool or top up your ` +
-            `${foundCoin.symbol || foundCoin.type} balance.`,
+          `of the first coin you specified.\n\nTo create a pool with <code>${firstValidatedInputAmount}</code> ` +
+          `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type} and ` +
+          `${foundCoin.symbol || foundCoin.type}, you need at least <code>${minAmountB}</code> ` +
+          `${foundCoin.symbol || foundCoin.type}.\n\nPlease, specify another coin to add in pool or top up your ` +
+          `${foundCoin.symbol || foundCoin.type} balance.`,
           { reply_markup: closeConversation, parse_mode: 'HTML' },
         );
 
@@ -933,7 +934,7 @@ export async function createAftermathPool(
     resultSecondCoinMinAmount = secondCoinMinAmount;
     resultSecondCoinMaxAmount =
       new BigNumber(availableSecondCoinMaxAmount) <
-      new BigNumber(secondCoinMaxAmount)
+        new BigNumber(secondCoinMaxAmount)
         ? availableSecondCoinMaxAmount
         : secondCoinMaxAmount;
   } else {
@@ -1506,7 +1507,7 @@ export async function createCoin(
   if (new BigNumber(suiBalance) < new BigNumber(1)) {
     await ctx.reply(
       'Please, top up your <b>SUI</b> balance. You need at least <code>1</code> ' +
-        '<b>SUI</b> to create a coin.',
+      '<b>SUI</b> to create a coin.',
       { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
@@ -1515,7 +1516,7 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin name</b>?\n\nExample: <code>My Awesome Coin</code>\n\n<span class="tg-spoiler">' +
-      '<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>',
+    '<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>',
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1550,9 +1551,9 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin symbol</b>?\n\nExample: <code>MY_AWESOME_COIN</code>, or just <code>AWESOME</code>\n\n<span class="tg-spoiler">' +
-      '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
-      '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
-      '<u>AWESOME</u> here is the coin symbol.</span>',
+    '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
+    '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
+    '<u>AWESOME</u> here is the coin symbol.</span>',
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1639,8 +1640,8 @@ export async function createCoin(
 
   await ctx.reply(
     'Send a <b>coin image</b>.\n\n<b>Suggestions</b>:\n1. The coin image should be ' +
-      'square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your ' +
-      'image does not exceed the size of 320x320 pixels, no quality changes will occur.',
+    'square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your ' +
+    'image does not exceed the size of 320x320 pixels, no quality changes will occur.',
     {
       reply_markup: closeWithSkipReplyMarkup,
       parse_mode: 'HTML',
@@ -1661,8 +1662,8 @@ export async function createCoin(
     if (imagesData === undefined) {
       await ctx.reply(
         'Invalid coin image. Please, send another image.\n\n<span class="tg-spoiler"><b>Hint</b>: If you are ' +
-          'sending an image as a file (without compression), consider sending it with compression. If your ' +
-          'image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>',
+        'sending an image as a file (without compression), consider sending it with compression. If your ' +
+        'image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>',
         {
           reply_markup: closeWithSkipReplyMarkup,
           parse_mode: 'HTML',
@@ -1729,13 +1730,13 @@ export async function createCoin(
 
   await ctx.reply(
     'Enter <b>coin decimals</b>.\n\n<b>Default</b>: <code>9</code>\n' +
-      '<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n' +
-      '<span class="tg-spoiler"><b>Hint</b>: If you don\'t ' +
-      'know what to enter, just skip this step.</span>\n\n' +
-      '<span class="tg-spoiler">You should be aware, that the higher coin decimals you\'ll choose, the less total ' +
-      'supply you can use.\n\n' +
-      '<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals ' +
-      '&#8213; 999,999,999 total supply</span>',
+    '<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n' +
+    '<span class="tg-spoiler"><b>Hint</b>: If you don\'t ' +
+    'know what to enter, just skip this step.</span>\n\n' +
+    '<span class="tg-spoiler">You should be aware, that the higher coin decimals you\'ll choose, the less total ' +
+    'supply you can use.\n\n' +
+    '<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals ' +
+    '&#8213; 999,999,999 total supply</span>',
     { parse_mode: 'HTML', reply_markup: closeWithSkipReplyMarkup },
   );
 
@@ -1781,8 +1782,8 @@ export async function createCoin(
 
   await ctx.reply(
     'Enter <b>total supply</b>.\n\n<b>Example</b>: <code>1000000</code>\n\n' +
-      '<b>Hint</b>: Max total supply for selected decimals ' +
-      `(<code>${coinDecimals}</code>) is <code>${maxTotalSupply}</code>`,
+    '<b>Hint</b>: Max total supply for selected decimals ' +
+    `(<code>${coinDecimals}</code>) is <code>${maxTotalSupply}</code>`,
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1825,7 +1826,7 @@ export async function createCoin(
   const yesOrNoWithCancelReplyMarkup = yesOrNo.clone().add(...closeButton);
   await ctx.reply(
     'Would supply be <b>fixed</b>?\n\n<span class="tg-spoiler"><b>Hint</b>:\nYes &#8213; Treasury Cap ' +
-      'will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>',
+    'will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>',
     { parse_mode: 'HTML', reply_markup: yesOrNoWithCancelReplyMarkup },
   );
 
