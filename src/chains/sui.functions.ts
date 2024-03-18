@@ -531,7 +531,7 @@ export async function home(ctx: BotContext) {
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price || 0]));
 
     let balance = 0;
     allCoinAssets.forEach(coin => {
@@ -545,7 +545,7 @@ export async function home(ctx: BotContext) {
 
   } catch (error) {
     console.error('Error in calculating total balance: ', error)
-    totalBalanceStr = `${error}`
+    totalBalanceStr = ``
   }
 
 
