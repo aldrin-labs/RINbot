@@ -26,6 +26,8 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
+import { SuiClient } from '../types'
+import { getPriceApi } from '../priceapi.utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply(
@@ -240,12 +242,14 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         },
       });
 
+
+
       const isTransactionResultSuccessful = isTransactionSuccessful(res);
       const result = isTransactionResultSuccessful
         ? TransactionResultStatus.Success
         : TransactionResultStatus.Failure;
 
-      return { digest: res.digest, result };
+      return { digest: res.digest, result, res };
     } catch (error) {
       if (error instanceof Error) {
         console.error(
@@ -264,10 +268,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}\n\n${resultOfSwap.res}`,
       { reply_markup: retryButton },
     );
-
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
@@ -285,3 +288,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
+
+// async function addTrade(coinType: string, conversation: MyConversation, ctx: BotContext) {
+
+
+
+//   await getPriceApi("sui", coinType).then(response => {
+//     conversation.session.trades.push({ buyingPrice: response?.data.data.price || null, sellingPrice: null, quantity:  })
+//   })
+// }

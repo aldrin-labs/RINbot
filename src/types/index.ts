@@ -7,8 +7,8 @@ import { Context, SessionFlavor } from 'grammy';
 
 //For PNL
 export interface Trade {
-  buyingPrice: number;
-  sellingPrice: number;
+  buyingPrice: number | null;
+  sellingPrice: number | null;
   quantity: number;
   fees?: number;
 }

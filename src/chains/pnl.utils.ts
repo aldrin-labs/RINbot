@@ -19,3 +19,5 @@ function calculateCumulativePnLPercentage(trades: Trade[]): string {
 }
 
 
+
+
