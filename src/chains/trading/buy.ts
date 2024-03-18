@@ -186,7 +186,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
         })
-        console.log(routeData);
+        console.log(routeData.maxOutputAmount);
 
 
         return transaction;
