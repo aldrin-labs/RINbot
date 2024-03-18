@@ -5,6 +5,14 @@ import {
 } from '@grammyjs/conversations';
 import { Context, SessionFlavor } from 'grammy';
 
+//For PNL
+export interface Trade {
+  buyingPrice: number;
+  sellingPrice: number;
+  quantity: number;
+  fees?: number;
+}
+
 export interface AxiosPriceApiResponseGet {
   data: {
     chainId: string;
@@ -20,7 +28,7 @@ export interface AxiosPriceApiResponseGet {
 }
 
 export interface AxiosPriceApiResponsePost {
-  data : {
+  data: {
     chainId: string;
     tokenAddress: string;
     timestamp: number;
@@ -40,24 +48,25 @@ export interface PriceApiPayload {
   }[]
 }
 
-export interface CoinAssetDataExtended extends CoinAssetData{
+export interface CoinAssetDataExtended extends CoinAssetData {
   price?: number;
   timestamp?: number;
 }
 
 export interface SessionData {
   step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
+  | 'main'
+  | 'buy'
+  | 'sell'
+  | 'positions'
+  | 'wallet'
+  | 'wallet-deposit'
+  | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetData[];
+  trades: Trade[];
   welcomeBonus: {
     amount: number;
     isUserEligibleToGetBonus: boolean;

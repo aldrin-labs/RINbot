@@ -39,6 +39,7 @@ import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
 import { buy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
+import { addTrades } from './migrations/addTrades';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -69,6 +70,7 @@ async function startBot(): Promise<void> {
           publicKey,
           settings: { slippagePercentage: 20 },
           assets: [],
+          trades: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
             isUserEligibleToGetBonus: true,
@@ -89,6 +91,7 @@ async function startBot(): Promise<void> {
           1: addWelcomeBonus,
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
+          4: addTrades,
         },
       }),
     }),
