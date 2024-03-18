@@ -268,7 +268,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}\n\n${resultOfSwap.res.balanceChanges}`,
+      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}\n\n${resultOfSwap.res.transaction}`,
       { reply_markup: retryButton },
     );
 
