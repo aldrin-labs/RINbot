@@ -545,8 +545,10 @@ export async function home(ctx: BotContext) {
 
   } catch (error) {
     console.error('Error in calculating total balance: ', error)
-    totalBalanceStr = ''
+    totalBalanceStr = 'фыв'
   }
+
+
 
   const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
   const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
