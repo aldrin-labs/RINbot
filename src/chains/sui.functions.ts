@@ -537,6 +537,8 @@ export async function home(ctx: BotContext) {
     allCoinAssets.forEach(coin => {
       const price = priceMap.get(coin.type);
       if (price !== undefined) {
+        console.log(price);
+
         balance += +coin.balance * price;
       }
     });

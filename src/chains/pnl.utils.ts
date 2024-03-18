@@ -1,7 +1,6 @@
 import { Trade } from "../types";
 
 
-
 function calculateCumulativePnLPercentage(trades: Trade[]): string {
     let totalBuyingCost = 0;
     let totalSellingRevenue = 0;
@@ -18,4 +17,5 @@ function calculateCumulativePnLPercentage(trades: Trade[]): string {
 
     return pnlPercentage.toFixed(2) + '%';
 }
+
 
