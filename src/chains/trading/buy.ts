@@ -179,6 +179,16 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           slippagePercentage: ctx.session.settings.slippagePercentage,
         });
 
+        const routeData = await routerManager.getBestRouteData({
+          tokenFrom: LONG_SUI_COIN_TYPE,
+          tokenTo: validatedCoinType,
+          amount: validatedInputAmount,
+          signerAddress: ctx.session.publicKey,
+          slippagePercentage: ctx.session.settings.slippagePercentage,
+        })
+        console.log(routeData);
+
+
         return transaction;
       } catch (error) {
         console.error(error);
