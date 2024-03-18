@@ -545,7 +545,7 @@ export async function home(ctx: BotContext) {
 
   } catch (error) {
     console.error('Error in calculating total balance: ', error)
-    totalBalanceStr = 'фыв'
+    totalBalanceStr = `${error}`
   }
 
 
