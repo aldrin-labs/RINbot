@@ -531,7 +531,7 @@ export async function home(ctx: BotContext) {
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price || undefined]));
 
     let balance = 0;
     allCoinAssets.forEach(coin => {
