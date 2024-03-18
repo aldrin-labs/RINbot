@@ -531,14 +531,12 @@ export async function home(ctx: BotContext) {
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(coinsPriceApi!.filter(coin => coin !== undefined && coin.tokenAddress !== undefined && coin.price !== undefined).map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
 
     let balance = 0;
     allCoinAssets.forEach(coin => {
       const price = priceMap.get(coin.type);
       if (price !== undefined) {
-        console.log(price);
-
         balance += +coin.balance * price;
       }
     });
