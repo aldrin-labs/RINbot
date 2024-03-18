@@ -272,7 +272,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       { reply_markup: retryButton },
     );
 
-    console.log();
+    console.log(resultOfSwap.res.transaction?.data.transaction);
 
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
