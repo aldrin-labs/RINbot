@@ -268,11 +268,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}\n\n${resultOfSwap.res.balanceChanges}`,
       { reply_markup: retryButton },
     );
 
-    console.log(resultOfSwap.res);
+    console.log();
 
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
