@@ -11,7 +11,6 @@ import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
 import { MyConversation, BotContext } from '../../types';
 import { ConversationId } from '../conversations.config';
-import { getPriceApi } from '../priceapi.utils';
 import {
   getCoinManager,
   getWalletManager,
@@ -268,6 +267,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
+
+    console.log(resultOfSwap.digest);
+
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
