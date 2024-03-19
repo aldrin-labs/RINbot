@@ -125,8 +125,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
+  ctx.session.tradeCoin = {
+    coinType: validatedCoinType,
+    useSpecifiedCoin: false
+  }; 
   const resCoinType = validatedCoinType;
-
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
