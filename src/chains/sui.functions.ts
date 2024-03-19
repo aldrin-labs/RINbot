@@ -190,9 +190,20 @@ export async function withdraw(
 ): Promise<void> {
   const {
     welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
+    refund: { claimedBoostedRefund },
   } = ctx.session;
   const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus;
+
+  if (claimedBoostedRefund) {
+    await ctx.reply(
+      '👋 Just a quick heads-up: withdrawal of funds is temporarily disabled because you opted for our enhanced ' +
+        'refund option. No worries, though! You can still use these funds and generate profits right here ' +
+        'with us. Feel free to continue trading and utilizing other features 📈',
+      { reply_markup: goHome },
+    );
+
+    return;
+  }
 
   if (isUserUsedWelcomeBonus) {
     await ctx.reply(
@@ -443,7 +454,7 @@ export async function assets(ctx: BotContext): Promise<void> {
   }
 }
 
-export function generateWallet(): any {
+export function generateWallet() {
   return WalletManagerSingleton.generateWallet();
 }
 
