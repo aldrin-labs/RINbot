@@ -466,9 +466,9 @@ export async function assets(ctx: BotContext): Promise<void> {
           ...coin,
           price: priceApiReponse.data.data[index].price,
           timestamp: Date.now(),
-          mcap: priceApiReponse.data.data[index].mcap || undefined,
-          priceChange1h: priceApiReponse.data.data[index].priceChange1h,
-          priceChange24h: priceApiReponse.data.data[index].priceChange24h
+          mcap: priceApiReponse.data.data[index].mcap || 0,
+          priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
+          priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0
         }));
       ctx.session.assets = allCoinsAssets;
     } catch (error) {
