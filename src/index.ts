@@ -63,7 +63,6 @@ async function startBot(): Promise<void> {
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
-        console.log(publicKey);
         return {
           step: 'main',
           privateKey,
@@ -236,7 +235,9 @@ async function startBot(): Promise<void> {
 
   // bot.errorBoundary(errorBoundaryHandler)
 
-  ENVIRONMENT === 'local' && bot.start();
+  if(ENVIRONMENT === 'local'){ 
+    await bot.start();
+  }
 }
 
 startBot();

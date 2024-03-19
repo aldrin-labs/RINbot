@@ -58,6 +58,7 @@ export interface SessionData {
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetData[];
+  suiAsset: CoinAssetData;
   welcomeBonus: {
     amount: number;
     isUserEligibleToGetBonus: boolean;

@@ -23,6 +23,7 @@ import withdraw_menu from './wallet_withdraw';
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
     ctx.session.step = 'buy';
+    ctx.session.tradeAmount = '0';
     await ctx.conversation.enter('buy');
   })
   .text('Sell & Manage', async (ctx) => {

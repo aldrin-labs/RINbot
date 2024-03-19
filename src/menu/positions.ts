@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
-import { home } from '../chains/sui.functions';
+import { balance, home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { ConversationId } from '../chains/conversations.config';
 
@@ -33,19 +33,29 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     ctx.session.step = "main"
   })
   .row()
-  .text('Buy 10 SUI', async (ctx) => {
+  .text((ctx) => {
+    const userBalance = ctx.session.suiAsset.balance;
+    return `Buy ${(parseFloat(userBalance) * 0.25).toPrecision(2)} SUI`;
+  }, async (ctx) => {
     const assets = ctx.session.assets;
+    const userBalance = ctx.session.suiAsset.balance;
+    const amount = parseFloat(userBalance) * 0.25;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = '10';
+    ctx.session.tradeAmount = amount.toString();
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.InstantBuy);
   })
-  .text('Buy 50 SUI', async (ctx) => {
+  .text((ctx) => {
+    const userBalance = ctx.session.suiAsset.balance;
+    return `Buy ${(parseFloat(userBalance) * 0.5).toPrecision(2)} SUI`;
+  }, async (ctx) => {
     const assets = ctx.session.assets;
+    const userBalance = ctx.session.suiAsset.balance;
+    const amount = parseFloat(userBalance) * 0.5;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = '50';
+    ctx.session.tradeAmount = amount.toString();
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.InstantBuy);    
   })

@@ -440,11 +440,19 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    let allCoinsAssets = (await walletManager.getAllCoinAssets(
+    const allCoinsAssets = (await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     ));
+    let allTokens = allCoinsAssets.filter(c => c.type !== LONG_SUI_COIN_TYPE);
+    const suiAsset = allCoinsAssets.find(c => c.type === LONG_SUI_COIN_TYPE)
 
-    ctx.session.assets = allCoinsAssets;
+    ctx.session.assets = allTokens;
+
+    if(!suiAsset) {
+      throw new Error('You dont have any SUI coins');
+    }
+
+    ctx.session.suiAsset = suiAsset;
     let data: PriceApiPayload = {data: []}
     allCoinsAssets.forEach(coin => {
       //move to price api
@@ -453,7 +461,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     try {
       const priceApiReponse = await postPriceApi(allCoinsAssets)
       if(priceApiReponse !== undefined)
-        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+        allTokens = allTokens.map((coin, index) => ({
           ...coin,
           price: priceApiReponse.data.data[index].price
         }));
@@ -461,11 +469,11 @@ export async function assets(ctx: BotContext): Promise<void> {
       console.error(error)
     }
 
-    if (allCoinsAssets?.length === 0) {
+    if (allTokens?.length === 0) {
       ctx.reply(`Your have no tokens yet.`, { reply_markup: goHome });
       return;
     }
-    const assetsString = allCoinsAssets?.reduce((acc, el) => {
+    const assetsString = allTokens?.reduce((acc, el) => {
       
       const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
 
@@ -725,13 +733,11 @@ export async function createAftermathPool(
 
       const inputAmount = ctx.msg?.text;
 
-      // ts check
       if (inputAmount === undefined) {
         return false;
       }
 
       const decimals = firstValidatedCoinToAdd.decimals;
-      // ts check
       if (decimals === null) {
         await ctx.reply(
           `Coin decimals not found for ${firstValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
