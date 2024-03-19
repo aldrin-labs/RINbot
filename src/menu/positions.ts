@@ -42,7 +42,6 @@ async function updateMessage(ctx: BotContext) {
   ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
 }
 
-
 const positions_menu = new Menu<BotContext>('positions-menu')
   .text('Sell', async (ctx) => {
     ctx.session.step = 'sell';
@@ -71,7 +70,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await home(ctx);
   })
   .text('Refresh', async (ctx) => {
-    let price;
     try {
       if (isCoinAssetDataExtended(currentToken)) {
         const priceApiGetResponse = await getPriceApi('sui', currentToken.type)
@@ -80,7 +78,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       }
     } catch (error) {
       console.error(error)
-      price = undefined
     }
   });
 
