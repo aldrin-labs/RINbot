@@ -566,8 +566,10 @@ export async function home(ctx: BotContext) {
     }
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {
-      if (index > 4)
+      if (index > 4) {
+        assetsString += `\n\n<i>Please note: Only 5 positions are shown here. To view all your positions, please go to the <b>Sell and Manage</b> menu.</i>`
         break;
+      }
       const token = allCoinsAssets[index];
       let priceApiDataStr: string;
       if (isCoinAssetDataExtended(token)) {
