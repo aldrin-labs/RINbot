@@ -470,6 +470,7 @@ export async function assets(ctx: BotContext): Promise<void> {
           priceChange1h: priceApiReponse.data.data[index].priceChange1h,
           priceChange24h: priceApiReponse.data.data[index].priceChange24h
         }));
+      ctx.session.assets = allCoinsAssets;
     } catch (error) {
       console.error(error)
     }

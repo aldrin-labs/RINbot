@@ -59,6 +59,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .row()
   .text('Home', async (ctx) => {
     await home(ctx);
+  })
+  .text('Refresh', async (ctx) => {
+
   });
 
 export default positions_menu;
