@@ -32,7 +32,8 @@ import {
 
 export async function sell(
   conversation: MyConversation,
-  ctx: BotContext
+  ctx: BotContext,
+  tokenType?: string,
 ): Promise<void> {
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -54,16 +55,17 @@ export async function sell(
 
     return;
   }
+  if (tokenType === undefined) {
+    await ctx.reply(
+      'What token do you want to sell? Please send a coin type or a link to suiscan.',
+      { reply_markup: closeConversation },
+    );
 
-  await ctx.reply(
-    'What token do you want to sell? Please send a coin type or a link to suiscan.',
-    { reply_markup: closeConversation },
-  );
-
-  await ctx.reply(
-    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
-    { parse_mode: 'HTML' },
-  );
+    await ctx.reply(
+      'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+      { parse_mode: 'HTML' },
+    );
+  }
 
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
@@ -81,8 +83,11 @@ export async function sell(
     if (ctx.callbackQuery?.data === 'close-conversation') {
       return false;
     }
-
-    const possibleCoin = (ctx.msg?.text || '').trim();
+    let possibleCoin;
+    if (tokenType !== undefined)
+      possibleCoin = tokenType
+    else
+      possibleCoin = (ctx.msg?.text || '').trim();
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
