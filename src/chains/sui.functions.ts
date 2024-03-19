@@ -46,7 +46,6 @@ import {
   validateCoinSymbol,
   validateTotalSupply,
 } from './createCoin.utils';
-import { getUserFeePercentage } from './fees/utils';
 import {
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
   SUI_PROVIDER_URL,
@@ -441,9 +440,10 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    let allCoinsAssets = await walletManager.getAllCoinAssets(
+    let allCoinsAssets = (await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
-    );
+    )).filter((a) => a.type !== '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
+
 
     ctx.session.assets = allCoinsAssets;
     let data: PriceApiPayload = {data: []}
@@ -481,6 +481,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       parse_mode: 'HTML',
     });
   } catch (e) {
+    console.log(e); 
     ctx.reply('Failed to fetch assets. Please, try again.', {
       reply_markup: goHome,
     });

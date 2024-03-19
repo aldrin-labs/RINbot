@@ -42,7 +42,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text((ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
-
     return tokenToUse.symbol ?? tokenToUse.type;
   })
   .text(
