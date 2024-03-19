@@ -8,13 +8,16 @@ import { isExponential } from '../chains/utils'
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
 
-function updateCurrentToken(assets: CoinAssetDataExtended[], direction: 'next' | 'prev') {
+function updateCurrentToken(ctx: BotContext, direction: 'next' | 'prev') {
+  const assets = ctx.session.assets
   if (direction === 'next') {
     currentTokenIndex = (currentTokenIndex + 1) % assets.length;
   } else {
     currentTokenIndex = (currentTokenIndex - 1 + assets.length) % assets.length;
   }
+
   currentToken = assets[currentTokenIndex];
+  ctx.session.chosenTokenType = currentToken.type
 }
 
 async function updateMessage(ctx: BotContext) {
@@ -49,7 +52,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   })
   .row()
   .text('⬅️', async (ctx) => {
-    updateCurrentToken(ctx.session.assets, 'prev');
+    updateCurrentToken(ctx, 'prev');
     await updateMessage(ctx);
   })
   .text((ctx) => {
@@ -60,7 +63,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text(
     '➡️',
     async (ctx) => {
-      updateCurrentToken(ctx.session.assets, 'next');
+      updateCurrentToken(ctx, 'next');
       await updateMessage(ctx);
     },
     (ctx) => ctx.menu.update(),

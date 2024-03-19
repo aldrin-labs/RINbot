@@ -78,6 +78,7 @@ async function startBot(): Promise<void> {
           },
           tradesCount: 0,
           createdAt: Date.now(),
+          chosenTokenType: '',
           tradeCoin: {
             coinType: '',
             useSpecifiedCoin: false,

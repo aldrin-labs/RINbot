@@ -32,8 +32,7 @@ import {
 
 export async function sell(
   conversation: MyConversation,
-  ctx: BotContext,
-  tokenType?: string,
+  ctx: BotContext
 ): Promise<void> {
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -47,6 +46,8 @@ export async function sell(
   const isAmountSuiAmountIsValid = +availableBalance > 0;
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
 
+  const tokenType = ctx.session.chosenTokenType
+
   if (!isAmountSuiAmountIsValid) {
     await ctx.reply(
       "You don't have enough SUI for transaction gas. Please, top up your SUI balance to continue.",
@@ -55,7 +56,7 @@ export async function sell(
 
     return;
   }
-  if (tokenType === undefined) {
+  if (tokenType === '') {
     await ctx.reply(
       'What token do you want to sell? Please send a coin type or a link to suiscan.',
       { reply_markup: closeConversation },
@@ -84,7 +85,7 @@ export async function sell(
       return false;
     }
     let possibleCoin;
-    if (tokenType !== undefined)
+    if (tokenType !== '')
       possibleCoin = tokenType
     else
       possibleCoin = (ctx.msg?.text || '').trim();
