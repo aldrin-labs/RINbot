@@ -24,7 +24,7 @@ export interface AxiosPriceApiResponseGet {
     priceChange1h: number;
     priceChange24h: number;
     fecthedFrom: string;
-  }
+  };
 }
 
 export interface AxiosPriceApiResponsePost {
@@ -38,14 +38,14 @@ export interface AxiosPriceApiResponsePost {
     priceChange1h: number;
     priceChange24h: number;
     fecthedFrom: string;
-  }[]
+  }[];
 }
 
 export interface PriceApiPayload {
   data: {
-    chainId: string,
-    tokenAddress: string
-  }[]
+    chainId: string;
+    tokenAddress: string;
+  }[];
 }
 
 export interface CoinAssetDataExtended extends CoinAssetData {
@@ -80,6 +80,9 @@ export interface SessionData {
   tradeCoin: {
     coinType: string;
     useSpecifiedCoin: boolean;
+  };
+  refund: {
+    claimedBoostedRefund: boolean;
   };
 }
 

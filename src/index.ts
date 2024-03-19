@@ -24,6 +24,8 @@ import {
   home,
   withdraw,
 } from './chains/sui.functions';
+import { buy } from './chains/trading/buy';
+import { sell } from './chains/trading/sell';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import {
   BOT_TOKEN,
@@ -33,14 +35,15 @@ import {
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
+
 import { buy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { addTrades } from './migrations/addTrades';
-
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -82,6 +85,9 @@ async function startBot(): Promise<void> {
             coinType: '',
             useSpecifiedCoin: false,
           },
+          refund: {
+            claimedBoostedRefund: false,
+          },
         };
       },
       storage: enhanceStorage({
@@ -90,6 +96,7 @@ async function startBot(): Promise<void> {
           1: addWelcomeBonus,
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
+          4: addBoostedRefund,
         },
       }),
     }),
