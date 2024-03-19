@@ -17,14 +17,11 @@ import {
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction
+  transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT,
-} from '../config/bot.config';
+import { WELCOME_BONUS_AMOUNT } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -46,7 +43,6 @@ import {
   validateCoinSymbol,
   validateTotalSupply,
 } from './createCoin.utils';
-import { getUserFeePercentage } from './fees/utils';
 import {
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
   SUI_PROVIDER_URL,
@@ -67,7 +63,12 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import {
+  calculate,
+  getPriceApi,
+  isCoinAssetDataExtended,
+  postPriceApi,
+} from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -182,53 +183,6 @@ export const getRouteManager = async () => {
   // console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
   return routerManager;
 };
-
-export async function exportPrivateKey(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
-  } = ctx.session;
-  const isUserNotEligibleToExportPrivateKey =
-    isUserAgreeWithBonus &&
-    isUserClaimedBonus &&
-    tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
-
-  if (isUserNotEligibleToExportPrivateKey) {
-    await ctx.reply(
-      `🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`,
-      { reply_markup: goHome },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
-  const messageData = await conversation.waitFor(':text');
-  const isExportConfirmed = messageData.msg.text === 'CONFIRM';
-
-  if (!isExportConfirmed) {
-    await ctx.reply(
-      `You've not typed CONFIRM. Ignoring your request of exporting private key.`,
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Your private key is: <span class="tg-spoiler">${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
-    { parse_mode: 'HTML', reply_markup: goHome },
-  );
-}
 
 export async function withdraw(
   conversation: MyConversation,
@@ -429,7 +383,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  return availableBalance
+  return availableBalance;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
@@ -446,20 +400,20 @@ export async function assets(ctx: BotContext): Promise<void> {
     );
 
     ctx.session.assets = allCoinsAssets;
-    let data: PriceApiPayload = {data: []}
-    allCoinsAssets.forEach(coin => {
+    let data: PriceApiPayload = { data: [] };
+    allCoinsAssets.forEach((coin) => {
       //move to price api
-      data.data.push({chainId: "sui", tokenAddress: coin.type})
-    })
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
     try {
-      const priceApiReponse = await postPriceApi(allCoinsAssets)
-      if(priceApiReponse !== undefined)
+      const priceApiReponse = await postPriceApi(allCoinsAssets);
+      if (priceApiReponse !== undefined)
         allCoinsAssets = allCoinsAssets.map((coin, index) => ({
           ...coin,
-          price: priceApiReponse.data.data[index].price
+          price: priceApiReponse.data.data[index].price,
         }));
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
 
     if (allCoinsAssets?.length === 0) {
@@ -467,8 +421,10 @@ export async function assets(ctx: BotContext): Promise<void> {
       return;
     }
     const assetsString = allCoinsAssets?.reduce((acc, el) => {
-      
-      const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+      const balance =
+        isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null
+          ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>`
+          : `<b>${el.balance} ${el.symbol}</b>`;
 
       acc = acc.concat(
         `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
@@ -500,48 +456,55 @@ export async function home(ctx: BotContext) {
   const avl_balance = await availableBalance(ctx);
   let price;
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
-    price = priceApiGetResponse?.data.data.price
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
+    price = priceApiGetResponse?.data.data.price;
   } catch (error) {
-    console.error(error)
-    price = undefined
+    console.error(error);
+    price = undefined;
   }
-  const balance_usd = calculate(userBalance, price)
-  const avl_balance_usd = calculate(avl_balance, price)
+  const balance_usd = calculate(userBalance, price);
+  const avl_balance_usd = calculate(avl_balance, price);
 
   let totalBalanceStr: string;
 
   try {
-      const data: PriceApiPayload = {data: []}
-      const allCoinAssets = ctx.session.assets
-      allCoinAssets.forEach(coin => {
-        //move to price api
-        data.data.push({chainId: "sui", tokenAddress: coin.type})
-      })
+    const data: PriceApiPayload = { data: [] };
+    const allCoinAssets = ctx.session.assets;
+    allCoinAssets.forEach((coin) => {
+      //move to price api
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
 
-      const response = await postPriceApi(allCoinAssets);
+    const response = await postPriceApi(allCoinAssets);
 
-      const coinsPriceApi = response?.data.data;
+    const coinsPriceApi = response?.data.data;
 
-      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(
+      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
+    );
 
-      let balance = 0;
-      allCoinAssets.forEach(coin => {
-        const price = priceMap.get(coin.type);
-        if (price !== undefined) {
-          balance += +coin.balance * price;
-        }
-      });
+    let balance = 0;
+    allCoinAssets.forEach((coin) => {
+      const price = priceMap.get(coin.type);
+      if (price !== undefined) {
+        balance += +coin.balance * price;
+      }
+    });
 
-      totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
-    
-    } catch (error) {
-      console.error('Error in calculating total balance: ', error)
-      totalBalanceStr = ''
-    }
+    totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
+  } catch (error) {
+    console.error('Error in calculating total balance: ', error);
+    totalBalanceStr = '';
+  }
 
-  const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
-  const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
+  const balanceSUIdStr =
+    balance_usd !== null
+      ? `<b>${userBalance} SUI / ${balance_usd} USD</b>`
+      : `<b>${userBalance} SUI</b>`;
+  const avlBalanceSUIdStr =
+    avl_balance_usd !== null
+      ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
+      : `<b>${avl_balance} SUI</b>`;
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
   await ctx.replyWithPhoto(
