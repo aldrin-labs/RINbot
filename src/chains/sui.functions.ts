@@ -573,7 +573,7 @@ export async function home(ctx: BotContext) {
       }
 
       acc = acc.concat(
-        `<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`,
+        `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`,
       );
 
       return acc;
