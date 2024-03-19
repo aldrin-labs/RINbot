@@ -16,6 +16,7 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { makeRefund } from './chains/refunds/conversations/make-refund';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import {
   createAftermathPool,
@@ -144,6 +145,9 @@ async function startBot(): Promise<void> {
   );
   composer.use(
     createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
+  );
+  composer.use(
+    createConversation(makeRefund, { id: ConversationId.MakeRefund }),
   );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer);
