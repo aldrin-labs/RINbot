@@ -1,12 +1,14 @@
 import { Bot } from 'grammy';
+import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
-import { home } from '../chains/sui.functions';
-import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
-import { BotContext } from '../types';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
+import { assets, home } from '../chains/sui.functions';
+import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
+import { BotContext } from '../types';
+import { CallbackQueryData } from '../types/callback-queries-data';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
@@ -21,6 +23,17 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     ctx.session.step = 'main';
     await home(ctx);
     await ctx.answerCallbackQuery();
+  });
+
+  bot.callbackQuery(CallbackQueryData.Assets, async (ctx) => {
+    await assets(ctx);
+    await ctx.answerCallbackQuery();
+  });
+
+  bot.callbackQuery(CallbackQueryData.ExportPrivateKey, async (ctx) => {
+    await ctx.conversation.exit();
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
   });
 
   useSurfdogCallbackQueries(bot);
