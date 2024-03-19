@@ -467,7 +467,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     const suiBalance = await balance(ctx);
     const suiAvlBalance = await availableBalance(ctx);
 
-    const newMessage = `<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+    const newMessage = `🪙<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
 
     await ctx.reply(newMessage, { reply_markup: positions_menu, parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
   } catch (e) {
