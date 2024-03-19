@@ -30,7 +30,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await ctx.conversation.enter('sell');
   })
   .row()
-  .text('<', (ctx) => {
+  .text('⬅️', (ctx) => {
     prevToken(ctx.session.assets);
 
     const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>\n\nPrice:{Price here}\n\nToken Balance: <b>${currentToken.balance}</b>\n\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
@@ -44,7 +44,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     return tokenToUse.symbol ?? tokenToUse.type;
   })
   .text(
-    '>',
+    '➡️',
     (ctx) => {
       nextToken(ctx.session.assets);
 
