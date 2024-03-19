@@ -1,12 +1,12 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { home } from '../chains/sui.functions';
-import { BotContext } from '../types';
+import { BotContext, CoinAssetDataExtended } from '../types';
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
 
-function nextToken(assets: CoinAssetData[]) {
+function nextToken(assets: CoinAssetDataExtended[]) {
   currentTokenIndex++;
   if (currentTokenIndex === assets.length) {
     currentTokenIndex = 0;
@@ -15,7 +15,7 @@ function nextToken(assets: CoinAssetData[]) {
   currentToken = assets[currentTokenIndex];
 }
 
-function prevToken(assets: CoinAssetData[]) {
+function prevToken(assets: CoinAssetDataExtended[]) {
   currentTokenIndex--;
   if (currentTokenIndex < 0) {
     currentTokenIndex = assets.length - 1;

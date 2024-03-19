@@ -35,7 +35,7 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { BotContext, MyConversation, PriceApiPayload } from '../types';
+import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -449,7 +449,7 @@ export async function balance(ctx: BotContext): Promise<string> {
 export async function assets(ctx: BotContext): Promise<void> {
   try {
     const walletManager = await getWalletManager();
-    let allCoinsAssets = await walletManager.getAllCoinAssets(
+    let allCoinsAssets: CoinAssetDataExtended[] = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
 
@@ -464,7 +464,11 @@ export async function assets(ctx: BotContext): Promise<void> {
       if (priceApiReponse !== undefined)
         allCoinsAssets = allCoinsAssets.map((coin, index) => ({
           ...coin,
-          price: priceApiReponse.data.data[index].price
+          price: priceApiReponse.data.data[index].price,
+          timestamp: Date.now(),
+          mcap: priceApiReponse.data.data[index].mcap || undefined,
+          priceChange1h: priceApiReponse.data.data[index].priceChange1h,
+          priceChange24h: priceApiReponse.data.data[index].priceChange24h
         }));
     } catch (error) {
       console.error(error)

@@ -69,7 +69,6 @@ export interface SessionData {
   publicKey: string;
   settings: { slippagePercentage: number };
   assets: CoinAssetDataExtended[];
-  trades: Trade[];
   welcomeBonus: {
     amount: number;
     isUserEligibleToGetBonus: boolean;
