@@ -81,7 +81,7 @@ export interface SessionData {
     coinType: string;
     useSpecifiedCoin: boolean;
   };
-  chosenTokenType: string
+  chosenTokenType: CoinAssetData | null
 }
 
 export type BotContext = Context &

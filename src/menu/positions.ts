@@ -17,7 +17,7 @@ function updateCurrentToken(ctx: BotContext, direction: 'next' | 'prev') {
   }
 
   currentToken = assets[currentTokenIndex];
-  ctx.session.chosenTokenType = currentToken.type
+  ctx.session.chosenTokenType = currentToken
 }
 
 async function updateMessage(ctx: BotContext) {

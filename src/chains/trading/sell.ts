@@ -46,7 +46,7 @@ export async function sell(
   const isAmountSuiAmountIsValid = +availableBalance > 0;
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
 
-  const tokenType = ctx.session.chosenTokenType
+  const chosenTokenType = ctx.session.chosenTokenType
 
   if (!isAmountSuiAmountIsValid) {
     await ctx.reply(
@@ -56,7 +56,7 @@ export async function sell(
 
     return;
   }
-  if (tokenType === '') {
+  if (chosenTokenType === null) {
     await ctx.reply(
       'What token do you want to sell? Please send a coin type or a link to suiscan.',
       { reply_markup: closeConversation },
@@ -85,8 +85,8 @@ export async function sell(
       return false;
     }
     let possibleCoin;
-    if (tokenType !== '')
-      possibleCoin = tokenType
+    if (chosenTokenType !== null)
+      possibleCoin = chosenTokenType.type
     else
       possibleCoin = (ctx.msg?.text || '').trim();
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
@@ -155,8 +155,10 @@ export async function sell(
 
       return false;
     }
-
-    validatedCoin = foundCoin;
+    if (ctx.session.chosenTokenType === null)
+      validatedCoin = foundCoin;
+    else
+      validatedCoin = ctx.session.chosenTokenType
     return true;
   });
 
@@ -333,7 +335,7 @@ export async function sell(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-    ctx.session.chosenTokenType = ''
+    ctx.session.chosenTokenType = null
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     return;
@@ -344,7 +346,7 @@ export async function sell(
       `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-    ctx.session.chosenTokenType = ''
+    ctx.session.chosenTokenType = null
     return;
   }
 

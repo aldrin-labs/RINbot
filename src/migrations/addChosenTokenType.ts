@@ -28,6 +28,6 @@ export function addChosenTokenType(old: {
 }) {
     return {
         ...old,
-        chosenTokenType: ''
+        chosenTokenType: null
     };
 }
