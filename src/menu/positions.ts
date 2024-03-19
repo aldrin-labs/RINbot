@@ -34,7 +34,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('⬅️', (ctx) => {
     prevToken(ctx.session.assets);
 
-    const priceApiDataStr = isCoinAssetDataExtended(currentToken) && calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price}</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>\nMcap: <b>${currentToken.mcap === 0 ? 'Not fetched' : currentToken.mcap}</b>\n1h: <b>${currentToken.priceChange1h === 0 ? 'Not fetched' : currentToken.priceChange1h}</b> 24h: <b>${currentToken.priceChange24h === 0 ? 'Not fetched' : currentToken.priceChange24h}</b>` : ``
+    const priceApiDataStr = isCoinAssetDataExtended(currentToken) && calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price}</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + currentToken.mcap + "</b>\n"}${currentToken.priceChange1h === 0 ? '' : "1h: <b>" + currentToken.priceChange1h + "</b>"} ${currentToken.priceChange24h === 0 ? '' : "24h: <b>" + currentToken.priceChange24h + "</b>"}` : ``
 
     const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: {sui balance}\nYour available SUI balance: {avl sui balance}\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
 
