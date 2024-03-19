@@ -9,4 +9,5 @@ export enum ConversationId {
   CreateCoin = 'createCoin',
   WelcomeBonus = 'welcomeBonus',
   ImportNewWallet = 'importNewWallet',
+  MakeRefund = 'makeRefund',
 }
