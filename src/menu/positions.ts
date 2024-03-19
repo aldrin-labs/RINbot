@@ -33,9 +33,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('<', (ctx) => {
     prevToken(ctx.session.assets);
 
-    const newMessage = currentToken.symbol
-      ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
-      : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
+    const newMessage = `Positions Overview:\n\n<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
 
     ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
   })

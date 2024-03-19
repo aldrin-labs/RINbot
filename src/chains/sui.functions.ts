@@ -484,7 +484,7 @@ export async function assets(ctx: BotContext): Promise<void> {
 
       return acc;
     }, '');
-    await ctx.reply(`<b>Your tokens:</b> \n\n${assetsString}`, {
+    await ctx.reply(`<b>Your positions:</b> \n\n${assetsString}`, {
       reply_markup: positions_menu,
       parse_mode: 'HTML',
     });
@@ -541,7 +541,7 @@ export async function home(ctx: BotContext) {
       }
     });
 
-    totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
+    totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
 
   } catch (error) {
     console.error('Error in calculating total balance: ', error)
