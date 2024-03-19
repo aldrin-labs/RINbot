@@ -26,7 +26,6 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
-import { SuiClient } from '../types'
 import { getPriceApi } from '../priceapi.utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
@@ -286,9 +285,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
-    await conversation.external(async () => {
-      await addTrade(validatedCoinType!, maxOutputAmount!, conversation, ctx)
-    })
+    // await conversation.external(async () => {
+    //   await addTrade(validatedCoinType!, maxOutputAmount!, conversation, ctx)
+    // })
 
     return;
   }
@@ -305,9 +304,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
 
-async function addTrade(coinType: string, quantity: bigint, conversation: MyConversation, ctx: BotContext) {
+// async function addTrade(coinType: string, quantity: bigint, conversation: MyConversation, ctx: BotContext) {
 
-  const response = await conversation.external(async () => await getPriceApi("sui", coinType).then(response => {
-    conversation.session.trades.push({ buyingPrice: response?.data.data.price || null, sellingPrice: null, quantity: quantity })
-  }))
-}
+//   const response = await conversation.external(async () => await getPriceApi("sui", coinType).then(response => {
+//     conversation.session.trades.push({ buyingPrice: response?.data.data.price || null, sellingPrice: null, quantity: quantity })
+//   }))
+// }
