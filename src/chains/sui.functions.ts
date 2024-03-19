@@ -512,6 +512,8 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   let price;
+  let positionOverview: string;
+
   try {
     const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
     price = priceApiGetResponse?.data.data.price
@@ -551,6 +553,55 @@ export async function home(ctx: BotContext) {
   } catch (error) {
     console.error('Error in calculating total balance: ', error)
     totalBalanceStr = ``
+  }
+
+  try {
+    const walletManager = await getWalletManager();
+    let allCoinsAssets: CoinAssetDataExtended[] = await walletManager.getAllCoinAssets(
+      ctx.session.publicKey,
+    );
+
+    ctx.session.assets = allCoinsAssets;
+    let data: PriceApiPayload = { data: [] }
+    allCoinsAssets.forEach(coin => {
+      //move to price api
+      data.data.push({ chainId: "sui", tokenAddress: coin.type })
+    })
+    try {
+      const priceApiReponse = await postPriceApi(allCoinsAssets)
+      if (priceApiReponse !== undefined)
+        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+          ...coin,
+          price: priceApiReponse.data.data[index].price,
+          timestamp: Date.now(),
+          mcap: priceApiReponse.data.data[index].mcap || 0,
+          priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
+          priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0
+        }));
+      ctx.session.assets = allCoinsAssets;
+    } catch (error) {
+      console.error(error)
+    }
+
+    if (allCoinsAssets?.length === 0) {
+      positionOverview = `Your have no tokens yet.`
+      return;
+    }
+    const assetsString = allCoinsAssets?.reduce((acc, el) => {
+
+      const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+
+      acc = acc.concat(
+        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
+      );
+
+      return acc;
+    }, '');
+    positionOverview = `<b>Your positions:</b> \n\n${assetsString}`
+
+  } catch (e) {
+    console.error(e)
+    positionOverview = ''
   }
 
 

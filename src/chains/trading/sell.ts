@@ -32,7 +32,7 @@ import {
 
 export async function sell(
   conversation: MyConversation,
-  ctx: BotContext,
+  ctx: BotContext
 ): Promise<void> {
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
