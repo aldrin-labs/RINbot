@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
-import { balance, home } from '../chains/sui.functions';
+import { home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { ConversationId } from '../chains/conversations.config';
 
@@ -30,7 +30,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await home(ctx);
   })
   .text('Close', async (ctx) => {
-    ctx.session.step = "main"
+    await home(ctx);
   })
   .row()
   .text((ctx) => {
@@ -94,13 +94,28 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   )
   .row()
   .text('Sell 25%', async (ctx) => {
-    await home(ctx);
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeAmount = '25';
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.Sell);
   })
   .text('Sell 100%', async (ctx) => {
-    await home(ctx);
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeAmount = '100';
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.Sell);
   })
   .text('Sell X%', async (ctx) => {
-    await home(ctx);
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeAmount = '0';
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.Sell);
   })
   .row()
   .dynamic(async (ctx, range) => {

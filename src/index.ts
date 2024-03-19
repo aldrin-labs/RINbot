@@ -39,6 +39,7 @@ import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
 import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
+import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -67,6 +68,13 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
+          suiAsset: {
+            type: LONG_SUI_COIN_TYPE,
+            symbol: 'SUI',
+            balance: '0',
+            decimals: 9,
+            noDecimals: false
+          },
           settings: { slippagePercentage: 20 },
           assets: [],
           welcomeBonus: {
