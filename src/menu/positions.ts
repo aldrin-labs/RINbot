@@ -51,7 +51,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       tokenPrice = `\n\nToken Price: <b>${currentToken.price} USD</b>`
       if (currentToken.price && isExponential(currentToken.price))
         tokenPrice = `\n\nToken Price: <b>${currentToken.price.toFixed(10)} USD</b>`
-      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>\n"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "</b>"}` : ``
+      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `${tokenPrice}\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>\n"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "</b>"}` : ``
     }
     else {
       priceApiDataStr = ''
