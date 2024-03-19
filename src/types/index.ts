@@ -66,6 +66,7 @@ export interface SessionData {
   };
   tradesCount: number;
   createdAt: number;
+  tradeAmount: string;
   tradeCoin: {
     coinType: string;
     useSpecifiedCoin: boolean;

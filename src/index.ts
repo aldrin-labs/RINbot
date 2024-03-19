@@ -37,7 +37,7 @@ import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
-import { buy } from './chains/trading/buy';
+import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 
 
@@ -63,6 +63,7 @@ async function startBot(): Promise<void> {
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
+        console.log(publicKey);
         return {
           step: 'main',
           privateKey,
@@ -75,6 +76,7 @@ async function startBot(): Promise<void> {
             isUserClaimedBonus: null,
             isUserAgreeWithBonus: null,
           },
+          tradeAmount: '0',
           tradesCount: 0,
           createdAt: Date.now(),
           tradeCoin: {
@@ -101,6 +103,7 @@ async function startBot(): Promise<void> {
   composer.use(conversations());
 
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
+  composer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
   composer.use(
     createConversation(exportPrivateKey, {

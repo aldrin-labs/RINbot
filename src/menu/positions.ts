@@ -2,6 +2,7 @@ import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { home } from '../chains/sui.functions';
 import { BotContext } from '../types';
+import { ConversationId } from '../chains/conversations.config';
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
@@ -25,14 +26,39 @@ function prevToken(assets: CoinAssetData[]) {
 }
 
 const positions_menu = new Menu<BotContext>('positions-menu')
-  .text('Sell', async (ctx) => {
-    ctx.session.step = 'sell';
-    await ctx.conversation.enter('sell');
+  .text('Home', async (ctx) => {
+    await home(ctx);
+  })
+  .text('Close', async (ctx) => {
+    ctx.session.step = "main"
+  })
+  .row()
+  .text('Buy 10 SUI', async (ctx) => {
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeAmount = '10';
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.InstantBuy);
+  })
+  .text('Buy 50 SUI', async (ctx) => {
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeAmount = '50';
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.InstantBuy);    
+  })
+  .text('Buy X SUI', async (ctx) => {
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    ctx.session.tradeCoin.coinType = tokenToUse.type;
+    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    await ctx.conversation.enter(ConversationId.Buy);
   })
   .row()
   .text('<', (ctx) => {
     prevToken(ctx.session.assets);
-
     const newMessage = currentToken.symbol
       ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
       : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
@@ -48,7 +74,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     '>',
     (ctx) => {
       nextToken(ctx.session.assets);
-
       const newMessage = currentToken.symbol
         ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
         : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
@@ -58,7 +83,24 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     (ctx) => ctx.menu.update(),
   )
   .row()
-  .text('Home', async (ctx) => {
+  .text('Sell 25%', async (ctx) => {
+    await home(ctx);
+  })
+  .text('Sell 100%', async (ctx) => {
+    await home(ctx);
+  })
+  .text('Sell X%', async (ctx) => {
+    await home(ctx);
+  })
+  .row()
+  .text('SUIVision.xyz', async (ctx) => {
+    await home(ctx);
+  })
+  .text('SUIScan.xyz', async (ctx) => {
+    await home(ctx);
+  })
+  .row()
+  .text('Refresh', async (ctx) => {
     await home(ctx);
   });
 

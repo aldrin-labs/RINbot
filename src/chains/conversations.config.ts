@@ -1,4 +1,5 @@
 export enum ConversationId {
+  InstantBuy = 'instantBuy',
   Buy = 'buy',
   Sell = 'sell',
   Withdraw = 'withdraw',

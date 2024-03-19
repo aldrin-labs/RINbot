@@ -116,7 +116,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     });
   }
 
-  // ts check
   if (validatedCoinType === undefined) {
     await ctx.reply(
       'Cannot process entered coin. Please, try again or contact support.',
@@ -154,7 +153,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     const inputAmount = ctx.msg?.text;
 
-    // ts check
     if (inputAmount === undefined) {
       return false;
     }
@@ -180,8 +178,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     validatedInputAmount = inputAmount;
     return true;
   });
-
-  // ts check
   if (validatedInputAmount === undefined) {
     await ctx.reply(
       `Invalid coinType or inputAmount. Please try again or contact support.`,
@@ -190,20 +186,28 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     return;
   }
+  ctx.session.tradeAmount = validatedInputAmount; 
+  await instantBuy(conversation, ctx);
+}
+
+export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
 
   const feePercentage = (
     await conversation.external(() => getUserFeePercentage(ctx))
   ).toString();
 
+  const {tradeAmount, tradeCoin: {coinType: resCoinType}} = ctx.session;
+  
   const feeAmount = RouteManager.calculateFeeAmountIn({
     feePercentage,
-    amount: validatedInputAmount,
+    amount: tradeAmount,
     tokenDecimals: SUI_DECIMALS,
   });
 
   // TODO: Re-check args here
   const tx = await conversation.external({
-    args: [resCoinType, validatedInputAmount],
+    args: [resCoinType, tradeAmount],
     task: async (resCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();

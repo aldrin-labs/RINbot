@@ -442,8 +442,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     const walletManager = await getWalletManager();
     let allCoinsAssets = (await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
-    )).filter((a) => a.type !== '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI');
-
+    ));
 
     ctx.session.assets = allCoinsAssets;
     let data: PriceApiPayload = {data: []}
