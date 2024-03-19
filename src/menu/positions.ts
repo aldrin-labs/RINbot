@@ -103,11 +103,16 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await home(ctx);
   })
   .row()
-  .text('SUIVision.xyz', async (ctx) => {
-    await home(ctx);
+  .dynamic(async (ctx, range) => {
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    const [tokenContract] = tokenToUse.type.split('::');
+    range.url('SUIVision.xyz', `https://suivision.xyz/package/${tokenContract}`);
   })
-  .text('SUIScan.xyz', async (ctx) => {
-    await home(ctx);
+  .dynamic(async (ctx, range) => {
+    const assets = ctx.session.assets;
+    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+    range.url('SUIScan.xyz', `https://suiscan.xyz/coin/${tokenToUse.type}`);
   })
   .row()
   .text('Refresh', async (ctx) => {
