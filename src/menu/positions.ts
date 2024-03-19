@@ -31,12 +31,15 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await ctx.conversation.enter('sell');
   })
   .row()
-  .text('⬅️', (ctx) => {
+  .text('⬅️', async (ctx) => {
     prevToken(ctx.session.assets);
 
     const priceApiDataStr = isCoinAssetDataExtended(currentToken) && calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price}</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + currentToken.mcap + "</b>\n"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "</b>"}` : ``
 
-    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${balance(ctx)}</b>\nYour available SUI balance: <b>${availableBalance(ctx)}</b>\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
+    const suiBalance = await balance(ctx)
+    const suiAvlBalance = await availableBalance(ctx)
+
+    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
 
     ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
   })
