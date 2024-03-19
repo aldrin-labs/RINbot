@@ -260,3 +260,4 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   else
     return "Could not fetch the data.\n\n"
 }
+

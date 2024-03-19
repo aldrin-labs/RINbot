@@ -67,7 +67,7 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import { calculate, formatTokenInfo, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -565,7 +565,7 @@ export async function home(ctx: BotContext) {
       const token = allCoinsAssets[index];
       let priceApiDataStr: string;
       if (isCoinAssetDataExtended(token)) {
-        priceApiDataStr = calculate(token.balance, token.price) !== null ? `\n\nToken Price: <b>${token.price?.toFixed(10)} USD</b>\nToken Balance: <b>${token.balance + " " + token.symbol + " / " + calculate(token.balance, token.price) + " USD"}</b>${token.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", token.mcap) + " USD</b>"}${token.priceChange1h === 0 ? `\n1h: <b>${token.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (token.priceChange1h! > 0 ? "+" + token.priceChange1h?.toFixed(2) : token.priceChange1h?.toFixed(2)) + "%</b>"} ${token.priceChange24h === 0 ? ` 24h: <b>${token.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (token.priceChange24h! > 0 ? "+" + token.priceChange24h?.toFixed(2) : token.priceChange24h?.toFixed(2)) + "%</b>"}` : ``;
+        priceApiDataStr = formatTokenInfo(token)
       } else {
         priceApiDataStr = '';
       }
