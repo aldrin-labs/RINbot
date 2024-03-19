@@ -2,7 +2,7 @@ import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { availableBalance, balance, home } from '../chains/sui.functions';
 import { BotContext, CoinAssetDataExtended } from '../types';
-import { calculate, isCoinAssetDataExtended } from '../chains/priceapi.utils';
+import { calculate, getPriceApi, isCoinAssetDataExtended } from '../chains/priceapi.utils';
 import { isExponential } from '../chains/utils'
 
 let currentTokenIndex: number = 0;
@@ -71,7 +71,17 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await home(ctx);
   })
   .text('Refresh', async (ctx) => {
-    // Implement refresh logic here
+    let price;
+    try {
+      if (isCoinAssetDataExtended(currentToken)) {
+        const priceApiGetResponse = await getPriceApi('sui', currentToken.type)
+        currentToken.price = priceApiGetResponse?.data.data.price
+        await updateMessage(ctx)
+      }
+    } catch (error) {
+      console.error(error)
+      price = undefined
+    }
   });
 
 export default positions_menu;
