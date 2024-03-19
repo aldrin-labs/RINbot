@@ -565,7 +565,10 @@ export async function home(ctx: BotContext) {
       return;
     }
     let assetsString = '';
-    allCoinsAssets.forEach((token, index) => {
+    for (let index = 0; index < allCoinsAssets.length; index++) {
+      if (index > 4)
+        break;
+      const token = allCoinsAssets[index];
       let priceApiDataStr: string;
       if (isCoinAssetDataExtended(token)) {
         priceApiDataStr = calculate(token.balance, token.price) !== null ? `\n\nToken Price: <b>${token.price?.toFixed(10)} USD</b>\nToken Balance: <b>${token.balance + " " + token.symbol + " / " + calculate(token.balance, token.price) + " USD"}</b>${token.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", token.mcap) + " USD</b>"}${token.priceChange1h === 0 ? `\n1h: <b>${token.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (token.priceChange1h! > 0 ? "+" + token.priceChange1h?.toFixed(2) : token.priceChange1h?.toFixed(2)) + "%</b>"} ${token.priceChange24h === 0 ? ` 24h: <b>${token.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (token.priceChange24h! > 0 ? "+" + token.priceChange24h?.toFixed(2) : token.priceChange24h?.toFixed(2)) + "%</b>"}` : ``;
@@ -574,7 +577,7 @@ export async function home(ctx: BotContext) {
       }
 
       assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`;
-    });
+    }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
 
   } catch (e) {
