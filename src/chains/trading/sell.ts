@@ -333,7 +333,7 @@ export async function sell(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-
+    ctx.session.chosenTokenType = ''
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     return;
@@ -344,7 +344,7 @@ export async function sell(
       `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-
+    ctx.session.chosenTokenType = ''
     return;
   }
 
