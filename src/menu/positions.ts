@@ -2,6 +2,7 @@ import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { home } from '../chains/sui.functions';
 import { BotContext, CoinAssetDataExtended } from '../types';
+import { calculate, isCoinAssetDataExtended } from '../chains/priceapi.utils';
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
@@ -33,7 +34,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('⬅️', (ctx) => {
     prevToken(ctx.session.assets);
 
-    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>\n\nPrice:{Price here}\nToken Balance: <b>${currentToken.balance}</b>\nMcap:{mcap}\nPrice Change: {price changes}\n\nYour SUI balance: {sui balance}\nYour available SUI balance: {avl sui balance}\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
+    const priceApiDataStr = isCoinAssetDataExtended(currentToken) && calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price}</b>\nToken Balance: <b>${calculate(currentToken.balance, currentToken.price)}</b>\nMcap: <b>${currentToken.mcap === 0 ? 'Not fethed' : currentToken.mcap}</b>\n1h: <b>${currentToken.priceChange1h === 0 ? 'Not fetched' : currentToken.priceChange1h}</b> 24h: <b>${currentToken.priceChange24h === 0 ? 'Not fetched' : currentToken.priceChange24h}</b>` : ``
+
+    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: {sui balance}\nYour available SUI balance: {avl sui balance}\nNet Worth: {Net Worth here}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
 
     ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
   })
