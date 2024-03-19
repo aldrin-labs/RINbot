@@ -3,6 +3,7 @@ import { Menu } from '@grammyjs/menu';
 import { availableBalance, balance, home } from '../chains/sui.functions';
 import { BotContext, CoinAssetDataExtended } from '../types';
 import { calculate, isCoinAssetDataExtended } from '../chains/priceapi.utils';
+import { isExponential } from '../chains/utils'
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
@@ -44,8 +45,17 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     });
 
     const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`
-
-    const priceApiDataStr = isCoinAssetDataExtended(currentToken) && calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>\n"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "</b>"}` : ``
+    let priceApiDataStr: string;
+    let tokenPrice: string;
+    if (isCoinAssetDataExtended(currentToken)) {
+      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>\n"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "</b>"}` : ``
+      if (currentToken.price && isExponential(currentToken.price))
+        tokenPrice = currentToken.price.toFixed(10)
+    }
+    else {
+      priceApiDataStr = ''
+      tokenPrice = ''
+    }
 
     const suiBalance = await balance(ctx)
     const suiAvlBalance = await availableBalance(ctx)

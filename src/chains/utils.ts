@@ -229,7 +229,7 @@ export function findCoinInAssets(
 }
 
 
-function isExponential(num: number): boolean {
+export function isExponential(num: number): boolean {
   const numStr = num.toString();
   return numStr.includes('e') || numStr.includes('E');
 }
@@ -240,11 +240,11 @@ function isExponential(num: number): boolean {
 
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;
-  if (isCoinAssetData(validCoin)){
+  if (isCoinAssetData(validCoin)) {
     const priceApiGetResponse = await getPriceApi('sui', validCoin.type);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
-      if(isExponential(price))
+      if (isExponential(price))
         price = price.toFixed(10)
       return `You are selling <code>${validCoin.type}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
@@ -252,11 +252,11 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
       return `Price information for <code>${validCoin.type}</code> is currently unavailable.\n\n`;
     }
   }
-  else if(typeof validCoin === 'string'){
+  else if (typeof validCoin === 'string') {
     const priceApiGetResponse = await getPriceApi('sui', validCoin);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
-      if(isExponential(price))
+      if (isExponential(price))
         price = price.toFixed(10)
       return `You are buying <code>${validCoin}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
