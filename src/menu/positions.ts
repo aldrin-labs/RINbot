@@ -33,9 +33,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('<', (ctx) => {
     prevToken(ctx.session.assets);
 
-    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>\n\n<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code>\n\nPrice:{}\n\nBalance: <b>${currentToken.balance}</b>\n\n`
+    const newMessage = `Positions Overview:\n\n<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>\n\nPrice:{Price here}\n\nToken Balance: <b>${currentToken.balance}</b>\n\nNet Worth: {Net Worth here}`
 
-    ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+    ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
   })
   .text((ctx) => {
     const assets = ctx.session.assets;
