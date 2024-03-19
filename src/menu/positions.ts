@@ -8,23 +8,40 @@ import { isExponential } from '../chains/utils'
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetData;
 
-function nextToken(assets: CoinAssetDataExtended[]) {
-  currentTokenIndex++;
-  if (currentTokenIndex === assets.length) {
-    currentTokenIndex = 0;
-    currentToken = assets[currentTokenIndex];
+function updateCurrentToken(assets: CoinAssetDataExtended[], direction: 'next' | 'prev') {
+  if (direction === 'next') {
+    currentTokenIndex = (currentTokenIndex + 1) % assets.length;
+  } else {
+    currentTokenIndex = (currentTokenIndex - 1 + assets.length) % assets.length;
   }
   currentToken = assets[currentTokenIndex];
 }
 
-function prevToken(assets: CoinAssetDataExtended[]) {
-  currentTokenIndex--;
-  if (currentTokenIndex < 0) {
-    currentTokenIndex = assets.length - 1;
-    currentToken = assets[currentTokenIndex];
+async function updateMessage(ctx: BotContext) {
+  const allCoinAssets = ctx.session.assets;
+  let netWorth = 0;
+  allCoinAssets.forEach(coin => {
+    if (coin.price !== undefined) {
+      netWorth += +coin.balance * coin.price;
+    }
+  });
+
+  const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+  let priceApiDataStr: string;
+  if (isCoinAssetDataExtended(currentToken)) {
+    priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>"}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + "%</b>"} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + "%</b>"}` : ``;
+  } else {
+    priceApiDataStr = '';
   }
-  currentToken = assets[currentTokenIndex];
+
+  const suiBalance = await balance(ctx);
+  const suiAvlBalance = await availableBalance(ctx);
+
+  const newMessage = `<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+
+  ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
 }
+
 
 const positions_menu = new Menu<BotContext>('positions-menu')
   .text('Sell', async (ctx) => {
@@ -33,51 +50,19 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   })
   .row()
   .text('⬅️', async (ctx) => {
-    prevToken(ctx.session.assets);
-
-    const allCoinAssets = ctx.session.assets
-
-    let netWorth = 0;
-    allCoinAssets.forEach(coin => {
-      if (coin.price !== undefined) {
-        netWorth += +coin.balance * coin.price;
-      }
-    });
-
-    const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`
-    let priceApiDataStr: string;
-    let tokenPrice: string;
-    if (isCoinAssetDataExtended(currentToken)) {
-      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>"}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + "%</b>"} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + "%</b>"}` : ``
-    }
-    else {
-      priceApiDataStr = ''
-      tokenPrice = ''
-    }
-
-    const suiBalance = await balance(ctx)
-    const suiAvlBalance = await availableBalance(ctx)
-
-    const newMessage = `<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`
-
-    ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+    updateCurrentToken(ctx.session.assets, 'prev');
+    await updateMessage(ctx);
   })
   .text((ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
-
     return tokenToUse.symbol ?? tokenToUse.type;
   })
   .text(
     '➡️',
-    (ctx) => {
-      nextToken(ctx.session.assets);
-
-      const newMessage = currentToken.symbol
-        ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
-        : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
-
-      ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+    async (ctx) => {
+      updateCurrentToken(ctx.session.assets, 'next');
+      await updateMessage(ctx);
     },
     (ctx) => ctx.menu.update(),
   )
@@ -86,7 +71,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await home(ctx);
   })
   .text('Refresh', async (ctx) => {
-
+    // Implement refresh logic here
   });
 
 export default positions_menu;
