@@ -46,8 +46,6 @@ export async function sell(
   const isAmountSuiAmountIsValid = +availableBalance > 0;
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
 
-  const chosenTokenType = ctx.session.chosenTokenType
-
   if (!isAmountSuiAmountIsValid) {
     await ctx.reply(
       "You don't have enough SUI for transaction gas. Please, top up your SUI balance to continue.",
@@ -56,17 +54,16 @@ export async function sell(
 
     return;
   }
-  if (chosenTokenType === null) {
-    await ctx.reply(
-      'What token do you want to sell? Please send a coin type or a link to suiscan.',
-      { reply_markup: closeConversation },
-    );
 
-    await ctx.reply(
-      'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
-      { parse_mode: 'HTML' },
-    );
-  }
+  await ctx.reply(
+    'What token do you want to sell? Please send a coin type or a link to suiscan.',
+    { reply_markup: closeConversation },
+  );
+
+  await ctx.reply(
+    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+    { parse_mode: 'HTML' },
+  );
 
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
@@ -84,11 +81,8 @@ export async function sell(
     if (ctx.callbackQuery?.data === 'close-conversation') {
       return false;
     }
-    let possibleCoin;
-    if (chosenTokenType !== null)
-      possibleCoin = chosenTokenType.type
-    else
-      possibleCoin = (ctx.msg?.text || '').trim();
+
+    const possibleCoin = (ctx.msg?.text || '').trim();
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
@@ -155,10 +149,7 @@ export async function sell(
 
       return false;
     }
-    if (ctx.session.chosenTokenType === null)
-      validatedCoin = foundCoin;
-    else
-      validatedCoin = ctx.session.chosenTokenType
+    validatedCoin = foundCoin;
     return true;
   });
 
@@ -335,7 +326,6 @@ export async function sell(
       `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-    ctx.session.chosenTokenType = null
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     return;
@@ -346,7 +336,6 @@ export async function sell(
       `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
-    ctx.session.chosenTokenType = null
     return;
   }
 

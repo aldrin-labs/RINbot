@@ -40,7 +40,6 @@ import { BotContext, SessionData } from './types';
 import { buy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { addTrades } from './migrations/addTrades';
-import { addChosenTokenType } from './migrations/addChosenTokenType';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -79,7 +78,6 @@ async function startBot(): Promise<void> {
           },
           tradesCount: 0,
           createdAt: Date.now(),
-          chosenTokenType: null,
           tradeCoin: {
             coinType: '',
             useSpecifiedCoin: false,
@@ -92,7 +90,6 @@ async function startBot(): Promise<void> {
           1: addWelcomeBonus,
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
-          4: addChosenTokenType
         },
       }),
     }),
