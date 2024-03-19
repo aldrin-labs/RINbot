@@ -564,12 +564,16 @@ export async function home(ctx: BotContext) {
       positionOverview = `Your have no tokens yet.`
       return;
     }
-    const assetsString = allCoinsAssets?.reduce((acc, el) => {
-
-      const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+    const assetsString = allCoinsAssets?.reduce((acc, token) => {
+      let priceApiDataStr: string;
+      if (isCoinAssetDataExtended(token)) {
+        priceApiDataStr = calculate(token.balance, token.price) !== null ? `\n\nToken Price: <b>${token.price?.toFixed(10)} USD</b>\nToken Balance: <b>${token.balance + " " + token.symbol + " / " + calculate(token.balance, token.price) + " USD"}</b>${token.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", token.mcap) + " USD</b>"}${token.priceChange1h === 0 ? `\n1h: <b>${token.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (token.priceChange1h! > 0 ? "+" + token.priceChange1h?.toFixed(2) : token.priceChange1h?.toFixed(2)) + "%</b>"} ${token.priceChange24h === 0 ? ` 24h: <b>${token.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (token.priceChange24h! > 0 ? "+" + token.priceChange24h?.toFixed(2) : token.priceChange24h?.toFixed(2)) + "%</b>"}` : ``;
+      } else {
+        priceApiDataStr = '';
+      }
 
       acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
+        `<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`,
       );
 
       return acc;
