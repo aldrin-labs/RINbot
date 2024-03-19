@@ -9,7 +9,7 @@ import { Context, SessionFlavor } from 'grammy';
 export interface Trade {
   buyingPrice: number | null;
   sellingPrice: number | null;
-  quantity: number;
+  quantity: bigint;
   fees?: number;
 }
 

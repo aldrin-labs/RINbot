@@ -166,6 +166,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   }
 
   // TODO: Re-check args here
+  let maxOutputAmount: bigint | null;
   const tx = await conversation.external({
     args: [validatedCoinType, validatedInputAmount],
     task: async (validatedCoinType: string, validatedInputAmount: string) => {
@@ -186,11 +187,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage,
         })
-        console.log(routeData.maxOutputAmount);
 
+        maxOutputAmount = routeData.maxOutputAmount;
 
         return transaction;
       } catch (error) {
+        maxOutputAmount = null
         console.error(error);
 
         if (error instanceof Error) {
@@ -259,7 +261,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         ? TransactionResultStatus.Success
         : TransactionResultStatus.Failure;
 
-      return { digest: res.digest, result, res };
+      return { digest: res.digest, result };
     } catch (error) {
       if (error instanceof Error) {
         console.error(
@@ -278,14 +280,15 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}\n\n${resultOfSwap.res.transaction?.data.transaction}`,
+      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
-    console.log(resultOfSwap.res.transaction?.data.transaction);
-
-
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
+
+    await conversation.external(async () => {
+      await addTrade(validatedCoinType!, maxOutputAmount!, conversation, ctx)
+    })
 
     return;
   }
@@ -302,11 +305,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
 }
 
-// async function addTrade(coinType: string, conversation: MyConversation, ctx: BotContext) {
+async function addTrade(coinType: string, quantity: bigint, conversation: MyConversation, ctx: BotContext) {
 
-
-
-//   await getPriceApi("sui", coinType).then(response => {
-//     conversation.session.trades.push({ buyingPrice: response?.data.data.price || null, sellingPrice: null, quantity:  })
-//   })
-// }
+  const response = await conversation.external(async () => await getPriceApi("sui", coinType).then(response => {
+    conversation.session.trades.push({ buyingPrice: response?.data.data.price || null, sellingPrice: null, quantity: quantity })
+  }))
+}
