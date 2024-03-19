@@ -48,10 +48,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     let priceApiDataStr: string;
     let tokenPrice: string;
     if (isCoinAssetDataExtended(currentToken)) {
-      tokenPrice = `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>`
-      // if (currentToken.price && isExponential(currentToken.price))
-      //   tokenPrice = `\n\nToken Price: <b>${currentToken.price.toFixed(10)} USD</b>`
-      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `${tokenPrice}\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>"}${currentToken.priceChange1h === 0 ? '' : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h : currentToken.priceChange1h) + "%</b>"} ${currentToken.priceChange24h === 0 ? '' : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h : currentToken.priceChange24h) + "%</b>"}` : ``
+      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>"}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + "%</b>"} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + "%</b>"}` : ``
     }
     else {
       priceApiDataStr = ''
