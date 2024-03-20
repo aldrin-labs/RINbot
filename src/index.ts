@@ -33,6 +33,7 @@ import {
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
@@ -90,6 +91,9 @@ async function startBot(): Promise<void> {
             coinType: '',
             useSpecifiedCoin: false,
           },
+          refund: {
+            claimedBoostedRefund: false,
+          },
         };
       },
       storage: enhanceStorage({
@@ -98,6 +102,7 @@ async function startBot(): Promise<void> {
           1: addWelcomeBonus,
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
+          4: addBoostedRefund,
         },
       }),
     }),

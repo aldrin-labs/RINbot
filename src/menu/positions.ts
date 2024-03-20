@@ -67,31 +67,37 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await ctx.conversation.enter(ConversationId.Buy);
   })
   .row()
-  .text('<', (ctx) => {
-    prevToken(ctx.session.assets);
-    const newMessage = currentToken.symbol
-      ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
-      : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
+  .dynamic(async (ctx, component) => {
+    const assets = ctx.session.assets;
+    if(assets.length > 1) {
+      component.text('<', () => {
+        prevToken(ctx.session.assets);
+        const newMessage = currentToken.symbol
+          ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
+          : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
 
-    ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+        ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+      })
+    }
   })
   .text((ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     return tokenToUse.symbol ?? tokenToUse.type;
   })
-  .text(
-    '>',
-    (ctx) => {
-      nextToken(ctx.session.assets);
-      const newMessage = currentToken.symbol
-        ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
-        : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
+  .dynamic(async (ctx, component) => {
+    const assets = ctx.session.assets;
+    if(assets.length > 1) {
+      component.text('>', () => {
+        nextToken(ctx.session.assets);
+        const newMessage = currentToken.symbol
+          ? `<b>${currentToken.symbol}</b> | <code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`
+          : `<code>${currentToken.type}</code> | <code>${currentToken.balance}</code>`;
 
-      ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
-    },
-    (ctx) => ctx.menu.update(),
-  )
+        ctx.editMessageText(newMessage, { parse_mode: 'HTML' });
+      }, (ctx) => ctx.menu.update())
+    }
+  })
   .row()
   .text('Sell 25%', async (ctx) => {
     const assets = ctx.session.assets;
@@ -131,7 +137,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   })
   .row()
   .text('Refresh', async (ctx) => {
-    await home(ctx);
   });
 
 export default positions_menu;

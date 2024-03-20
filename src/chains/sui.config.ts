@@ -5,5 +5,7 @@ export const SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS = {
   updateIntervalInMs: 1000 * 60 * 60,
 };
 
+
+export const SUI_COIN_TYPE = '';
 export const RINCEL_COIN_TYPE =
   '0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL';
