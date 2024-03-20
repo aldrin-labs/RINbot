@@ -16,7 +16,8 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { makeRefund } from './chains/refunds/conversations/make-refund';
+import { checkCurrentWallet } from './chains/refunds/conversations/checkCurrentWallet';
+import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import {
   createAftermathPool,
@@ -39,11 +40,11 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
-import { addRefundFields } from './migrations/addRefundFields';
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -151,7 +152,14 @@ async function startBot(): Promise<void> {
     createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
   );
   composer.use(
-    createConversation(makeRefund, { id: ConversationId.MakeRefund }),
+    createConversation(checkCurrentWallet, {
+      id: ConversationId.CheckCurrentWalletForRefund,
+    }),
+  );
+  composer.use(
+    createConversation(checkProvidedAddress, {
+      id: ConversationId.CheckProvidedAddressForRefund,
+    }),
   );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer);

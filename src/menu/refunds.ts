@@ -1,11 +1,15 @@
 import { Menu } from '@grammyjs/menu';
-import { checkUserIsEligibleToRefund } from '../chains/refunds/checkUserIsEligibleToRefund';
-import { BotContext } from '../types';
+import { ConversationId } from '../chains/conversations.config';
 import { home } from '../chains/sui.functions';
+import { BotContext } from '../types';
 
 const refundsMenu = new Menu<BotContext>('refunds')
-  .text('Check', async (ctx) => {
-    await checkUserIsEligibleToRefund(ctx);
+  .text('Check Current Wallet', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CheckCurrentWalletForRefund);
+  })
+  .row()
+  .text('Check Provided Address', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CheckProvidedAddressForRefund);
   })
   .row()
   .text('Home', async (ctx) => {
