@@ -27,8 +27,11 @@ async function updateMessage(ctx: BotContext) {
       netWorth += +coin.balance * coin.price;
     }
   });
-
-  const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+  let totalNetWorth;
+  if (netWorth === 0)
+    totalNetWorth = ''
+  else
+    totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
   let priceApiDataStr: string;
   if (isCoinAssetDataExtended(currentToken)) {
     priceApiDataStr = formatTokenInfo(currentToken)
