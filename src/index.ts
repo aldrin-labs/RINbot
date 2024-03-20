@@ -40,6 +40,7 @@ import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
+import { addRefundFields } from './migrations/addRefundFields';
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -83,12 +84,10 @@ async function startBot(): Promise<void> {
           },
           refund: {
             claimedBoostedRefund: false,
-            walletBeforeBoostedRefundClaim: {
-              publicKey: null,
-              privateKey: null,
-            },
+            walletBeforeBoostedRefundClaim: null,
             baseRefundAmount: null,
             boostedRefundAmount: null,
+            boostedRefundAccount: null,
           },
         };
       },
@@ -99,6 +98,7 @@ async function startBot(): Promise<void> {
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
           4: addBoostedRefund,
+          5: addRefundFields,
         },
       }),
     }),

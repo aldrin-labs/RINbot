@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
-export function addBoostedRefund(old: {
+export function addRefundFields(old: {
   step:
     | 'main'
     | 'buy'
@@ -33,12 +33,10 @@ export function addBoostedRefund(old: {
     ...old,
     refund: {
       ...old.refund,
-      walletBeforeBoostedRefundClaim: {
-        publicKey: null,
-        privateKey: null,
-      },
+      walletBeforeBoostedRefundClaim: null,
       baseRefundAmount: null,
       boostedRefundAmount: null,
+      boostedRefundAccount: null,
     },
   };
 }

@@ -84,11 +84,15 @@ export interface SessionData {
   refund: {
     claimedBoostedRefund: boolean;
     walletBeforeBoostedRefundClaim: {
-      publicKey: string | null;
-      privateKey: string | null;
-    };
+      publicKey: string;
+      privateKey: string;
+    } | null;
     baseRefundAmount: string | null;
     boostedRefundAmount: string | null;
+    boostedRefundAccount: {
+      publicKey: string;
+      privateKey: string;
+    } | null;
   };
 }
 
