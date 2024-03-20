@@ -2,7 +2,7 @@ import { InlineKeyboard } from 'grammy';
 import { CallbackQueryData } from '../types/callback-queries-data';
 
 const refundOptionsKeyboard = new InlineKeyboard()
-  .text('Full Refund', CallbackQueryData.FullRefund)
-  .text('Enhanced Refund', CallbackQueryData.EnhancedRefund);
+  .text('Base Refund', CallbackQueryData.BaseRefund)
+  .text('Boosted Refund', CallbackQueryData.BoostedRefund);
 
 export default refundOptionsKeyboard;

@@ -3,8 +3,8 @@ export enum CallbackQueryData {
   Confirm = 'confirm',
   Yes = 'yes',
   No = 'no',
-  FullRefund = 'full-refund',
-  EnhancedRefund = 'enhanced-refund',
+  BaseRefund = 'base-refund',
+  BoostedRefund = 'boosted-refund',
   Assets = 'assets',
   ExportPrivateKey = 'export-private-key',
 }

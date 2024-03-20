@@ -201,7 +201,7 @@ export async function withdraw(
 
   if (claimedBoostedRefund) {
     await ctx.reply(
-      '👋 Just a quick heads-up: withdrawal of funds is temporarily disabled because you opted for our enhanced ' +
+      '👋 Just a quick heads-up: withdrawal of funds is temporarily disabled because you opted for our boosted ' +
         'refund option. No worries, though! You can still use these funds and generate profits right here ' +
         'with us. Feel free to continue trading and utilizing other features 📈',
       { reply_markup: goHome },
