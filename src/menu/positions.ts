@@ -1,7 +1,7 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { ConversationId } from '../chains/conversations.config';
-import { assets, availableBalance, balance, home } from '../chains/sui.functions';
+import { availableBalance, balance, home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { formatTokenInfo, getPriceApi, isCoinAssetDataExtended } from '../chains/priceapi.utils';
 
@@ -142,12 +142,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await ctx.conversation.enter(ConversationId.Sell);
   })
   .row()
-  .dynamic(async (ctx, range) => {
-    const assets = ctx.session.assets;
-    const tokenToUse = currentToken ?? assets[currentTokenIndex];
-    const [tokenContract] = tokenToUse?.type.split('::');
-    range.url('SUIVision.xyz', `https://suivision.xyz/package/${tokenContract}`);
-  })
   .dynamic(async (ctx, range) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
