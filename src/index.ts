@@ -85,6 +85,12 @@ async function startBot(): Promise<void> {
           },
           refund: {
             claimedBoostedRefund: false,
+            walletBeforeBoostedRefundClaim: {
+              publicKey: null,
+              privateKey: null,
+            },
+            baseRefundAmount: null,
+            boostedRefundAmount: null,
           },
         };
       },
