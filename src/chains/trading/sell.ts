@@ -25,7 +25,6 @@ import {
   extractCoinTypeFromLink,
   swapTokenTypesAreEqual,
   findCoinInAssets,
-  isCoinAssetData,
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
@@ -240,7 +239,7 @@ export async function sell(
   await instantSell(conversation, ctx, tradeAmount.toString(), validCoinToSell.type);
 }
 
-export async function instantSell(
+async function instantSell(
   conversation: MyConversation,
   ctx: BotContext,
   tradeAmount: string,
