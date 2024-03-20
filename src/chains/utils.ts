@@ -219,6 +219,11 @@ export function getAftermathPoolLink(poolObjectId: string) {
   return `${AftermathSingleton.AFTERMATH_POOL_URL}/${poolObjectId}`;
 }
 
+export function isExponential(num: number): boolean {
+  const numStr = num.toString();
+  return numStr.includes('e') || numStr.includes('E');
+}
+
 export function findCoinInAssets(
   assets: CoinAssetData[],
   coinType: string,
