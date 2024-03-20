@@ -115,7 +115,7 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
     `${priceOutput} Reply with the amount you wish to sell (0 - 100 %):`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
-
+  let result: string = '0';
   await conversation.waitUntil(async (ctx) => {
     if (ctx.callbackQuery?.data === 'close-conversation') {
       return false;
@@ -123,13 +123,11 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
 
     const inputAmount = ctx.msg?.text;
 
-    // ts check
     if (inputAmount === undefined) {
       return false;
     }
 
     const decimals = validCoinToSell.decimals;
-    // ts check
     if (decimals === null) {
       await ctx.reply(
         `Token decimals not found for ${validCoinToSell.type}. Please, use another token for sell or contact support.`,
@@ -154,9 +152,11 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
 
       return false;
     }
-    ctx.session.tradeAmount = inputAmount;
+    console.log('INPUT AMOUNT', inputAmount);
+    result = inputAmount;
     return true;
   });
+  return result;
 }
 
 export async function sell(
@@ -210,7 +210,6 @@ export async function sell(
       return parseCoinTypeResponse(ctx, ctx.msg?.text || '', coinManager, allCoinsAssets);
     });
   }
-
   const coinType = ctx.session.tradeCoin.coinType;
   const validatedCoin = await coinManager.getCoinByType2(coinType);
   if (validatedCoin === null) {
@@ -230,7 +229,7 @@ export async function sell(
   }
   const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
   if(ctx.session.tradeAmount === '0') {
-    await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
+    ctx.session.tradeAmount = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
   }
   const percentage = parseFloat(ctx.session.tradeAmount) / 100;
 

@@ -116,7 +116,7 @@ async function startBot(): Promise<void> {
 
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
   composer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
-  //composer.use(createConversation(sell, { id: ConversationId.Sell }));
+  composer.use(createConversation(sell, { id: ConversationId.Sell }));
   composer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
