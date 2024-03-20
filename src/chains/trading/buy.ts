@@ -54,7 +54,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     );
 
     const coinManager = await getCoinManager();
-
     await conversation.waitUntil(async (ctx) => {
       if (ctx.callbackQuery?.data === 'close-conversation') {
         return false;
@@ -67,9 +66,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       if (!coinTypeIsValid && !suiScanLinkIsValid) {
         const replyText =
           'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.';
-
         await ctx.reply(replyText, { reply_markup: closeConversation });
-
         return false;
       }
 

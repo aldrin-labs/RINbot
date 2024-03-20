@@ -24,6 +24,10 @@ const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
     ctx.session.step = 'buy';
     ctx.session.tradeAmount = '0';
+    ctx.session.tradeCoin = {
+      coinType: '',
+      useSpecifiedCoin: false
+    };
     await ctx.conversation.enter('buy');
   })
   .text('Sell & Manage', async (ctx) => {

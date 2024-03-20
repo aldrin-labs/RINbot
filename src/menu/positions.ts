@@ -1,7 +1,7 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { ConversationId } from '../chains/conversations.config';
-import { availableBalance, balance, home } from '../chains/sui.functions';
+import { assets, availableBalance, balance, home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { formatTokenInfo, getPriceApi, isCoinAssetDataExtended } from '../chains/priceapi.utils';
 
@@ -98,9 +98,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       });
     }
   })
-  .text((ctx) => {
-    const assets = ctx.session.assets;
-    const tokenToUse = currentToken ?? assets[currentTokenIndex];
+  .text(async (ctx) => {
+    const sessionAssets = ctx.session.assets;
+    const tokenToUse = currentToken ?? sessionAssets[currentTokenIndex];
     return tokenToUse.symbol ?? tokenToUse.type;
   })
   .dynamic(async (ctx, component) => {
@@ -145,7 +145,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .dynamic(async (ctx, range) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
-    const [tokenContract] = tokenToUse.type.split('::');
+    const [tokenContract] = tokenToUse?.type.split('::');
     range.url('SUIVision.xyz', `https://suivision.xyz/package/${tokenContract}`);
   })
   .dynamic(async (ctx, range) => {

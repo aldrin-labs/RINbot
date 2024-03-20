@@ -23,6 +23,16 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
   });
 
+  /*bot.callbackQuery('buy', async (ctx) => {
+    ctx.session.step = 'buy';
+    ctx.session.tradeAmount = '0';
+    ctx.session.tradeCoin = {
+      coinType: '',
+      useSpecifiedCoin: false
+    };
+    ctx.conversation.enter('buy');
+  });*/
+
   useSurfdogCallbackQueries(bot);
   useSlippageCallbackQueries(bot);
 
