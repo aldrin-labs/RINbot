@@ -571,8 +571,7 @@ export async function home(ctx: BotContext) {
         priceApiDataStr = '';
       }
 
-      const parts = token.type.split("::");
-      const symbol = parts[parts.length - 1];
+      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
 
       assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
