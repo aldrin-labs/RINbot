@@ -40,8 +40,11 @@ async function updateMessage(ctx: BotContext) {
   const suiAvlBalance = await availableBalance(ctx);
 
   const newMessage = `🪙<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
-
-  ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+  try {
+    await ctx.editMessageText(newMessage, { parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+  }catch(e) {
+    console.log('handled error', e);
+  }
 }
 
 const positions_menu = new Menu<BotContext>('positions-menu')

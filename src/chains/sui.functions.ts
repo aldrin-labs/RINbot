@@ -526,11 +526,18 @@ export async function home(ctx: BotContext) {
 
   try {
     const walletManager = await getWalletManager();
-    let allCoinsAssets: CoinAssetDataExtended[] = await walletManager.getAllCoinAssets(
+    const allCoinsAssetsResponse: CoinAssetDataExtended[] = await walletManager.getAllCoinAssets(
       ctx.session.publicKey,
     );
 
+    let allCoinsAssets = allCoinsAssetsResponse.filter(c => c.type !== LONG_SUI_COIN_TYPE);
+    let suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE);
+    if(!suiAsset) {
+      throw new Error('Failed to fetch SUI informations');
+    }
+    ctx.session.suiAsset = suiAsset;
     ctx.session.assets = allCoinsAssets;
+
     let data: PriceApiPayload = { data: [] }
     allCoinsAssets.forEach(coin => {
       //move to price api

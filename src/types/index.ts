@@ -68,7 +68,7 @@ export interface SessionData {
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
-  suiAsset: CoinAssetData;
+  suiAsset: CoinAssetDataExtended;
   assets: CoinAssetDataExtended[];
   welcomeBonus: {
     amount: number;

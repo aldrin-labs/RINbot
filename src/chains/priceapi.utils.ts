@@ -32,7 +32,7 @@ export function formatTokenInfo(token: CoinAssetDataExtended): string {
     return `\n\nToken Price: <b>${tokenPrice} USD</b>\nToken Balance: <b>${tokenBalance} ${tokenSymbol} / ${tokenValueInUSD} USD</b>${mcapInUSD ? "\nMcap: <b>" + mcapInUSD + " USD</b>" : ''}${priceChange1h ? "\n1h: <b>" + priceChange1h + "</b>" : ''}${priceChange24h ? " 24h: <b>" + priceChange24h + "</b>" : ''}`;
 }
 
-export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => 'price' in asset;
+export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => asset && 'price' in asset;
 
 export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
     try {
