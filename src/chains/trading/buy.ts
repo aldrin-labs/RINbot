@@ -211,7 +211,6 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     task: async (resCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();
-        console.log('USING slippage', ctx.session.settings.slippagePercentage);
         const transaction = await routerManager.getBestRouteTransaction({
           tokenFrom: LONG_SUI_COIN_TYPE,
           tokenTo: resCoinType,
