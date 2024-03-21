@@ -12,4 +12,4 @@ export enum RefundPhase {
 }
 
 export const BOOSTED_REFUND_EXAMPLE_FOR_USER_URL =
-  'https://github.com/aldrin-labs/refund-contract/blob/booster-cap/examples/signMessageForTesting.ts';
+  'https://github.com/aldrin-labs/refund-contract/tree/booster-cap/examples';
