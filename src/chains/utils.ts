@@ -217,11 +217,6 @@ export function getAftermathPoolLink(poolObjectId: string) {
   return `${AftermathSingleton.AFTERMATH_POOL_URL}/${poolObjectId}`;
 }
 
-export function isExponential(num: number): boolean {
-  const numStr = num.toString();
-  return numStr.includes('e') || numStr.includes('E');
-}
-
 export function findCoinInAssets(
   assets: CoinAssetData[],
   coinType: string,
@@ -237,7 +232,7 @@ export function findCoinInAssets(
 // TODO: Entire text should depend on the param (e.g. `side`, which is buy or sell)
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;
-  if (isCoinAssetData(validCoin)) {
+  if (isCoinAssetData(validCoin)){
     const priceApiGetResponse = await getPriceApi('sui', validCoin.type);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
@@ -247,7 +242,7 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
       return `Price information for <code>${validCoin.type}</code> is currently unavailable.\n\n`;
     }
   }
-  else if (typeof validCoin === 'string') {
+  else if(typeof validCoin === 'string'){
     const priceApiGetResponse = await getPriceApi('sui', validCoin);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
@@ -260,4 +255,3 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   else
     return "Could not fetch the data.\n\n"
 }
-
