@@ -499,7 +499,12 @@ export async function home(ctx: BotContext) {
     const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
     price = priceApiGetResponse?.data.data.price;
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) {
+      console.error('[home] Price API error:', error.message)
+    } else {
+      console.error('[home] Price API error: unknown error')
+    }
+
     price = undefined;
   }
   const balance_usd = calculate(userBalance, price);

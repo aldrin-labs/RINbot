@@ -50,7 +50,7 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
         console.log(`Price API post response time: ${requestTime}ms`);
         return response
     } catch (error) {
-        console.error('Price API error: ', error);
+        // console.error('Price API error: ', error);
         return undefined
     }
 }
@@ -70,7 +70,11 @@ export async function getPriceApi(chainId: string, tokenAddress: string) {
         console.log(`Price API get response time: ${requestTime}ms`);
         return response
     } catch (error) {
-        console.error('Price API error: ', error);
+        if (error instanceof Error) {
+            console.error('Price API error:', error.message)
+        } else {
+            console.error('Price API error: unknown error')
+        }
         return undefined
     }
 }
