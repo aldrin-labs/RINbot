@@ -16,16 +16,18 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import {
   createAftermathPool,
   createCoin,
-  exportPrivateKey,
   generateWallet,
   home,
   withdraw,
 } from './chains/sui.functions';
 import { buy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
+import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
+import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import {
   BOT_TOKEN,
@@ -68,7 +70,7 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
-          settings: { slippagePercentage: 20 },
+          settings: { slippagePercentage: DEFAULT_SLIPPAGE },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -145,10 +147,14 @@ async function startBot(): Promise<void> {
       id: ConversationId.WelcomeBonus,
     }),
   );
+  composer.use(
+    createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
+  );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer);
   bot.use(menu);
 
+  // TODO: Move these `command` calls to separated file like with `useCallbackQueries`
   bot.command('version', async (ctx) => {
     await ctx.reply(`Version ${APP_VERSION}`);
   });
@@ -193,6 +199,10 @@ async function startBot(): Promise<void> {
     await ctx.conversation.exit();
   });
 
+  bot.command('importnewwallet', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -217,10 +227,12 @@ async function startBot(): Promise<void> {
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
+    { command: 'importnewwallet', description: 'Import new wallet' },
   ]);
 
   useCallbackQueries(bot);
 
+  // TODO: Move this to `useCallbackQueries`
   bot.callbackQuery('add-cetus-liquidity', async (ctx) => {
     await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
     await ctx.answerCallbackQuery();
