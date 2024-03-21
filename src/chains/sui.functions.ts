@@ -280,7 +280,6 @@ export async function withdraw(
       );
     },
   );
-  console.debug('availableAmount before:', availableAmount);
 
   let nonWithdrawableAmount = new BigNumber(0);
 
@@ -290,13 +289,11 @@ export async function withdraw(
   if (claimedBoostedRefund && boostedRefundAmount !== null) {
     nonWithdrawableAmount = nonWithdrawableAmount.plus(boostedRefundAmount);
   }
-  console.debug('nonWithdrawableAmount:', nonWithdrawableAmount.toString());
 
   // Decrease available amount with non-withdrawable amount (welcome bonus or/and boosted refund)
   availableAmount = new BigNumber(availableAmount)
     .minus(nonWithdrawableAmount)
     .toString();
-  console.debug('availableAmount after:', availableAmount);
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
