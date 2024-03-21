@@ -33,6 +33,12 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
       await ctx.answerCallbackQuery();
     });
   });
+
+  // We need this to handle button clicks which are not handled wherever (e.g. in conversations)
+  bot.on('callback_query:data', async (ctx) => {
+    console.log('Unknown button event with payload', ctx.callbackQuery.data);
+    await ctx.answerCallbackQuery();
+  });
 }
 
 function useSurfdogCallbackQueries(bot: Bot<BotContext>) {

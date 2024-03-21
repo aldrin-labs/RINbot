@@ -1,7 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import { DEFAULT_SLIPPAGE } from '../chains/slippage/percentages';
 
-export function enlargeDefaultSlippage(old: {
+export function addBoostedRefund(old: {
   step:
     | 'main'
     | 'buy'
@@ -22,9 +21,15 @@ export function enlargeDefaultSlippage(old: {
   };
   tradesCount: number;
   createdAt: number;
+  tradeCoin: {
+    coinType: string;
+    useSpecifiedCoin: boolean;
+  };
 }) {
   return {
     ...old,
-    settings: { slippagePercentage: DEFAULT_SLIPPAGE },
+    refund: {
+      claimedBoostedRefund: false,
+    },
   };
 }
