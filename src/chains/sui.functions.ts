@@ -539,20 +539,20 @@ export async function home(ctx: BotContext) {
 
   try {
     const data: PriceApiPayload = { data: [] }
-    const allCoinAssets = ctx.session.assets
-    allCoinAssets.forEach(coin => {
+    const {allCoinsAssets, suiAsset} = await refreshAssets(ctx);
+    [...allCoinsAssets, suiAsset].forEach(coin => {
       //move to price api
       data.data.push({ chainId: "sui", tokenAddress: coin.type })
     })
 
-    const response = await postPriceApi(allCoinAssets);
+    const response = await postPriceApi([...allCoinsAssets, suiAsset]);
 
     const coinsPriceApi = response?.data.data;
 
     const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
 
     let balance = 0;
-    allCoinAssets.forEach(coin => {
+    [...allCoinsAssets, suiAsset].forEach(coin => {
       const price = priceMap.get(coin.type);
       if (price !== undefined) {
         balance += +coin.balance * price;
