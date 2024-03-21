@@ -502,6 +502,7 @@ export async function home(ctx: BotContext) {
     console.error(error);
     price = undefined;
   }
+
   const balance_usd = calculate(userBalance, price);
   const avl_balance_usd = calculate(avl_balance, price);
 
@@ -570,7 +571,6 @@ export async function home(ctx: BotContext) {
 
     if (allCoinsAssets?.length === 0) {
       positionOverview = `Your have no tokens yet.`;
-      return;
     }
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {
