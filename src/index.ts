@@ -209,6 +209,7 @@ async function startBot(): Promise<void> {
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
     { command: 'version', description: 'Show the bot version' },
+    { command: 'balances', description: 'Show your wallet balances' },
     { command: 'buy', description: 'Show buy menu' },
     { command: 'sell', description: 'Show sell menu' },
     { command: 'withdrawal', description: 'Show withdrawal menu' },
