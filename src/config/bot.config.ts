@@ -18,8 +18,8 @@ export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES =
 export const PRICE_API_URL = process.env.PRICE_API_URL || '';
 export const ALDRIN_AUTHORITY = process.env.ALDRIN_AUTHORITY || '';
 export const imgs = [
-  './src/imgs/aldrin1.jpg',
-  './src/imgs/aldrin2.jpg',
-  './src/imgs/rincel2.jpg',
-  './src/imgs/rincel1.jpg'
+  'https://i.ibb.co/J5JK48D/aldrin1.jpg',
+  'https://i.ibb.co/dbQS5K1/aldrin2.jpg',
+  'https://i.ibb.co/fQKWMJ4/rincel1.jpg',
+  'https://i.ibb.co/B3BH8gb/rincel2.jpg'
 ]
