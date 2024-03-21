@@ -29,6 +29,7 @@ import {
   isValidCoinLink,
   swapTokenTypesAreEqual,
 } from '../utils';
+import { showSlippageConfiguration } from '../slippage/showSlippageConfiguration';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -36,7 +37,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     () => ctx.session.tradeCoin.useSpecifiedCoin,
   );
   const coinType = ctx.session.tradeCoin.coinType;
-
   let validatedCoinType: string | undefined;
 
   if (useSpecifiedCoin) {
@@ -211,6 +211,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     task: async (resCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();
+        console.log('USING slippage', ctx.session.settings.slippagePercentage);
         const transaction = await routerManager.getBestRouteTransaction({
           tokenFrom: LONG_SUI_COIN_TYPE,
           tokenTo: resCoinType,
@@ -310,21 +311,28 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
-      { reply_markup: retryButton },
+      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`
     );
-
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
-
     return;
   }
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
       `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
-      { reply_markup: retryButton },
+      { reply_markup: retryButton.clone().row().text('Change slippage and retry',  'change-slippage-retry')},
     );
-
+    const continueContext = await conversation.waitFor('callback_query:data');
+    const continueCallbackQueryData = continueContext.callbackQuery.data;
+    if(continueCallbackQueryData === 'change-slippage-retry') {
+      await showSlippageConfiguration(ctx);
+      const result = await conversation.waitFor('callback_query:data');
+      const newSlippage = parseInt(result.callbackQuery.data.split('-')[1]);
+      if(!isNaN(newSlippage)) { //If not a number means that the user choose home option
+        ctx.session.settings.slippagePercentage = newSlippage;
+        instantBuy(conversation, ctx);
+      }
+    }
     return;
   }
 
