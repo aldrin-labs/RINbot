@@ -18,7 +18,7 @@ export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES =
 export const PRICE_API_URL = process.env.PRICE_API_URL || '';
 export const ALDRIN_AUTHORITY = process.env.ALDRIN_AUTHORITY || '';
 export const imgs = [
-  'src/imgs/aldirn1.jpg',
+  'src/imgs/aldrin1.jpg',
   'src/imgs/aldrin2.jpg',
   'src/imgs/rincel2.jpg',
   'src/imgs/rincel1.jpg'
