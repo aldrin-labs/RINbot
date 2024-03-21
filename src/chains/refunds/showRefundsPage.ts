@@ -4,7 +4,7 @@ import { InlineKeyboard, InputFile } from 'grammy';
 import goHome from '../../inline-keyboards/goHome';
 import refundsMenu from '../../menu/refunds';
 import { BotContext } from '../../types';
-import { REFUND_PAGE_IMAGE_PATH } from './config';
+import { REFUND_PAGE_IMAGE_URL } from './config';
 import { RefundPhase } from './conversations/config';
 import { getRefundManager } from './getRefundManager';
 import { backupCurrentAccount, createBoostedRefundAccount } from './utils';
@@ -48,7 +48,7 @@ export async function showRefundsPage(ctx: BotContext) {
       break;
   }
 
-  await ctx.replyWithPhoto(new InputFile(REFUND_PAGE_IMAGE_PATH), {
+  await ctx.replyWithPhoto(new InputFile(REFUND_PAGE_IMAGE_URL), {
     caption:
       '🚨 <b>Has your account been affected by the Romas Rug Pull incident?</b> 🚨\n\n' +
       phaseString,
