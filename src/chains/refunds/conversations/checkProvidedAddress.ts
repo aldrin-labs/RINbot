@@ -136,14 +136,16 @@ export async function checkProvidedAddress(
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.\n\n` +
-      'There are 2 ways, please choose one of them:\n' +
+    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.\n\n` +
+      '✎ There are 2 ways, please choose one of them:\n\n' +
       '<i><b>1.</b></i> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
       "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
-      `    a) <b>Base refund</b> (100%) — ${baseRefundAmount} <b>SUI</b> and free to withdraw/export private key.\n` +
-      `    b) <b>Boosted refund</b> (150%) — ${boostedRefundAmount} <b>SUI, new secure account, ability to use all ` +
-      `the features of RINbot, but you can withdraw only profit. ${boostedRefundAmount} <b>SUI</b> are ` +
-      `non-withdrawable. Also export private key feature will be disabled.\n` +
+      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b> and free to ` +
+      `withdraw/export private key.\n` +
+      `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, new secure ` +
+      `account, ability to use all ` +
+      `the features of RINbot, but you can withdraw only profit. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
+      `non-withdrawable. Also export private key feature will be disabled.\n\n` +
       '<i><b>2.</b></i> Continue to work without importing. Only <b>Boosted Refund</b> is enabled this way. ' +
       'We will prepare boosted refund claim, but you will have to manually use gist script to sign and ' +
       'execute required for refund transaction.',
@@ -329,7 +331,7 @@ export async function checkProvidedAddress(
   }
 
   await ctx.reply(
-    'Failed to claim the <b>boosted refund</b>. Please, try again or contact support.',
+    'Failed to allow the <b>boosted refund</b>. Please, try again or contact support.',
     {
       reply_markup: retryButton,
       parse_mode: 'HTML',
