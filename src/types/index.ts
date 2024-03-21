@@ -87,6 +87,8 @@ export interface SessionData {
       publicKey: string;
       privateKey: string;
     } | null;
+    baseRefundAmount: string | null;
+    boostedRefundAmount: string | null;
     boostedRefundAccount: {
       publicKey: string;
       privateKey: string;
