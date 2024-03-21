@@ -28,6 +28,7 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
+import yesOrNo from '../../inline-keyboards/yesOrNo';
 
 
 async function parseCoinTypeResponse(
@@ -122,7 +123,6 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
     }
 
     const inputAmount = ctx.msg?.text;
-
     if (inputAmount === undefined) {
       return false;
     }
@@ -146,13 +146,20 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
 
     if (!amountIsValid) {
       await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
+        `Invalid percentage. Reason: ${reason}\n\nPlease, try again.`,
         { reply_markup: closeConversation },
       );
 
       return false;
     }
-    console.log('INPUT AMOUNT', inputAmount);
+    if(parseFloat(inputAmount) < 0 || parseFloat(inputAmount) > 100) {
+      await ctx.reply(
+        `Invalid percentage. The value should be between 0 and 100\n\nPlease, try again.`,
+        { reply_markup: closeConversation },
+      );
+
+      return false;
+    }
     result = inputAmount;
     return true;
   });
@@ -230,6 +237,33 @@ export async function sell(
   const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
   if(ctx.session.tradeAmount === '0') {
     ctx.session.tradeAmount = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
+  }
+  
+  if(parseFloat(ctx.session.tradeAmount) === 100) {
+    const closeButton = closeConversation.inline_keyboard[0];
+    const yesOrNoWithCancelReplyMarkup = yesOrNo.clone().add(...closeButton);
+    await ctx.reply(
+      `You will sell your entire amount of ${ctx.session.tradeCoin.coinType}, confirm?`,
+      { reply_markup: yesOrNoWithCancelReplyMarkup},
+    );
+    const answerMessage = await conversation.waitUntil(async (ctx) => {
+      if (ctx.callbackQuery?.data === 'close-conversation') {
+        return false;
+      }
+      if (ctx.callbackQuery?.data === 'yes') {
+        await ctx.answerCallbackQuery();
+        return true;
+      }
+      if (ctx.callbackQuery?.data === 'no') {
+        await ctx.answerCallbackQuery();
+        return true;
+      }
+      return false;
+    });
+    const answer = answerMessage.callbackQuery?.data;
+    if(answer === 'no') {
+      ctx.session.tradeAmount = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
+    }
   }
   const percentage = parseFloat(ctx.session.tradeAmount) / 100;
 

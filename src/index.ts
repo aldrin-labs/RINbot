@@ -164,7 +164,7 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('sell', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.Sell);
+    await ctx.conversation.enter(ConversationId.Sell, {overwrite: true});
   });
 
   bot.command('withdrawal', async (ctx) => {

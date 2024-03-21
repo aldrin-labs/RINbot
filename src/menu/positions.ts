@@ -123,7 +123,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     ctx.session.tradeCoin.coinType = tokenToUse.type;
     ctx.session.tradeAmount = '25';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
-    await ctx.conversation.enter(ConversationId.Sell);
+    await ctx.conversation.enter(ConversationId.Sell, {overwrite: true});
   })
   .text('Sell 100%', async (ctx) => {
     const assets = ctx.session.assets;
@@ -131,7 +131,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     ctx.session.tradeCoin.coinType = tokenToUse.type;
     ctx.session.tradeAmount = '100';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
-    await ctx.conversation.enter(ConversationId.Sell);
+    await ctx.conversation.enter(ConversationId.Sell, {overwrite: true});
   })
   .text('Sell X%', async (ctx) => {
     const assets = ctx.session.assets;
@@ -139,7 +139,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     ctx.session.tradeCoin.coinType = tokenToUse.type;
     ctx.session.tradeAmount = '0';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
-    await ctx.conversation.enter(ConversationId.Sell);
+    await ctx.conversation.enter(ConversationId.Sell, {overwrite: true});
   })
   .row()
   .dynamic(async (ctx, range) => {
