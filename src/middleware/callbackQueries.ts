@@ -93,6 +93,7 @@ function useSlippageCallbackQueries(bot: Bot<BotContext>) {
 
 function useRefundsCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.Refunds, async (ctx) => {
+    await ctx.answerCallbackQuery();
     await showRefundsPage(ctx);
   });
 }
