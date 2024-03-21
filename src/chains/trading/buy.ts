@@ -1,4 +1,5 @@
 import {
+  FeeManager,
   LONG_SUI_COIN_TYPE,
   RouteManager,
   SHORT_SUI_COIN_TYPE,
@@ -195,7 +196,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     await conversation.external(() => getUserFeePercentage(ctx))
   ).toString();
 
-  const feeAmount = RouteManager.calculateFeeAmountIn({
+  const feeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
     amount: validatedInputAmount,
     tokenDecimals: SUI_DECIMALS,
