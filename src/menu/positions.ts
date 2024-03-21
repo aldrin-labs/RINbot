@@ -82,7 +82,11 @@ const positions_menu = new Menu<BotContext>('positions-menu')
         await updateMessage(ctx)
       }
     } catch (error) {
-      console.error(error)
+      if (error instanceof Error) {
+        console.error('[Refresh] Price API error:', error.message)
+      } else {
+        console.error('[Refresh] Price API error: unknown error')
+      }
     }
   });
 
