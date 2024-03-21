@@ -584,7 +584,9 @@ export async function home(ctx: BotContext) {
         priceApiDataStr = '';
       }
 
-      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`;
+      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
+
+      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
   } catch (e) {
