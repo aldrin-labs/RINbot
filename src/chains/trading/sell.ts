@@ -28,6 +28,7 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
+import { showSlippageConfiguration } from '../slippage/showSlippageConfiguration';
 
 
 async function parseCoinTypeResponse(
@@ -364,9 +365,19 @@ async function instantSell(
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
       `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
-      { reply_markup: retryButton },
+      { reply_markup: retryButton.clone().row().text('Change slippage and retry',  'change-slippage-retry')},
     );
-
+    const continueContext = await conversation.waitFor('callback_query:data');
+    const continueCallbackQueryData = continueContext.callbackQuery.data;
+    if(continueCallbackQueryData === 'change-slippage-retry') {
+      await showSlippageConfiguration(ctx);
+      const result = await conversation.waitFor('callback_query:data');
+      const newSlippage = parseInt(result.callbackQuery.data.split('-')[1]);
+      if(!isNaN(newSlippage)) { //If not a number means that the user choose home option
+        ctx.session.settings.slippagePercentage = newSlippage;
+        instantSell(conversation, ctx, tradeAmount, resCoinType);
+      }
+    }
     return;
   }
 
