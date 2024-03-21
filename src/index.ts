@@ -41,6 +41,7 @@ import { BotContext, SessionData } from './types';
 import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
+import { balances } from './commands/balances';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -117,6 +118,7 @@ async function startBot(): Promise<void> {
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
   composer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
+  composer.use(createConversation(balances, {id: ConversationId.Balances}));
   composer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
@@ -169,6 +171,10 @@ async function startBot(): Promise<void> {
 
   bot.command('withdrawal', async (ctx) => {
     await ctx.conversation.enter(ConversationId.Withdraw);
+  });
+
+  bot.command('balances', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.Balances);
   });
 
   bot.command('createaftermathpool', async (ctx) => {

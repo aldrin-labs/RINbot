@@ -603,8 +603,8 @@ export async function home(ctx: BotContext) {
   }catch(e) {
     console.error(e);
   }
-  
 }
+
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
     '<b>Welcome to NFT menu!</b>\n\nPlease check the options below.',
