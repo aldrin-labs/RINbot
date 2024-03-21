@@ -218,7 +218,7 @@ export async function sell(
     return true;
   });
 
-  await ctx.reply('Initiating swap...');
+  await ctx.reply('Finding the best route to save your money… ☺️');
 
   const tx = await conversation.external({
     task: async () => {
@@ -274,14 +274,14 @@ export async function sell(
   });
 
   if (!tx) {
-    await ctx.reply('Transaction creation failed', {
+    await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
 
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
 
   const resultOfSwap: {
     digest?: string;
@@ -324,7 +324,7 @@ export async function sell(
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap successful ✅\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
@@ -335,12 +335,12 @@ export async function sell(
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap failed ❌\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
     return;
   }
 
-  await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed. ❌', { reply_markup: retryButton });
 }
