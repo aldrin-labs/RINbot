@@ -170,7 +170,6 @@ export async function claimBoostedRefund({
     }
   });
 
-  // TODO: Adjust check for SDK method result (try/catch it)
   if (boostedClaimCap === undefined) {
     await ctx.reply('<b>Preparing boosted claim...</b>', {
       parse_mode: 'HTML',
