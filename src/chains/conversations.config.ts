@@ -7,6 +7,5 @@ export enum ConversationId {
   CreateCetusPool = 'createCetusPool',
   AddCetusPoolLiquidity = 'addCetusPoolLiquidity',
   CreateCoin = 'createCoin',
-  WelcomeBonus = 'welcomeBonus',
-  ImportNewWallet = 'importNewWallet',
+  WelcomeBonus = 'welcomeBonus'
 }
