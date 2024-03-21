@@ -1,18 +1,19 @@
-import {
-  RefundManagerSingleton,
-  WalletManagerSingleton,
-} from '@avernikoz/rinbot-sui-sdk';
+import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
 import { InlineKeyboard } from 'grammy';
+import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
+import assetsWithHomeKeyboard from '../../../inline-keyboards/mixed/assets-with-home';
+import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { BotContext, MyConversation } from '../../../types';
 import {
   getTransactionFromMethod,
   signAndExecuteTransaction,
 } from '../../conversations.utils';
-import { TransactionResultStatus, generateWallet } from '../../sui.functions';
+import { TransactionResultStatus } from '../../sui.functions';
 import { getSuiVisionTransactionLink } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
+import { getRefundManager } from '../getRefundManager';
+import { userHasBoostedRefundAccount } from '../utils';
 import { boostedRefundExportPrivateKeyWarnMessage } from './config';
-import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 
 export async function claimBaseRefund({
   ctx,
@@ -54,7 +55,7 @@ export async function claimBaseRefund({
     await ctx.reply(
       `<b>Base refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,
       {
-        reply_markup: retryButton,
+        reply_markup: assetsWithHomeKeyboard,
         parse_mode: 'HTML',
       },
     );
@@ -94,6 +95,8 @@ export async function claimBoostedRefund({
   conversation: MyConversation;
   retryButton: InlineKeyboard;
 }): Promise<void> {
+  const refundManager = getRefundManager();
+
   // Exporting current wallet private key
   const warnWithCheckAndPrintSucceeded =
     await warnWithCheckAndPrivateKeyPrinting({
@@ -112,81 +115,131 @@ export async function claimBoostedRefund({
     conversation.session.refund.boostedRefundAccount,
   );
 
-  // Create an account for boosted user refund and store it to the session
-  if (conversation.session.refund.boostedRefundAccount === null) {
-    console.debug('boosted refund account generation');
-    const { publicKey, privateKey } = generateWallet();
+  const userHasStoredBoostedRefundAccount = await conversation.external(() =>
+    userHasBoostedRefundAccount(ctx),
+  );
 
-    conversation.session.refund.boostedRefundAccount = {
-      publicKey,
-      privateKey,
-    };
-    console.debug(
-      'boostedRefundAccount after generation:',
-      conversation.session.refund.boostedRefundAccount,
-    );
-  }
-
-  const { signature } = await conversation.external({
-    args: [conversation.session.refund.boostedRefundAccount.publicKey],
-    task: (newAddress: string) =>
-      RefundManagerSingleton.signMessageSignatureForBoostedRefund({
-        keypair: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          conversation.session.privateKey,
-        ),
-        affectedAddress: conversation.session.publicKey,
-        newAddress,
-        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-      }),
-  });
-  console.debug('signature:', signature);
-
-  try {
-    const signedMessageIsValid =
-      await RefundManagerSingleton.verifySignedMessageForBoostedRefund({
-        affectedAddress: conversation.session.publicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-        signedMessageSignature: signature,
-        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-      });
-
-    if (!signedMessageIsValid) {
-      await ctx.reply(
-        'Created signature is not valid. Please, try again or contact support.',
-        { reply_markup: retryButton },
-      );
-
-      return;
-    }
-  } catch (error) {
-    console.error(error);
-
+  if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
-      'Created signature is not valid. Please, try again or contact support.',
-      { reply_markup: retryButton },
+      'This is not secure to continue because of failed backup process. ' +
+        'Please, try again later or contact support.',
+      {
+        reply_markup: refundsKeyboard,
+        parse_mode: 'HTML',
+      },
     );
 
     return;
   }
 
-  // Create transaction to claim refund with signature
+  if (conversation.session.refund.boostedRefundAccount === null) {
+    await ctx.reply(
+      'This is not secure to continue because of unexpected case of dialog scenario. ' +
+        'Please, try again later or contact support.',
+      { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
+  let boostedClaimCap = await conversation.external(async () => {
+    return await refundManager.getBoostedClaimCap({
+      ownerAddress: conversation.session.publicKey,
+    });
+  });
+
+  // TODO: Adjust check for SDK method result (try/catch it)
+  if (boostedClaimCap === undefined) {
+    await ctx.reply('<b>Preparing boosted claim...</b>', {
+      parse_mode: 'HTML',
+    });
+
+    const allowBoostedClaimTransaction = await getTransactionFromMethod({
+      conversation,
+      ctx,
+      method: RefundManagerSingleton.getAllowBoostedClaim,
+      params: {
+        affectedAddress: conversation.session.publicKey,
+        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+        publisherObjectId:
+          RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
+      },
+    });
+
+    if (allowBoostedClaimTransaction === undefined) {
+      await ctx.reply(
+        'Failed to create transaction for allowing boosted claim. Please, try again later or contact support.',
+        { reply_markup: retryButton },
+      );
+
+      return;
+    }
+
+    const allowBoostedClaimResult = await signAndExecuteTransaction({
+      conversation,
+      ctx,
+      transaction: allowBoostedClaimTransaction,
+      signerPrivateKey: ALDRIN_AUTHORITY,
+    });
+
+    if (
+      allowBoostedClaimResult.result === TransactionResultStatus.Success &&
+      allowBoostedClaimResult.digest !== undefined
+    ) {
+      await ctx.reply(
+        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
+          ` the <b>boosted refund</b> claim!`,
+        {
+          parse_mode: 'HTML',
+        },
+      );
+    } else if (
+      allowBoostedClaimResult.result === TransactionResultStatus.Failure &&
+      allowBoostedClaimResult.digest !== undefined
+    ) {
+      await ctx.reply(
+        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
+          `the <b>boosted claim</b>. Please, try again or contact support.`,
+        { reply_markup: retryButton, parse_mode: 'HTML' },
+      );
+
+      return;
+    } else {
+      await ctx.reply(
+        `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
+        { reply_markup: retryButton, parse_mode: 'HTML' },
+      );
+
+      return;
+    }
+
+    boostedClaimCap = await conversation.external(async () => {
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress: conversation.session.publicKey,
+      });
+    });
+  }
+
+  await ctx.reply('<b>Claiming the boosted refund...</b>', {
+    parse_mode: 'HTML',
+  });
+
+  // Create transaction to claim refund
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
     method: RefundManagerSingleton.getClaimRefundBoosted,
     params: {
-      affectedAddress: conversation.session.publicKey,
-      newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+      boostedClaimCap,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-      publisherObjectId: RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
-      signature,
     },
   });
 
   if (transaction === undefined) {
     await ctx.reply(
-      'Failed to create transaction for claiming boosted refund. Please, try again or contact support.',
-      { reply_markup: retryButton },
+      'Failed to create transaction for claiming the <b>boosted refund</b>. Please, try again or contact support.',
+      { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
     return;
@@ -196,7 +249,6 @@ export async function claimBoostedRefund({
     conversation,
     ctx,
     transaction,
-    signerPrivateKey: ALDRIN_AUTHORITY,
   });
 
   if (
@@ -219,7 +271,7 @@ export async function claimBoostedRefund({
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,
       {
-        reply_markup: retryButton,
+        reply_markup: assetsWithHomeKeyboard,
         parse_mode: 'HTML',
       },
     );

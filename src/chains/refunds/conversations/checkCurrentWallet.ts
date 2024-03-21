@@ -1,20 +1,20 @@
-import { SUI_DENOMINATOR } from '@avernikoz/rinbot-sui-sdk';
-import BigNumber from 'bignumber.js';
+import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
 import closeConversation from '../../../inline-keyboards/closeConversation';
-import confirmWithCloseKeyboard from '../../../inline-keyboards/confirm-with-close';
+import confirmWithCloseKeyboard from '../../../inline-keyboards/mixed/confirm-with-close';
 import refundOptionsKeyboard from '../../../inline-keyboards/refund-options';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import { reactOnUnexpectedBehaviour } from '../../utils';
-import { getAffectedAddressData } from '../utils';
+import { getRefundManager } from '../getRefundManager';
 import { claimBaseRefund, claimBoostedRefund } from './utils';
 
 export async function checkCurrentWallet(
   conversation: MyConversation,
   ctx: BotContext,
 ) {
+  const refundManager = getRefundManager();
   const retryButton =
     retryAndGoHomeButtonsData[ConversationId.CheckCurrentWalletForRefund];
   const closeButtons = closeConversation.inline_keyboard[0];
@@ -31,15 +31,20 @@ export async function checkCurrentWallet(
   );
 
   // Check current wallet
-  const affectedAddressData = await conversation.external(() =>
-    getAffectedAddressData(conversation.session.publicKey),
+  const { normalRefund, boostedRefund } = await conversation.external(
+    async () => {
+      return await refundManager.getClaimAmount({
+        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+        affectedAddress: conversation.session.publicKey,
+      });
+    },
   );
 
-  if (affectedAddressData === undefined) {
+  if (normalRefund.mist === 0) {
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
-      'We have <b>not found any traces of a scam</b> for this account. If you do not agree, please ' +
+      'Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
         'contact the support service.',
       {
         reply_markup: retryButton,
@@ -50,15 +55,8 @@ export async function checkCurrentWallet(
     return;
   }
 
-  // TODO: Add flow when user already claimed funds for this account
-  const { amount } = affectedAddressData;
-  const boostedRefundAmountMultiplier = 1.5;
-  const baseRefundAmount = new BigNumber(amount)
-    .div(SUI_DENOMINATOR)
-    .toString();
-  const boostedRefundAmount = new BigNumber(baseRefundAmount)
-    .multipliedBy(boostedRefundAmountMultiplier)
-    .toString();
+  const baseRefundAmount = normalRefund.sui;
+  const boostedRefundAmount = boostedRefund.sui;
 
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
