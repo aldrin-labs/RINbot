@@ -194,25 +194,40 @@ export async function withdraw(
   ctx: BotContext,
 ): Promise<void> {
   const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    refund: { claimedBoostedRefund },
-  } = ctx.session;
+    welcomeBonus: {
+      isUserAgreeWithBonus,
+      isUserClaimedBonus,
+      amount: welcomeBonusAmount,
+    },
+    refund: { claimedBoostedRefund, boostedRefundAmount },
+  } = conversation.session;
   const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus;
 
-  if (claimedBoostedRefund) {
-    await ctx.reply(
-      '👋 Just a quick heads-up: withdrawal of funds is temporarily disabled because you opted for our boosted ' +
-        'refund option. No worries, though! You can still use these funds and generate profits right here ' +
-        'with us. Feel free to continue trading and utilizing other features 📈',
-      { reply_markup: goHome },
-    );
+  let nonWithdrawableAmountString = '';
 
-    return;
+  if (claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount and ` +
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `are non-withdrawable.`;
+  } else if (!claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `is non-withdrawable.`;
+  } else if (claimedBoostedRefund && !isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount ` +
+      `is non-withdrawable.`;
   }
 
-  if (isUserUsedWelcomeBonus) {
+  if (claimedBoostedRefund || isUserUsedWelcomeBonus) {
     await ctx.reply(
-      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`,
+      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `But hey, the profits you make from trading? Those are yours to take!\n` +
+        `Keep growing that portfolio and enjoy the fruits of your trading strategies.\n` +
+        `Happy profiting! 🌈🚀`,
+      { parse_mode: 'HTML' },
     );
   }
 
@@ -257,20 +272,41 @@ export async function withdraw(
     return;
   }
 
-  const walletManager = await getWalletManager();
-  let { availableAmount, totalGasFee } =
-    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+  let { availableAmount, totalGasFee } = await conversation.external(
+    async () => {
+      const walletManager = await getWalletManager();
+      return await walletManager.getAvailableWithdrawSuiAmount(
+        ctx.session.publicKey,
+      );
+    },
+  );
+  console.debug('availableAmount before:', availableAmount);
 
-  // Decrease available amount in case user participate in the welcome bonus program
-  availableAmount = isUserUsedWelcomeBonus
-    ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString()
-    : availableAmount;
+  let nonWithdrawableAmount = new BigNumber(0);
+
+  if (isUserUsedWelcomeBonus) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(welcomeBonusAmount);
+  }
+  if (claimedBoostedRefund && boostedRefundAmount !== null) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(boostedRefundAmount);
+  }
+  console.debug('nonWithdrawableAmount:', nonWithdrawableAmount.toString());
+
+  // Decrease available amount with non-withdrawable amount (welcome bonus or/and boosted refund)
+  availableAmount = new BigNumber(availableAmount)
+    .minus(nonWithdrawableAmount)
+    .toString();
+  console.debug('availableAmount after:', availableAmount);
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
     await ctx.reply(
-      `⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`,
-      { reply_markup: goHome },
+      `⚠️ Heads up! Your available balance is currently <code>${nonWithdrawableAmount}</code> <b>SUI</b> ` +
+        `or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `Trade strategically to build up your balance, and soon you'll be able to withdraw those ` +
+        `well-earned profits. \nStay focused on your trading goals! 📊💼`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
     );
 
     return;
