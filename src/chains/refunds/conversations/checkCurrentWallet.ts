@@ -96,8 +96,8 @@ export async function checkCurrentWallet(
 
   let userConfirmedChoise = false;
   do {
-    const choiseContext = await conversation.waitFor('callback_query:data');
-    const choiseCallbackQueryData = choiseContext.callbackQuery.data;
+    const choiseContext = await conversation.wait();
+    const choiseCallbackQueryData = choiseContext.callbackQuery?.data;
 
     if (choiseCallbackQueryData === CallbackQueryData.Cancel) {
       await conversation.skip();
