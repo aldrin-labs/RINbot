@@ -264,6 +264,7 @@ export async function checkProvidedAddress(
     conversation.session.privateKey =
       conversation.session.refund.boostedRefundAccount.privateKey;
     conversation.session.refund.claimedBoostedRefund = true;
+    conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +

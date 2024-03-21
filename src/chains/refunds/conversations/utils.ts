@@ -90,10 +90,12 @@ export async function claimBoostedRefund({
   ctx,
   conversation,
   retryButton,
+  boostedRefundAmount,
 }: {
   ctx: BotContext;
   conversation: MyConversation;
   retryButton: InlineKeyboard;
+  boostedRefundAmount: string;
 }): Promise<void> {
   const refundManager = getRefundManager();
 
@@ -267,6 +269,7 @@ export async function claimBoostedRefund({
     conversation.session.privateKey =
       conversation.session.refund.boostedRefundAccount.privateKey;
     conversation.session.refund.claimedBoostedRefund = true;
+    conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,

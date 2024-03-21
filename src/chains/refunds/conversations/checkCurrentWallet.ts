@@ -148,7 +148,12 @@ export async function checkCurrentWallet(
       } else if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
         await confirmContext.answerCallbackQuery();
         userConfirmedChoise = true;
-        return await claimBoostedRefund({ ctx, conversation, retryButton });
+        return await claimBoostedRefund({
+          ctx,
+          conversation,
+          retryButton,
+          boostedRefundAmount,
+        });
       } else {
         await reactOnUnexpectedBehaviour(
           ctx,
