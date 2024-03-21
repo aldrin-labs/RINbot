@@ -484,8 +484,12 @@ export async function home(ctx: BotContext) {
         balance += +coin.balance * price;
       }
     });
-
-    totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    if (balance === 0) {
+      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    }
+    else {
+      totalBalanceStr = ''
+    }
   } catch (error) {
     console.error('Error in calculating total balance: ', error);
     totalBalanceStr = ``;
