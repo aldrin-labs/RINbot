@@ -48,7 +48,7 @@ export async function showRefundsPage(ctx: BotContext) {
       break;
   }
 
-  await ctx.replyWithPhoto(new InputFile(REFUND_PAGE_IMAGE_URL), {
+  await ctx.replyWithPhoto(REFUND_PAGE_IMAGE_URL, {
     caption:
       '🚨 <b>Has your account been affected by the Romas Rug Pull incident?</b> 🚨\n\n' +
       phaseString,
