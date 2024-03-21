@@ -21,7 +21,7 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import { WELCOME_BONUS_AMOUNT } from '../config/bot.config';
+import { imgs } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -67,6 +67,8 @@ import {
   sleep,
   swapTokenTypesAreEqual,
 } from './utils';
+
+import { InputFile } from 'grammy';
 import {
   calculate,
   formatTokenInfo,
@@ -605,7 +607,7 @@ export async function home(ctx: BotContext) {
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
   await ctx.replyWithPhoto(
-    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    new InputFile(imgs[Math.floor(Math.random() * 4)]),
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
