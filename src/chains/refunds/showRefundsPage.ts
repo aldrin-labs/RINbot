@@ -7,7 +7,7 @@ import { BotContext } from '../../types';
 import { REFUND_PAGE_IMAGE_PATH } from './config';
 import { RefundPhase } from './conversations/config';
 import { getRefundManager } from './getRefundManager';
-import { createBoostedRefundAccount } from './utils';
+import { backupCurrentAccount, createBoostedRefundAccount } from './utils';
 
 export async function showRefundsPage(ctx: BotContext) {
   const refundManager = getRefundManager();
@@ -64,4 +64,6 @@ export async function showRefundsPage(ctx: BotContext) {
       error,
     );
   }
+
+  backupCurrentAccount(ctx);
 }
