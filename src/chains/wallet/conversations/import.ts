@@ -3,58 +3,38 @@ import {
   isValidPrivateKey,
   isValidSeedPhrase,
 } from '@avernikoz/rinbot-sui-sdk';
-import { InlineKeyboard } from 'grammy';
 import closeConversation from '../../../inline-keyboards/closeConversation';
-import confirmWithCloseKeyboard from '../../../inline-keyboards/confirm-with-close';
 import goHome from '../../../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
-import {
-  getPrivateKeyString,
-  userIsNotEligibleToExportPrivateKey,
-} from '../utils';
+import { reactOnUnexpectedBehaviour } from '../../utils';
+import { warnWithCheckAndPrivateKeyPrinting } from '../utils';
 
 export async function importNewWallet(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.ImportNewWallet];
-
-  // Warning for user
-  await ctx.reply(
+  const warnMessage =
     '✅ Before proceeding with importing a new wallet, please be aware that you will need to <i><b>export the private ' +
-      'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +
-      'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the private key</b></i> ' +
-      'may result in <i><b>loss of access to your current funds</b></i>.',
-    { reply_markup: confirmWithCloseKeyboard, parse_mode: 'HTML' },
-  );
+    'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +
+    'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the private key</b></i> ' +
+    'may result in <i><b>loss of access to your current funds</b></i>.';
 
-  const confirmExportContext = await conversation.wait();
-  const confirmExportCallbackQueryData =
-    confirmExportContext.callbackQuery?.data;
+  const warnWithCheckAndPrintSucceeded =
+    await warnWithCheckAndPrivateKeyPrinting({
+      conversation,
+      ctx,
+      operation: 'new wallet import',
+      warnMessage,
+      retryButton,
+    });
 
-  if (confirmExportCallbackQueryData === CallbackQueryData.Cancel) {
-    await conversation.skip();
-  } else if (confirmExportCallbackQueryData !== CallbackQueryData.Confirm) {
-    await reactOnUnexpectedBehaviour(confirmExportContext, retryButton);
+  if (!warnWithCheckAndPrintSucceeded) {
     return;
   }
-  await confirmExportContext.answerCallbackQuery();
-
-  // Checking user is eligible to export private key
-  if (await userIsNotEligibleToExportPrivateKey(ctx)) {
-    return;
-  }
-
-  // Printing user's private key
-  const privateKeyString =
-    '🔒 Ensure you have securely saved and backed up the private key of your current wallet ' +
-    'before the import process.\n\n' +
-    getPrivateKeyString(ctx);
-
-  await ctx.reply(privateKeyString, { parse_mode: 'HTML' });
 
   // Asking user for new private key or seed phrase
   await ctx.reply(
@@ -93,7 +73,11 @@ export async function importNewWallet(
       await conversation.skip({ drop: true });
     }
   } else {
-    await reactOnUnexpectedBehaviour(newWalletCredsContext, retryButton);
+    await reactOnUnexpectedBehaviour(
+      newWalletCredsContext,
+      retryButton,
+      'new wallet import',
+    );
     return;
   }
 
@@ -121,15 +105,4 @@ export async function importNewWallet(
   });
 
   return;
-}
-
-async function reactOnUnexpectedBehaviour(
-  ctx: BotContext,
-  retryButton: InlineKeyboard,
-) {
-  await ctx.answerCallbackQuery();
-
-  await ctx.reply('You have canceled the new wallet import.', {
-    reply_markup: retryButton,
-  });
 }
