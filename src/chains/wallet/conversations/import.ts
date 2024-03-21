@@ -38,7 +38,7 @@ export async function importNewWallet(
 
   // Asking user for new private key or seed phrase
   await ctx.reply(
-    'Enter a <b>private key</b> or a <b>seed phrase</b> of the wallet you want to import.',
+    'Enter a <b>private key</b> of the wallet you want to import.',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -50,12 +50,11 @@ export async function importNewWallet(
   if (newWalletCredsCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   } else if (newWalletCreds !== undefined) {
-    const credsAreValid =
-      isValidPrivateKey(newWalletCreds) || isValidSeedPhrase(newWalletCreds);
+    const credsAreValid = isValidPrivateKey(newWalletCreds);
 
     if (!credsAreValid) {
       await ctx.reply(
-        'Invalid <b>private key</b> or <b>seed phrase</b>. Please, enter a valid one.',
+        'Invalid <b>private key</b>. Please, enter a valid one.',
         { reply_markup: closeConversation, parse_mode: 'HTML' },
       );
 
@@ -92,10 +91,8 @@ export async function importNewWallet(
   }
 
   // Creating new wallet keypair
-  const newWalletCredsArePrivateKey = isValidPrivateKey(newWalletCreds);
-  const newKeypair = newWalletCredsArePrivateKey
-    ? WalletManagerSingleton.getKeyPairFromPrivateKey(newWalletCreds)
-    : WalletManagerSingleton.getKeyPairFromMnemonic(newWalletCreds);
+  const newKeypair =
+    WalletManagerSingleton.getKeyPairFromPrivateKey(newWalletCreds);
 
   // Replacing current wallet credentials with new ones
   conversation.session.publicKey = newKeypair.getPublicKey().toSuiAddress();
