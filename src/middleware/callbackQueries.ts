@@ -3,6 +3,7 @@ import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
+import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 import { assets, home } from '../chains/sui.functions';
@@ -38,6 +39,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
 
   useSurfdogCallbackQueries(bot);
   useSlippageCallbackQueries(bot);
+  useRefundsCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -86,5 +88,11 @@ function useSlippageCallbackQueries(bot: Bot<BotContext>) {
       await showSlippageConfiguration(ctx);
       await ctx.answerCallbackQuery();
     });
+  });
+}
+
+function useRefundsCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.Refunds, async (ctx) => {
+    await showRefundsPage(ctx);
   });
 }
