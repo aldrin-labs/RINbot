@@ -24,6 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   WELCOME_BONUS_AMOUNT,
   WELCOME_BONUS_MIN_TRADES_LIMIT,
+  imgs,
 } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
@@ -68,6 +69,7 @@ import {
 } from './utils';
 
 import { calculate, formatTokenInfo, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import { InputFile } from 'grammy';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -585,7 +587,7 @@ export async function home(ctx: BotContext) {
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
   await ctx.replyWithPhoto(
-    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    new InputFile(imgs[Math.floor(Math.random() * 4)]),
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
