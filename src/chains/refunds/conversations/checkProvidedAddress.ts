@@ -227,7 +227,7 @@ export async function checkProvidedAddress(
     return;
   }
 
-  let boostedClaimCap = await conversation.external(async () => {
+  const boostedClaimCap = await conversation.external(async () => {
     try {
       return await refundManager.getBoostedClaimCap({
         ownerAddress: conversation.session.publicKey,
@@ -245,7 +245,7 @@ export async function checkProvidedAddress(
   if (boostedClaimCap) {
     await ctx.reply(
       '<b>Boosted refund</b> is already allowed for this account. Here is the <i><b>boosted claim cap</b></i> ' +
-        `you should use in <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
+        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
         `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
       { reply_markup: goHome, parse_mode: 'HTML' },
     );
