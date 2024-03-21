@@ -24,7 +24,7 @@ import {
 import { importNewWallet } from '../../wallet/conversations/import';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
 import { getRefundManager } from '../getRefundManager';
-import { userHasBoostedRefundAccount } from '../utils';
+import { userHasBackupedAccount, userHasBoostedRefundAccount } from '../utils';
 import {
   BOOSTED_REFUND_EXAMPLE_FOR_USER_URL,
   boostedRefundExportPrivateKeyWarnMessage,
@@ -206,6 +206,34 @@ export async function checkProvidedAddress(
 
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
+      'This is not secure to continue because of failed store process. ' +
+        'Please, try again later or contact support.',
+      {
+        reply_markup: refundsKeyboard,
+        parse_mode: 'HTML',
+      },
+    );
+
+    return;
+  }
+
+  const userHasBackupedAccountForRefund = await conversation.external(
+    async () => {
+      try {
+        return await userHasBackupedAccount(ctx);
+      } catch (error) {
+        console.error(
+          '[checkProvidedAddress] Error while userHasBackupedAccount():',
+          error,
+        );
+
+        return false;
+      }
+    },
+  );
+
+  if (!userHasBackupedAccountForRefund) {
+    await ctx.reply(
       'This is not secure to continue because of failed backup process. ' +
         'Please, try again later or contact support.',
       {
@@ -286,12 +314,6 @@ export async function checkProvidedAddress(
     result.result === TransactionResultStatus.Success &&
     result.digest !== undefined
   ) {
-    // Store old user wallet credentials before switching to a new one
-    conversation.session.refund.walletBeforeBoostedRefundClaim = {
-      publicKey: conversation.session.publicKey,
-      privateKey: conversation.session.privateKey,
-    };
-
     // Switch to the new wallet
     conversation.session.publicKey =
       conversation.session.refund.boostedRefundAccount.publicKey;

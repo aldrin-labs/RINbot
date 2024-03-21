@@ -12,7 +12,7 @@ import { TransactionResultStatus } from '../../sui.functions';
 import { getSuiVisionTransactionLink } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
 import { getRefundManager } from '../getRefundManager';
-import { userHasBoostedRefundAccount } from '../utils';
+import { userHasBackupedAccount, userHasBoostedRefundAccount } from '../utils';
 import { boostedRefundExportPrivateKeyWarnMessage } from './config';
 
 export async function claimBaseRefund({
@@ -112,10 +112,6 @@ export async function claimBoostedRefund({
   if (!warnWithCheckAndPrintSucceeded) {
     return;
   }
-  console.debug(
-    'boostedRefundAccount:',
-    conversation.session.refund.boostedRefundAccount,
-  );
 
   const userHasStoredBoostedRefundAccount = await conversation.external(
     async () => {
@@ -133,6 +129,34 @@ export async function claimBoostedRefund({
   );
 
   if (!userHasStoredBoostedRefundAccount) {
+    await ctx.reply(
+      'This is not secure to continue because of failed store process. ' +
+        'Please, try again later or contact support.',
+      {
+        reply_markup: refundsKeyboard,
+        parse_mode: 'HTML',
+      },
+    );
+
+    return;
+  }
+
+  const userHasBackupedAccountForRefund = await conversation.external(
+    async () => {
+      try {
+        return await userHasBackupedAccount(ctx);
+      } catch (error) {
+        console.error(
+          '[claimBoostedRefund] Error while userHasBackupedAccount():',
+          error,
+        );
+
+        return false;
+      }
+    },
+  );
+
+  if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
       'This is not secure to continue because of failed backup process. ' +
         'Please, try again later or contact support.',
@@ -294,12 +318,6 @@ export async function claimBoostedRefund({
     result.result === TransactionResultStatus.Success &&
     result.digest !== undefined
   ) {
-    // Store old user wallet credentials before switching to a new one
-    conversation.session.refund.walletBeforeBoostedRefundClaim = {
-      publicKey: conversation.session.publicKey,
-      privateKey: conversation.session.privateKey,
-    };
-
     // Switch to the new wallet
     conversation.session.publicKey =
       conversation.session.refund.boostedRefundAccount.publicKey;
