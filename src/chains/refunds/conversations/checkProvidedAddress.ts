@@ -1,11 +1,12 @@
 import {
   RefundManagerSingleton,
-  SUI_DENOMINATOR,
   isValidSuiAddress,
 } from '@avernikoz/rinbot-sui-sdk';
-import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
+import goHome from '../../../inline-keyboards/goHome';
+import importWalletWithContinueKeyboard from '../../../inline-keyboards/mixed/import-wallet-with-continue';
+import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
@@ -14,19 +15,25 @@ import {
   getTransactionFromMethod,
   signAndExecuteTransaction,
 } from '../../conversations.utils';
-import { TransactionResultStatus, generateWallet } from '../../sui.functions';
+import { TransactionResultStatus } from '../../sui.functions';
 import {
   getSuiVisionTransactionLink,
   reactOnUnexpectedBehaviour,
 } from '../../utils';
+import { importNewWallet } from '../../wallet/conversations/import';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
-import { getAffectedAddressData } from '../utils';
-import { boostedRefundExportPrivateKeyWarnMessage } from './config';
+import { getRefundManager } from '../getRefundManager';
+import { userHasBoostedRefundAccount } from '../utils';
+import {
+  BOOSTED_REFUND_EXAMPLE_FOR_USER_URL,
+  boostedRefundExportPrivateKeyWarnMessage,
+} from './config';
 
 export async function checkProvidedAddress(
   conversation: MyConversation,
   ctx: BotContext,
 ) {
+  const refundManager = getRefundManager();
   const retryButton =
     retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
 
@@ -66,7 +73,7 @@ export async function checkProvidedAddress(
   if (affectedPublicKey === undefined) {
     await ctx.reply(
       'Cannot process provided public key. Please, try again or contact support.',
-      {},
+      { reply_markup: retryButton },
     );
 
     return;
@@ -80,15 +87,20 @@ export async function checkProvidedAddress(
   );
 
   // Check provided address
-  const affectedAddressData = await conversation.external(() =>
-    getAffectedAddressData(affectedPublicKey),
+  const { normalRefund, boostedRefund } = await conversation.external(
+    async () => {
+      return await refundManager.getClaimAmount({
+        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+        affectedAddress: affectedPublicKey,
+      });
+    },
   );
 
-  if (affectedAddressData === undefined) {
+  if (normalRefund.mist === 0) {
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
-      'We have <b>not found any traces of a scam</b> for this account. If you do not agree, please ' +
+      'Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
         'contact the support service.\n\nNow you can enter another address to check.',
       {
         reply_markup: closeConversation,
@@ -99,36 +111,55 @@ export async function checkProvidedAddress(
     await conversation.skip({ drop: true });
   }
 
-  // ts check
-  if (affectedAddressData === undefined) {
-    await ctx.api.editMessageText(
-      checkingMessage.chat.id,
-      checkingMessage.message_id,
-      'Cannot process affected address data. Please, try again later ot contact support.',
-      { reply_markup: retryButton },
-    );
-    return;
-  }
+  const baseRefundAmount = normalRefund.sui;
+  const boostedRefundAmount = boostedRefund.sui;
 
-  // TODO: Add flow when user already claimed funds for this account
-  const { amount } = affectedAddressData;
-  const boostedRefundAmountMultiplier = 1.5;
-  const baseRefundAmount = new BigNumber(amount)
-    .div(SUI_DENOMINATOR)
-    .toString();
-  const boostedRefundAmount = new BigNumber(baseRefundAmount)
-    .multipliedBy(boostedRefundAmountMultiplier)
-    .toString();
+  const cancelButtons = closeConversation.inline_keyboard[0];
+  const importWalletWithContinueAndCancelKeyboard =
+    importWalletWithContinueKeyboard
+      .clone()
+      .row()
+      .add(...cancelButtons);
 
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.`,
+    `We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.\n\n` +
+      'There are 2 ways, please choose one of them:\n' +
+      '<i><b>1.</b></i> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
+      "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
+      `    a) <b>Base refund</b> (100%) — ${baseRefundAmount} <b>SUI</b> and free to withdraw/export private key.\n` +
+      `    b) <b>Boosted refund</b> (150%) — ${boostedRefundAmount} <b>SUI, new secure account, ability to use all ` +
+      `the features of RINbot, but you can withdraw only profit. ${boostedRefundAmount} <b>SUI</b> are ` +
+      `non-withdrawable. Also export private key feature will be disabled.\n` +
+      '<i><b>2.</b></i> Continue to work without importing. Only <b>Boosted Refund</b> is enabled this way. ' +
+      'We will prepare boosted refund claim, but you will have to manually use gist script to sign and ' +
+      'execute required for refund transaction.',
     {
-      reply_markup: closeConversation,
+      reply_markup: importWalletWithContinueAndCancelKeyboard,
       parse_mode: 'HTML',
     },
   );
+
+  const choiseContext = await conversation.wait();
+  const choiseCallbackQueryData = choiseContext.callbackQuery?.data;
+
+  if (choiseCallbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+  } else if (choiseCallbackQueryData === CallbackQueryData.ImportWallet) {
+    await choiseContext.answerCallbackQuery();
+
+    return await importNewWallet(conversation, ctx);
+  } else if (choiseCallbackQueryData === CallbackQueryData.Continue) {
+    await choiseContext.answerCallbackQuery();
+  } else {
+    await reactOnUnexpectedBehaviour(
+      choiseContext,
+      retryButton,
+      'provided address check',
+    );
+    return;
+  }
 
   // Exporting current wallet private key
   const warnWithCheckAndPrintSucceeded =
@@ -144,86 +175,66 @@ export async function checkProvidedAddress(
     return;
   }
 
-  // Create an account for boosted user refund and store it to the session
-  if (conversation.session.refund.boostedRefundAccount === null) {
-    const { publicKey, privateKey } = generateWallet();
-
-    conversation.session.refund.boostedRefundAccount = {
-      publicKey,
-      privateKey,
-    };
-  }
-
-  const { hex: message } = RefundManagerSingleton.getMessageForBoostedRefund({
-    poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-    affectedAddress: affectedPublicKey,
-    newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-  });
-
-  await ctx.reply(
-    `💸 <b>Boosted Refund</b> is chosen: 150% — <code>${boostedRefundAmount}</code> <b>SUI</b>.\n\n` +
-      `Here is your message: <code>${message}</code>\n\nUse <a href="https://github.com">the script</a> to ` +
-      'sign it and then enter the signature :)',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
+  const userHasStoredBoostedRefundAccount = await conversation.external(() =>
+    userHasBoostedRefundAccount(ctx),
   );
 
-  const signatureContext = await conversation.wait();
-  const signatureCallbackQueryData = signatureContext.callbackQuery?.data;
-  const signature = signatureContext.msg?.text;
-
-  if (signatureCallbackQueryData === CallbackQueryData.Cancel) {
-    await conversation.skip();
-  } else if (signature !== undefined) {
-    const signedMessageIsValid =
-      await RefundManagerSingleton.verifySignedMessageForBoostedRefund({
-        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-        affectedAddress: affectedPublicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-        signedMessageSignature: signature,
-      });
-
-    if (!signedMessageIsValid) {
-      await ctx.reply('Signature is invalid. Please, enter a valid one.', {
-        reply_markup: closeConversation,
-      });
-
-      await conversation.skip({ drop: true });
-    }
-  } else {
-    await reactOnUnexpectedBehaviour(
-      ctx,
-      retryButton,
-      'provided address check',
-    );
-    return;
-  }
-
-  if (signature === undefined) {
+  if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
-      'Cannot process the signed message. Please, try again or contact support.',
-      { reply_markup: retryButton },
+      'This is not secure to continue because of failed backup process. ' +
+        'Please, try again later or contact support.',
+      {
+        reply_markup: refundsKeyboard,
+        parse_mode: 'HTML',
+      },
     );
 
     return;
   }
 
-  // Create transaction to claim refund with signature
+  if (conversation.session.refund.boostedRefundAccount === null) {
+    await ctx.reply(
+      'This is not secure to continue because of unexpected case of dialog scenario. ' +
+        'Please, try again later or contact support.',
+      { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
+  let boostedClaimCap = await conversation.external(async () => {
+    return await refundManager.getBoostedClaimCap({
+      ownerAddress: conversation.session.publicKey,
+    });
+  });
+
+  if (boostedClaimCap) {
+    await ctx.reply(
+      '<b>Boosted refund</b> is already allowed for this account. Here is the <i><b>boosted claim cap</b></i> ' +
+        `you should use in <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
+        `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
+  // Allow user to claim boosted refund
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
-    method: RefundManagerSingleton.getClaimRefundBoosted,
+    method: RefundManagerSingleton.getAllowBoostedClaim,
     params: {
       affectedAddress: affectedPublicKey,
       newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
       publisherObjectId: RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
-      signature,
     },
   });
 
   if (transaction === undefined) {
     await ctx.reply(
-      'Failed to create transaction for claiming boosted refund. Please, try again or contact support.',
+      'Failed to create transaction for allowing boosted refund claim. Please, try again or contact support.',
       { reply_markup: retryButton },
     );
 
@@ -255,9 +266,12 @@ export async function checkProvidedAddress(
     conversation.session.refund.claimedBoostedRefund = true;
 
     await ctx.reply(
-      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,
+      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +
+        `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
+        `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n` +
+        `<code>${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
       {
-        reply_markup: retryButton,
+        reply_markup: goHome,
         parse_mode: 'HTML',
       },
     );
@@ -270,7 +284,8 @@ export async function checkProvidedAddress(
     result.digest !== undefined
   ) {
     await ctx.reply(
-      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>.`,
+      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to allow the <b>boosted refund</b>. ` +
+        `Please, try again or contact support.`,
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -280,10 +295,13 @@ export async function checkProvidedAddress(
     return;
   }
 
-  await ctx.reply('Failed to claim the <b>boosted refund</b>.', {
-    reply_markup: retryButton,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    'Failed to claim the <b>boosted refund</b>. Please, try again or contact support.',
+    {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    },
+  );
 
   return;
 }
