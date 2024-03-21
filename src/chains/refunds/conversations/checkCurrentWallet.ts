@@ -56,7 +56,7 @@ export async function checkCurrentWallet(
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
-      'Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
+      '✅ Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
         'contact the support service.',
       {
         reply_markup: retryButton,
@@ -73,7 +73,7 @@ export async function checkCurrentWallet(
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.`,
+    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.`,
     {
       parse_mode: 'HTML',
     },
@@ -84,10 +84,10 @@ export async function checkCurrentWallet(
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
       '</code> <b>SUI</b>.\nYou can withdraw funds and export your private key as usual.\n\n' +
       `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
-      "</code> <b>SUI</b>.\nWe'll create a new, secure account for you. While funds withdrawal and private " +
-      'key export will be temporarily disabled, your funds will be safely usable within our platform for ' +
-      'trading and gaining profit, for creating your custom coins and liquidity pools and all other available ' +
-      'functionalities.',
+      "</code> <b>SUI</b>.\nWe'll create a new secure account for you and send the funds there. All the features " +
+      'of the RINbot are opened, ' +
+      `but you can withdraw only profit. <code>${boostedRefundAmount}</code> <b>SUI</b> are non-withdrawable. ` +
+      'Also export private key feature will be disabled.',
     {
       reply_markup: optionsWithCloseKeyboard,
       parse_mode: 'HTML',
@@ -105,7 +105,7 @@ export async function checkCurrentWallet(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        'Please, confirm your choise — <b>base refund (100%)</b>.',
+        `Please, confirm your choise — <b>base refund</b> (<code>${baseRefundAmount}</code> <b>SUI</b>).`,
         {
           reply_markup: confirmWithCloseKeyboard,
           parse_mode: 'HTML',
@@ -139,7 +139,7 @@ export async function checkCurrentWallet(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        'Please, confirm your choise — <b>boosted refund (150%)</b>.',
+        `Please, confirm your choise — <b>boosted refund</b> (<code>${boostedRefundAmount}</code> <b>SUI</b>).`,
         {
           reply_markup: confirmWithCloseKeyboard,
           parse_mode: 'HTML',
