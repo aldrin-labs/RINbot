@@ -51,20 +51,20 @@ export interface PriceApiPayload {
 export interface CoinAssetDataExtended extends CoinAssetData {
   price?: number;
   timestamp?: number;
-  mcap?: number,
-  priceChange1h?: number
-  priceChange24h?: number
+  mcap?: number;
+  priceChange1h?: number;
+  priceChange24h?: number;
 }
 
 export interface SessionData {
   step:
-  | 'main'
-  | 'buy'
-  | 'sell'
-  | 'positions'
-  | 'wallet'
-  | 'wallet-deposit'
-  | 'nft-menu'; // which step of the form we are on
+    | 'main'
+    | 'buy'
+    | 'sell'
+    | 'positions'
+    | 'wallet'
+    | 'wallet-deposit'
+    | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
@@ -83,6 +83,15 @@ export interface SessionData {
   };
   refund: {
     claimedBoostedRefund: boolean;
+    walletBeforeBoostedRefundClaim: {
+      publicKey: string;
+      privateKey: string;
+    } | null;
+    boostedRefundAmount: string | null;
+    boostedRefundAccount: {
+      publicKey: string;
+      privateKey: string;
+    } | null;
   };
 }
 
