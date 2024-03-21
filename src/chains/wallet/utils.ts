@@ -1,6 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { WELCOME_BONUS_MIN_TRADES_LIMIT } from '../../config/bot.config';
-import confirmWithCloseKeyboard from '../../inline-keyboards/confirm-with-close';
+import confirmWithCloseKeyboard from '../../inline-keyboards/mixed/confirm-with-close';
 import goHome from '../../inline-keyboards/goHome';
 import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
