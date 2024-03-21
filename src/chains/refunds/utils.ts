@@ -17,7 +17,6 @@ export async function createBoostedRefundAccount(ctx: BotContext) {
 
 export async function userHasBoostedRefundAccount(ctx: BotContext) {
   const userId = ctx.from?.id;
-  console.debug('userId', userId);
 
   if (userId === undefined) {
     throw new Error(
@@ -35,7 +34,6 @@ export async function userHasBoostedRefundAccount(ctx: BotContext) {
   }
 
   const parsedUserData = JSON.parse(userData);
-  console.debug('parsedUserData:', parsedUserData);
 
   return isSessionDataContainingBoostedRefundAccount(parsedUserData);
 }
