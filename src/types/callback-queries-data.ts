@@ -7,4 +7,7 @@ export enum CallbackQueryData {
   BoostedRefund = 'boosted-refund',
   Assets = 'assets',
   ExportPrivateKey = 'export-private-key',
+  ImportWallet = 'import-wallet',
+  Continue = 'continue',
+  Refunds = 'refunds',
 }
