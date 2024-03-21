@@ -117,8 +117,19 @@ export async function claimBoostedRefund({
     conversation.session.refund.boostedRefundAccount,
   );
 
-  const userHasStoredBoostedRefundAccount = await conversation.external(() =>
-    userHasBoostedRefundAccount(ctx),
+  const userHasStoredBoostedRefundAccount = await conversation.external(
+    async () => {
+      try {
+        return await userHasBoostedRefundAccount(ctx);
+      } catch (error) {
+        console.error(
+          '[claimBoostedRefund] Error while userHasBoostedRefundAccount():',
+          error,
+        );
+
+        return false;
+      }
+    },
   );
 
   if (!userHasStoredBoostedRefundAccount) {
@@ -145,9 +156,18 @@ export async function claimBoostedRefund({
   }
 
   let boostedClaimCap = await conversation.external(async () => {
-    return await refundManager.getBoostedClaimCap({
-      ownerAddress: conversation.session.publicKey,
-    });
+    try {
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress: conversation.session.publicKey,
+      });
+    } catch (error) {
+      console.error(
+        '[claimBoostedRefund] Error while getBoostedClaimCap():',
+        error,
+      );
+
+      return;
+    }
   });
 
   // TODO: Adjust check for SDK method result (try/catch it)
@@ -217,10 +237,28 @@ export async function claimBoostedRefund({
     }
 
     boostedClaimCap = await conversation.external(async () => {
-      return await refundManager.getBoostedClaimCap({
-        ownerAddress: conversation.session.publicKey,
-      });
+      try {
+        return await refundManager.getBoostedClaimCap({
+          ownerAddress: conversation.session.publicKey,
+        });
+      } catch (error) {
+        console.error(
+          '[claimBoostedRefund] Error while getBoostedClaimCap():',
+          error,
+        );
+
+        return;
+      }
     });
+  }
+
+  if (boostedClaimCap === undefined) {
+    await ctx.reply(
+      `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
+    );
+
+    return;
   }
 
   await ctx.reply('<b>Claiming the boosted refund...</b>', {
@@ -231,7 +269,7 @@ export async function claimBoostedRefund({
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
-    method: RefundManagerSingleton.getClaimRefundBoosted,
+    method: RefundManagerSingleton.getClaimRefundBoostedTransaction,
     params: {
       boostedClaimCap,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,

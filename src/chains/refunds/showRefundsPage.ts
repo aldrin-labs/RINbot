@@ -11,9 +11,18 @@ import { createBoostedRefundAccount } from './utils';
 
 export async function showRefundsPage(ctx: BotContext) {
   const refundManager = getRefundManager();
-  const currentPhase = await refundManager.getCurrentRefundPhase({
-    poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-  });
+
+  let currentPhase = RefundPhase.Addition;
+  try {
+    currentPhase = await refundManager.getCurrentRefundPhase({
+      poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+    });
+  } catch (error) {
+    console.error(
+      '[showRefundsPage] Error while fetching current refund phase:',
+      error,
+    );
+  }
 
   let phaseString = '';
   let phaseMenu: InlineKeyboard | Menu<BotContext> = goHome;
@@ -47,5 +56,12 @@ export async function showRefundsPage(ctx: BotContext) {
     parse_mode: 'HTML',
   });
 
-  await createBoostedRefundAccount(ctx);
+  try {
+    await createBoostedRefundAccount(ctx);
+  } catch (error) {
+    console.error(
+      '[showRefundsPage] Error while createBoostedRefundAccount():',
+      error,
+    );
+  }
 }

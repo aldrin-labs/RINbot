@@ -1,4 +1,5 @@
 import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
+import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import confirmWithCloseKeyboard from '../../../inline-keyboards/mixed/confirm-with-close';
 import refundOptionsKeyboard from '../../../inline-keyboards/refund-options';
@@ -31,16 +32,27 @@ export async function checkCurrentWallet(
   );
 
   // Check current wallet
-  const { normalRefund, boostedRefund } = await conversation.external(
-    async () => {
+  let normalRefund;
+  let boostedRefund;
+  try {
+    const claimAmounts = await conversation.external(async () => {
       return await refundManager.getClaimAmount({
         poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
         affectedAddress: conversation.session.publicKey,
       });
-    },
-  );
+    });
 
-  if (normalRefund.mist === 0) {
+    normalRefund = claimAmounts.normalRefund;
+    boostedRefund = claimAmounts.boostedRefund;
+  } catch (error) {
+    await ctx.reply('Something went wrong. Please, try again.', {
+      reply_markup: retryButton,
+    });
+
+    return;
+  }
+
+  if (new BigNumber(normalRefund.mist).isEqualTo(0)) {
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,

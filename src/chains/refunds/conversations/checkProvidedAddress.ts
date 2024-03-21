@@ -2,6 +2,7 @@ import {
   RefundManagerSingleton,
   isValidSuiAddress,
 } from '@avernikoz/rinbot-sui-sdk';
+import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
@@ -87,16 +88,27 @@ export async function checkProvidedAddress(
   );
 
   // Check provided address
-  const { normalRefund, boostedRefund } = await conversation.external(
-    async () => {
+  let normalRefund;
+  let boostedRefund;
+  try {
+    const claimAmounts = await conversation.external(async () => {
       return await refundManager.getClaimAmount({
         poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
         affectedAddress: affectedPublicKey,
       });
-    },
-  );
+    });
 
-  if (normalRefund.mist === 0) {
+    normalRefund = claimAmounts.normalRefund;
+    boostedRefund = claimAmounts.boostedRefund;
+  } catch (error) {
+    await ctx.reply('Something went wrong. Please, try again.', {
+      reply_markup: retryButton,
+    });
+
+    return;
+  }
+
+  if (new BigNumber(normalRefund.mist).isEqualTo(0)) {
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
@@ -175,8 +187,19 @@ export async function checkProvidedAddress(
     return;
   }
 
-  const userHasStoredBoostedRefundAccount = await conversation.external(() =>
-    userHasBoostedRefundAccount(ctx),
+  const userHasStoredBoostedRefundAccount = await conversation.external(
+    async () => {
+      try {
+        return await userHasBoostedRefundAccount(ctx);
+      } catch (error) {
+        console.error(
+          '[checkProvidedAddress] Error while userHasBoostedRefundAccount():',
+          error,
+        );
+
+        return false;
+      }
+    },
   );
 
   if (!userHasStoredBoostedRefundAccount) {
@@ -203,9 +226,18 @@ export async function checkProvidedAddress(
   }
 
   let boostedClaimCap = await conversation.external(async () => {
-    return await refundManager.getBoostedClaimCap({
-      ownerAddress: conversation.session.publicKey,
-    });
+    try {
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress: conversation.session.publicKey,
+      });
+    } catch (error) {
+      console.error(
+        '[checkProvidedAddress] Error while getBoostedClaimCap():',
+        error,
+      );
+
+      return;
+    }
   });
 
   if (boostedClaimCap) {
