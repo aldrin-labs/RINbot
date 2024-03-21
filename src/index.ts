@@ -87,6 +87,7 @@ async function startBot(): Promise<void> {
           refund: {
             claimedBoostedRefund: false,
             walletBeforeBoostedRefundClaim: null,
+            boostedRefundAmount: null,
             boostedRefundAccount: null,
           },
         };

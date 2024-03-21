@@ -34,6 +34,7 @@ export function addRefundFields(old: {
     refund: {
       ...old.refund,
       walletBeforeBoostedRefundClaim: null,
+      boostedRefundAmount: null,
       boostedRefundAccount: null,
     },
   };
