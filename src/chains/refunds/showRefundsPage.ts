@@ -51,7 +51,7 @@ export async function showRefundsPage(ctx: BotContext) {
       phaseString =
       'Phase 4: Reclaim\n' +
         "We regret to inform you that the refund process has concluded." + 
-        "If you have any further inquiries, please don't hesitate to contact our support team.!";
+        "If you have any further inquiries, please don't hesitate to contact our support team!";
       break;
   }
 
