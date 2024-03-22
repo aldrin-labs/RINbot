@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.4.4":
-  version "2.4.4"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.4.4.tgz#e80b75faad10ab45d4b852201640317d65a2bbbe"
-  integrity sha512-3wyqxMR5nReGDKPHwMNLs8F+6XgEHHeg7H/w9FWJ2LWMOcPz2VMjupyaVwctKAxedSSbBhiZn+I7PGJ3y6I65w==
+"@avernikoz/rinbot-sui-sdk@^2.5.9":
+  version "2.5.9"
+  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.5.9.tgz#adfdf710eb3bfe08274901d82a532afb81542f6e"
+  integrity sha512-W5wBfbFAZoYrQUEKAmqOQVNtaCI+/re837e2Vxp9Mm6e8OhsDZeqTzao8HXHU3WbyAM+psQdfJl3VZb3zg1LlA==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
@@ -13,6 +13,7 @@
     "@types/redis" "^4.0.11"
     aftermath-ts-sdk "^1.1.32"
     bignumber.js "^9.1.2"
+    decimal.js "^10.4.3"
     turbos-clmm-sdk "^2.1.0"
 
 "@babel/runtime@^7.15.4":

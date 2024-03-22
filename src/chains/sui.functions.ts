@@ -17,14 +17,11 @@ import {
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction
+  transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT,
-} from '../config/bot.config';
+import { imgs } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -35,7 +32,12 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { BotContext, MyConversation, PriceApiPayload } from '../types';
+import {
+  BotContext,
+  CoinAssetDataExtended,
+  MyConversation,
+  PriceApiPayload,
+} from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -46,7 +48,6 @@ import {
   validateCoinSymbol,
   validateTotalSupply,
 } from './createCoin.utils';
-import { getUserFeePercentage } from './fees/utils';
 import {
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
   SUI_PROVIDER_URL,
@@ -67,7 +68,14 @@ import {
   swapTokenTypesAreEqual,
 } from './utils';
 
-import { calculate, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
+import { InputFile } from 'grammy';
+import {
+  calculate,
+  formatTokenInfo,
+  getPriceApi,
+  isCoinAssetDataExtended,
+  postPriceApi,
+} from './priceapi.utils';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -183,66 +191,45 @@ export const getRouteManager = async () => {
   return routerManager;
 };
 
-export async function exportPrivateKey(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
-  } = ctx.session;
-  const isUserNotEligibleToExportPrivateKey =
-    isUserAgreeWithBonus &&
-    isUserClaimedBonus &&
-    tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
-
-  if (isUserNotEligibleToExportPrivateKey) {
-    await ctx.reply(
-      `🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`,
-      { reply_markup: goHome },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
-  const messageData = await conversation.waitFor(':text');
-  const isExportConfirmed = messageData.msg.text === 'CONFIRM';
-
-  if (!isExportConfirmed) {
-    await ctx.reply(
-      `You've not typed CONFIRM. Ignoring your request of exporting private key.`,
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Your private key is: <span class="tg-spoiler">${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
-    { parse_mode: 'HTML', reply_markup: goHome },
-  );
-}
-
 export async function withdraw(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
   const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
-  } = ctx.session;
+    welcomeBonus: {
+      isUserAgreeWithBonus,
+      isUserClaimedBonus,
+      amount: welcomeBonusAmount,
+    },
+    refund: { claimedBoostedRefund, boostedRefundAmount },
+  } = conversation.session;
   const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus;
 
-  if (isUserUsedWelcomeBonus) {
+  let nonWithdrawableAmountString = '';
+
+  if (claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount and ` +
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `are non-withdrawable.`;
+  } else if (!claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `is non-withdrawable.`;
+  } else if (claimedBoostedRefund && !isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount ` +
+      `is non-withdrawable.`;
+  }
+
+  if (claimedBoostedRefund || isUserUsedWelcomeBonus) {
     await ctx.reply(
-      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`,
+      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `But hey, the profits you make from trading? Those are yours to take!\n` +
+        `Keep growing that portfolio and enjoy the fruits of your trading strategies.\n` +
+        `Happy profiting! 🌈🚀`,
+      { parse_mode: 'HTML' },
     );
   }
 
@@ -287,20 +274,38 @@ export async function withdraw(
     return;
   }
 
-  const walletManager = await getWalletManager();
-  let { availableAmount, totalGasFee } =
-    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+  let { availableAmount, totalGasFee } = await conversation.external(
+    async () => {
+      const walletManager = await getWalletManager();
+      return await walletManager.getAvailableWithdrawSuiAmount(
+        ctx.session.publicKey,
+      );
+    },
+  );
 
-  // Decrease available amount in case user participate in the welcome bonus program
-  availableAmount = isUserUsedWelcomeBonus
-    ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString()
-    : availableAmount;
+  let nonWithdrawableAmount = new BigNumber(0);
+
+  if (isUserUsedWelcomeBonus) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(welcomeBonusAmount);
+  }
+  if (claimedBoostedRefund && boostedRefundAmount !== null) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(boostedRefundAmount);
+  }
+
+  // Decrease available amount with non-withdrawable amount (welcome bonus or/and boosted refund)
+  availableAmount = new BigNumber(availableAmount)
+    .minus(nonWithdrawableAmount)
+    .toString();
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
     await ctx.reply(
-      `⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`,
-      { reply_markup: goHome },
+      `⚠️ Heads up! Your available balance is currently <code>${nonWithdrawableAmount}</code> <b>SUI</b> ` +
+        `or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `Trade strategically to build up your balance, and soon you'll be able to withdraw those ` +
+        `well-earned profits. \nStay focused on your trading goals! 📊💼`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
     );
 
     return;
@@ -429,7 +434,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  return availableBalance
+  return availableBalance;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
@@ -440,45 +445,34 @@ export async function balance(ctx: BotContext): Promise<string> {
 
 export async function assets(ctx: BotContext): Promise<void> {
   try {
-    const walletManager = await getWalletManager();
-    let allCoinsAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
-
-    ctx.session.assets = allCoinsAssets;
-    let data: PriceApiPayload = {data: []}
-    allCoinsAssets.forEach(coin => {
-      //move to price api
-      data.data.push({chainId: "sui", tokenAddress: coin.type})
-    })
-    try {
-      const priceApiReponse = await postPriceApi(allCoinsAssets)
-      if(priceApiReponse !== undefined)
-        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
-          ...coin,
-          price: priceApiReponse.data.data[index].price
-        }));
-    } catch (error) {
-      console.error(error)
+    const allCoinAssets = ctx.session.assets;
+    let netWorth = 0;
+    allCoinAssets.forEach((coin) => {
+      if (coin.price !== undefined) {
+        netWorth += +coin.balance * coin.price;
+      }
+    });
+    const currentToken = allCoinAssets[0];
+    const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+    let priceApiDataStr: string;
+    if (isCoinAssetDataExtended(currentToken)) {
+      priceApiDataStr =
+        calculate(currentToken.balance, currentToken.price) !== null
+          ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + ' ' + currentToken.symbol + ' / ' + calculate(currentToken.balance, currentToken.price) + ' USD'}</b>${currentToken.mcap === 0 ? '' : '\nMcap: <b>' + calculate('1', currentToken.mcap) + ' USD</b>'}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : '\n1h: <b>' + (currentToken.priceChange1h! > 0 ? '+' + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + '%</b>'} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : ' 24h: <b>' + (currentToken.priceChange24h! > 0 ? '+' + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + '%</b>'}`
+          : ``;
+    } else {
+      priceApiDataStr = '';
     }
 
-    if (allCoinsAssets?.length === 0) {
-      ctx.reply(`Your have no tokens yet.`, { reply_markup: goHome });
-      return;
-    }
-    const assetsString = allCoinsAssets?.reduce((acc, el) => {
-      
-      const balance = isCoinAssetDataExtended(el) && calculate(el.balance, el.price) !== null ? `<b>${el.balance} ${el.symbol?.toUpperCase()} / ${calculate(el.balance, el.price)} USD</b>` : `<b>${el.balance} ${el.symbol}</b>`
+    const suiBalance = await balance(ctx);
+    const suiAvlBalance = await availableBalance(ctx);
 
-      acc = acc.concat(
-        `Token: <b>${el.symbol || el.type}</b>\nType: <code>${el.type}</code>\nAmount: ${balance}\n\n`,
-      );
+    const newMessage = `🪙<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
 
-      return acc;
-    }, '');
-    await ctx.reply(`<b>Your tokens:</b> \n\n${assetsString}`, {
+    await ctx.reply(newMessage, {
       reply_markup: positions_menu,
       parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
     });
   } catch (e) {
     ctx.reply('Failed to fetch assets. Please, try again.', {
@@ -487,7 +481,7 @@ export async function assets(ctx: BotContext): Promise<void> {
   }
 }
 
-export function generateWallet(): any {
+export function generateWallet() {
   return WalletManagerSingleton.generateWallet();
 }
 
@@ -499,53 +493,125 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   let price;
+  let positionOverview: string;
+
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
-    price = priceApiGetResponse?.data.data.price
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
+    price = priceApiGetResponse?.data.data.price;
   } catch (error) {
-    console.error(error)
-    price = undefined
+    if (error instanceof Error) {
+      console.error('[home] Price API error:', error.message)
+    } else {
+      console.error('[home] Price API error: unknown error')
+    }
+
+    price = undefined;
   }
-  const balance_usd = calculate(userBalance, price)
-  const avl_balance_usd = calculate(avl_balance, price)
+
+  const balance_usd = calculate(userBalance, price);
+  const avl_balance_usd = calculate(avl_balance, price);
 
   let totalBalanceStr: string;
 
   try {
-      const data: PriceApiPayload = {data: []}
-      const allCoinAssets = ctx.session.assets
-      allCoinAssets.forEach(coin => {
-        //move to price api
-        data.data.push({chainId: "sui", tokenAddress: coin.type})
-      })
+    const data: PriceApiPayload = { data: [] };
+    const allCoinAssets = ctx.session.assets;
+    allCoinAssets.forEach((coin) => {
+      //move to price api
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
 
-      const response = await postPriceApi(allCoinAssets);
+    const response = await postPriceApi(allCoinAssets);
 
-      const coinsPriceApi = response?.data.data;
+    const coinsPriceApi = response?.data.data;
 
-      const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(
+      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
+    );
 
-      let balance = 0;
-      allCoinAssets.forEach(coin => {
-        const price = priceMap.get(coin.type);
-        if (price !== undefined) {
-          balance += +coin.balance * price;
-        }
-      });
-
-      totalBalanceStr = `Your balance: <b>$${balance.toFixed(2)} USD</b>`;
-    
-    } catch (error) {
-      console.error('Error in calculating total balance: ', error)
+    let balance = 0;
+    allCoinAssets.forEach((coin) => {
+      const price = priceMap.get(coin.type);
+      if (price !== undefined) {
+        balance += +coin.balance * price;
+      }
+    });
+    if (balance === 0) {
+      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    }
+    else {
       totalBalanceStr = ''
     }
+  } catch (error) {
+    console.error('Error in calculating total balance: ', error);
+    totalBalanceStr = ``;
+  }
 
-  const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
-  const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
+  try {
+    const walletManager = await getWalletManager();
+    let allCoinsAssets: CoinAssetDataExtended[] =
+      await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code> \n\nYour SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}\n`;
-  await ctx.replyWithPhoto(
-    'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
+    ctx.session.assets = allCoinsAssets;
+    let data: PriceApiPayload = { data: [] };
+    allCoinsAssets.forEach((coin) => {
+      //move to price api
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
+    try {
+      const priceApiReponse = await postPriceApi(allCoinsAssets);
+      if (priceApiReponse !== undefined)
+        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+          ...coin,
+          price: priceApiReponse.data.data[index].price,
+          timestamp: Date.now(),
+          mcap: priceApiReponse.data.data[index].mcap || 0,
+          priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
+          priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0,
+        }));
+      ctx.session.assets = allCoinsAssets;
+    } catch (error) {
+      console.error(error);
+    }
+
+    if (allCoinsAssets?.length === 0) {
+      positionOverview = `Your have no tokens yet.`;
+    }
+    let assetsString = '';
+    for (let index = 0; index < allCoinsAssets.length; index++) {
+      if (index > 4) {
+        assetsString += `<i>Please note: Only 5 positions are shown here. To view all your positions, please go to the <b>Sell and Manage</b> menu.</i>\n\n`;
+        break;
+      }
+      const token = allCoinsAssets[index];
+      let priceApiDataStr: string;
+      if (isCoinAssetDataExtended(token)) {
+        priceApiDataStr = formatTokenInfo(token);
+      } else {
+        priceApiDataStr = '';
+      }
+
+      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
+
+      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
+    }
+    positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
+  } catch (e) {
+    console.error(e);
+    positionOverview = '';
+  }
+
+  const balanceSUIdStr =
+    balance_usd !== null
+      ? `<b>${userBalance} SUI / ${balance_usd} USD</b>`
+      : `<b>${userBalance} SUI</b>`;
+  const avlBalanceSUIdStr =
+    avl_balance_usd !== null
+      ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
+      : `<b>${avl_balance} SUI</b>`;
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)],
     { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
   );
 }
