@@ -81,7 +81,7 @@ export async function checkProvidedAddress(
   }
 
   const checkingMessage = await ctx.reply(
-    '<b>Checking your current account address. This may take some time...</b>',
+    '<b>Checking entered account address. This may take some time...</b>',
     {
       parse_mode: 'HTML',
     },
