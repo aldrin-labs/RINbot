@@ -245,12 +245,8 @@ async function instantSell(
   resCoinType: string
 ): Promise<void> {
 
-<<<<<<< HEAD
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantSell];
-  await ctx.reply('Initiating swap...');
-=======
   await ctx.reply('Finding the best route to save your money… ☺️');
->>>>>>> 2392ca24523ddb3d99742cbabdb360a748f77264
 
   const tx = await conversation.external({
     task: async () => {
