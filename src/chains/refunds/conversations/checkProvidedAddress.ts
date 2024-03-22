@@ -39,7 +39,7 @@ export async function checkProvidedAddress(
     retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
 
   // Ask user for address he wants to check
-  await ctx.reply('Please, enter the <b>public key</b> you want to check.', {
+  await ctx.reply('Please enter the <b>address</b> of your wallet that you wish to check.', {
     reply_markup: closeConversation,
     parse_mode: 'HTML',
   });
@@ -56,7 +56,7 @@ export async function checkProvidedAddress(
 
     if (!publicKeyIsValid) {
       await ctx.reply(
-        'Entered <b>public key</b> is not valid. Please, enter a valid one.',
+        'Entered <b>address</b> is not valid. Please, enter a valid one.',
         { reply_markup: closeConversation, parse_mode: 'HTML' },
       );
 
@@ -73,7 +73,7 @@ export async function checkProvidedAddress(
 
   if (affectedPublicKey === undefined) {
     await ctx.reply(
-      'Cannot process provided public key. Please, try again or contact support.',
+      'Cannot process provided address. Please, try again or contact support.',
       { reply_markup: retryButton },
     );
 
@@ -81,7 +81,7 @@ export async function checkProvidedAddress(
   }
 
   const checkingMessage = await ctx.reply(
-    '<b>Checking this account, it may take some time....</b>',
+    '<b>Checking your current account address. This may take some time...</b>',
     {
       parse_mode: 'HTML',
     },
@@ -101,7 +101,7 @@ export async function checkProvidedAddress(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply('Something went wrong. Please, try again.', {
+    await ctx.reply('An error occurred while retrieving the claim amount. Please try again.', {
       reply_markup: retryButton,
     });
 
@@ -112,8 +112,9 @@ export async function checkProvidedAddress(
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
-      '✅ Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
-        'contact the support service.\n\nNow you can enter another address to check.',
+      '✅ Your account is either not affected or you have already claimed the refund. ' +
+      'If you have any questions, feel free to reach out to us.' +
+      '\n\nNow you can enter another address to check.',
       {
         reply_markup: closeConversation,
         parse_mode: 'HTML',
