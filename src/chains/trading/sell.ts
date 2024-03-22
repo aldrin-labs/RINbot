@@ -199,7 +199,7 @@ export async function sell(
     );
 
     await ctx.reply(
-      'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
+      'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
       { parse_mode: 'HTML' },
     );
   
@@ -228,29 +228,25 @@ export async function sell(
     return;
   }
   const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
-  if(ctx.session.tradeAmount === '0') {
-    ctx.session.tradeAmount = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
+  if(ctx.session.tradeAmountPercentage === '0') {
+    ctx.session.tradeAmountPercentage = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
   }
-  const percentage = parseFloat(ctx.session.tradeAmount) / 100;
+  const percentage = parseFloat(ctx.session.tradeAmountPercentage) / 100;
 
-  const tradeAmount = parseFloat(validCoinToSell.balance) * percentage;
+  const tradeAmountPercentage = parseFloat(validCoinToSell.balance) * percentage;
   
-  await instantSell(conversation, ctx, tradeAmount.toString(), validCoinToSell.type);
+  await instantSell(conversation, ctx, tradeAmountPercentage.toString(), validCoinToSell.type);
 }
 
 async function instantSell(
   conversation: MyConversation,
   ctx: BotContext,
-  tradeAmount: string,
+  tradeAmountPercentage: string,
   resCoinType: string
 ): Promise<void> {
 
-<<<<<<< HEAD
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantSell];
-  await ctx.reply('Initiating swap...');
-=======
   await ctx.reply('Finding the best route to save your money… ☺️');
->>>>>>> 2392ca24523ddb3d99742cbabdb360a748f77264
 
   const tx = await conversation.external({
     task: async () => {
@@ -259,7 +255,7 @@ async function instantSell(
         const transaction = await routerManager.getBestRouteTransaction({
           tokenFrom: resCoinType,
           tokenTo: LONG_SUI_COIN_TYPE,
-          amount: tradeAmount,
+          amount: tradeAmountPercentage,
           signerAddress: ctx.session.publicKey,
           slippagePercentage: ctx.session.settings.slippagePercentage || 10,
         });

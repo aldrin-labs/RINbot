@@ -50,7 +50,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     );
 
     await ctx.reply(
-      'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
+      'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
       { parse_mode: 'HTML' },
     );
 
@@ -187,7 +187,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     return;
   }
-  ctx.session.tradeAmount = validatedInputAmount; 
+  ctx.session.tradeAmountPercentage = validatedInputAmount; 
   await instantBuy(conversation, ctx);
 }
 
@@ -198,17 +198,17 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     await conversation.external(() => getUserFeePercentage(ctx))
   ).toString();
 
-  const {tradeAmount, tradeCoin: {coinType: resCoinType}} = ctx.session;
+  const {tradeAmountPercentage, tradeCoin: {coinType: resCoinType}} = ctx.session;
   
   const feeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
-    amount: tradeAmount,
+    amount: tradeAmountPercentage,
     tokenDecimals: SUI_DECIMALS,
   });
 
   // TODO: Re-check args here
   const tx = await conversation.external({
-    args: [resCoinType, tradeAmount],
+    args: [resCoinType, tradeAmountPercentage],
     task: async (resCoinType: string, validatedInputAmount: string) => {
       try {
         const routerManager = await getRouteManager();

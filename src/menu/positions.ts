@@ -67,7 +67,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     const amount = parseFloat(userBalance) * 0.25;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = amount.toString();
+    ctx.session.tradeAmountPercentage = amount.toString();
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.InstantBuy);
   })
@@ -80,7 +80,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     const amount = parseFloat(userBalance) * 0.5;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = amount.toString();
+    ctx.session.tradeAmountPercentage = amount.toString();
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.InstantBuy);    
   })
@@ -124,7 +124,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = '25';
+    ctx.session.tradeAmountPercentage = '25';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.Sell);
   })
@@ -132,7 +132,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = '100';
+    ctx.session.tradeAmountPercentage = '100';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.Sell);
   })
@@ -140,7 +140,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
     ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeAmount = '0';
+    ctx.session.tradeAmountPercentage = '0';
     ctx.session.tradeCoin.useSpecifiedCoin = true;
     await ctx.conversation.enter(ConversationId.Sell);
   })

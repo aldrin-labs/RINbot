@@ -46,6 +46,7 @@ import { BotContext, SessionData } from './types';
 import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
+import { addSuiAssetField } from './migrations/addSuiAssetField';
 
 
 function errorBoundaryHandler(err: BotError) {
@@ -89,7 +90,7 @@ async function startBot(): Promise<void> {
             isUserClaimedBonus: null,
             isUserAgreeWithBonus: null,
           },
-          tradeAmount: '0',
+          tradeAmountPercentage: '0',
           tradesCount: 0,
           createdAt: Date.now(),
           tradeCoin: {
@@ -112,6 +113,7 @@ async function startBot(): Promise<void> {
           3: addTradeCoin,
           4: addBoostedRefund,
           5: addRefundFields,
+          6: addSuiAssetField,
         },
       }),
     }),
