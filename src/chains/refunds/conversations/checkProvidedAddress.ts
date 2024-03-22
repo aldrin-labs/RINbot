@@ -175,6 +175,32 @@ export async function checkProvidedAddress(
     return;
   }
 
+  let boostedClaimCap = await conversation.external(async () => {
+    try {
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress: affectedPublicKey,
+      });
+    } catch (error) {
+      console.error(
+        '[checkProvidedAddress] Error while getBoostedClaimCap():',
+        error,
+      );
+
+      return;
+    }
+  });
+
+  if (boostedClaimCap) {
+    await ctx.reply(
+      '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
+        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
+        `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
   // Exporting current wallet private key
   const warnWithCheckAndPrintSucceeded =
     await warnWithCheckAndPrivateKeyPrinting({
@@ -255,32 +281,6 @@ export async function checkProvidedAddress(
     return;
   }
 
-  const boostedClaimCap = await conversation.external(async () => {
-    try {
-      return await refundManager.getBoostedClaimCap({
-        ownerAddress: conversation.session.publicKey,
-      });
-    } catch (error) {
-      console.error(
-        '[checkProvidedAddress] Error while getBoostedClaimCap():',
-        error,
-      );
-
-      return;
-    }
-  });
-
-  if (boostedClaimCap) {
-    await ctx.reply(
-      '<b>Boosted refund</b> is already allowed for this account. Here is the <i><b>boosted claim cap</b></i> ' +
-        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
-        `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
-      { reply_markup: goHome, parse_mode: 'HTML' },
-    );
-
-    return;
-  }
-
   // Allow user to claim boosted refund
   const transaction = await getTransactionFromMethod({
     conversation,
@@ -296,12 +296,16 @@ export async function checkProvidedAddress(
 
   if (transaction === undefined) {
     await ctx.reply(
-      'Failed to create transaction for allowing boosted refund claim. Please, try again or contact support.',
+      'Failed to create transaction for preparing boosted refund claim. Please, try again or contact support.',
       { reply_markup: retryButton },
     );
 
     return;
   }
+
+  await ctx.reply('<b>Preparing boosted refund claim...</b>', {
+    parse_mode: 'HTML',
+  });
 
   const result = await signAndExecuteTransaction({
     conversation,
@@ -322,8 +326,24 @@ export async function checkProvidedAddress(
     conversation.session.refund.claimedBoostedRefund = true;
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
+    // Updating boosted claim cap
+    boostedClaimCap = await conversation.external(async () => {
+      try {
+        return await refundManager.getBoostedClaimCap({
+          ownerAddress: affectedPublicKey,
+        });
+      } catch (error) {
+        console.error(
+          '[checkProvidedAddress] Error while getBoostedClaimCap():',
+          error,
+        );
+
+        return;
+      }
+    });
+
     await ctx.reply(
-      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +
+      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>!\n\n` +
         `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
         `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n` +
         `<code>${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
@@ -341,7 +361,7 @@ export async function checkProvidedAddress(
     result.digest !== undefined
   ) {
     await ctx.reply(
-      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to allow the <b>boosted refund</b>. ` +
+      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to prepare the <b>boosted refund</b>. ` +
         `Please, try again or contact support.`,
       {
         reply_markup: retryButton,
@@ -353,7 +373,7 @@ export async function checkProvidedAddress(
   }
 
   await ctx.reply(
-    'Failed to allow the <b>boosted refund</b>. Please, try again or contact support.',
+    'Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.',
     {
       reply_markup: retryButton,
       parse_mode: 'HTML',
