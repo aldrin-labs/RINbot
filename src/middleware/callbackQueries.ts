@@ -1,12 +1,15 @@
 import { Bot } from 'grammy';
+import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
-import { home } from '../chains/sui.functions';
-import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
-import { BotContext } from '../types';
+import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
+import { assets, home } from '../chains/sui.functions';
+import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
+import { BotContext } from '../types';
+import { CallbackQueryData } from '../types/callback-queries-data';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
@@ -23,18 +26,20 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
   });
 
-  /*bot.callbackQuery('buy', async (ctx) => {
-    ctx.session.step = 'buy';
-    ctx.session.tradeAmount = '0';
-    ctx.session.tradeCoin = {
-      coinType: '',
-      useSpecifiedCoin: false
-    };
-    ctx.conversation.enter('buy');
-  });*/
+  bot.callbackQuery(CallbackQueryData.Assets, async (ctx) => {
+    await assets(ctx);
+    await ctx.answerCallbackQuery();
+  });
+
+  bot.callbackQuery(CallbackQueryData.ExportPrivateKey, async (ctx) => {
+    await ctx.conversation.exit();
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
+  });
 
   useSurfdogCallbackQueries(bot);
   useSlippageCallbackQueries(bot);
+  useRefundsCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -42,6 +47,12 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
       await ctx.conversation.enter(conversationId);
       await ctx.answerCallbackQuery();
     });
+  });
+
+  // We need this to handle button clicks which are not handled wherever (e.g. in conversations)
+  bot.on('callback_query:data', async (ctx) => {
+    console.log('Unknown button event with payload', ctx.callbackQuery.data);
+    await ctx.answerCallbackQuery();
   });
 }
 
@@ -77,5 +88,12 @@ function useSlippageCallbackQueries(bot: Bot<BotContext>) {
       await showSlippageConfiguration(ctx);
       await ctx.answerCallbackQuery();
     });
+  });
+}
+
+function useRefundsCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.Refunds, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showRefundsPage(ctx);
   });
 }

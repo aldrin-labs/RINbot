@@ -8,6 +8,8 @@ import { File, PhotoSize } from 'grammy/types';
 import { CoinForPool } from './types';
 import { BOT_TOKEN } from '../config/bot.config';
 import { getPriceApi } from './priceapi.utils';
+import { BotContext } from '../types';
+import { InlineKeyboard } from 'grammy';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -246,8 +248,7 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
       // Handle case where price data is not available but the request did not fail
       return `Price information for <code>${validCoin.type}</code> is currently unavailable.\n\n`;
     }
-  }
-  else if (typeof validCoin === 'string') {
+  } else if (typeof validCoin === 'string') {
     const priceApiGetResponse = await getPriceApi('sui', validCoin);
     if (priceApiGetResponse?.data?.data?.price) {
       price = priceApiGetResponse.data.data.price;
@@ -256,8 +257,21 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
       // Handle case where price data is not available but the request did not fail
       return `Price information for <code>${validCoin}</code> is currently unavailable.\n\n`;
     }
-  }
-  else
-    return "Could not fetch the data.\n\n"
+  } else return 'Could not fetch the data.\n\n';
 }
 
+export async function reactOnUnexpectedBehaviour(
+  ctx: BotContext,
+  retryButton: InlineKeyboard,
+  cancelSubject: string,
+) {
+  // If there is no clicked button, this function will throw an error, which will be showed to user.
+  // Because of that, we catch it here and ignore.
+  try {
+    await ctx.answerCallbackQuery();
+  } catch (error) {}
+
+  await ctx.reply(`You have canceled the ${cancelSubject}.`, {
+    reply_markup: retryButton,
+  });
+}
