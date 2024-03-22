@@ -148,7 +148,7 @@ export async function checkProvidedAddress(
       `the features of RINbot, but you can withdraw only profit. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
       `non-withdrawable. Also export private key feature will be disabled.\n\n` +
       '<b>2.</b> Continue to work without importing. Only <b>Boosted Refund</b> is enabled this way. ' +
-      'We will prepare boosted refund claim, but you will have to manually use gist script to sign and ' +
+      'We will prepare boosted refund claim, but you will have to manually use github example to sign and ' +
       'execute required for refund transaction.',
     {
       reply_markup: importWalletWithContinueAndCancelKeyboard,
@@ -194,7 +194,7 @@ export async function checkProvidedAddress(
   if (boostedClaimCap) {
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
-        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n<code>` +
+        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
         `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
       { reply_markup: goHome, parse_mode: 'HTML' },
     );
@@ -346,7 +346,7 @@ export async function checkProvidedAddress(
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>!\n\n` +
         `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
-        `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">gist example</a>:\n` +
+        `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n` +
         `<code>${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
       {
         reply_markup: goHome,
