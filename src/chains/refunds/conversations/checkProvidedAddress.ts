@@ -233,7 +233,7 @@ export async function checkProvidedAddress(
 
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
-      'This is not secure to continue because of failed store process. ' +
+      "It's not safe to continue due to the failed backup account process. " +
         'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
@@ -261,7 +261,7 @@ export async function checkProvidedAddress(
 
   if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
-      'This is not secure to continue because of failed backup process. ' +
+      "It's not safe to continue due to the failed backup account process. " +
         'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
@@ -274,7 +274,7 @@ export async function checkProvidedAddress(
 
   if (conversation.session.refund.boostedRefundAccount === null) {
     await ctx.reply(
-      'This is not secure to continue because of unexpected case of dialog scenario. ' +
+      "It's not safe to continue due to unexpected case of dialog scenario. " +
         'Please, try again later or contact support.',
       { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
     );
