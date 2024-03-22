@@ -28,6 +28,7 @@ import {
   isTransactionSuccessful,
   getPriceOutputData,
 } from '../utils';
+import BigNumber from 'bignumber.js';
 
 
 async function parseCoinTypeResponse(
@@ -231,9 +232,9 @@ export async function sell(
   if(ctx.session.tradeAmountPercentage === '0') {
     ctx.session.tradeAmountPercentage = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
   }
-  const percentage = parseFloat(ctx.session.tradeAmountPercentage) / 100;
+  const percentage = new BigNumber(ctx.session.tradeAmountPercentage).dividedBy(100);
 
-  const tradeAmountPercentage = parseFloat(validCoinToSell.balance) * percentage;
+  const tradeAmountPercentage = new BigNumber(validCoinToSell.balance).multipliedBy(percentage);
   
   await instantSell(conversation, ctx, tradeAmountPercentage.toString(), validCoinToSell.type);
 }

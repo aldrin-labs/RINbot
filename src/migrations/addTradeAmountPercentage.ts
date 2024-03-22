@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
-export function addSuiAssetField(old: {
+export function addTradeAmountField(old: {
   step:
     | 'main'
     | 'buy'

@@ -491,13 +491,12 @@ export async function refreshAssets(ctx: BotContext) {
     ctx.session.publicKey,
   );
 
-  let allCoinsAssets = allCoinsAssetsResponse.filter(c => c.type !== LONG_SUI_COIN_TYPE);
-  const suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE);
-  if(!suiAsset) {
-    throw new Error('Failed to fetch SUI informations');
+  let allCoinsAssets = allCoinsAssetsResponse.filter(c => c.type !== LONG_SUI_COIN_TYPE && c.type !== SHORT_SUI_COIN_TYPE);
+  const suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE || c.type === SHORT_SUI_COIN_TYPE);
+  if(suiAsset) {
+    ctx.session.suiAsset = suiAsset;
   }
-  ctx.session.suiAsset = suiAsset;
-  ctx.session.assets = allCoinsAssets;
+  ctx.session.assets = allCoinsAssets || [];
   let data: PriceApiPayload = { data: [] }
   allCoinsAssets.forEach(coin => {
     //move to price api
@@ -516,7 +515,7 @@ export async function refreshAssets(ctx: BotContext) {
       }));
     ctx.session.assets = allCoinsAssets;
   } catch (error) {
-    console.error(error)
+    console.error("ERROR during postPriceApi", error);
   }
   return {suiAsset, allCoinsAssets};
 }
@@ -603,7 +602,7 @@ export async function home(ctx: BotContext) {
         }));
       ctx.session.assets = allCoinsAssets;
     } catch (error) {
-      console.error(error);
+      console.error("ERROR during postPriceApi", error);
     }
 
     if (allCoinsAssets?.length === 0) {
@@ -629,7 +628,7 @@ export async function home(ctx: BotContext) {
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
   } catch (e) {
-    console.error(e);
+    console.error("ERROR during position overview calculation", e);
     positionOverview = '';
   }
 

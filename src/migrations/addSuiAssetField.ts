@@ -1,5 +1,4 @@
 import { CoinAssetData, LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
-import { isCoinAssetData } from '../chains/utils';
 
 export function addSuiAssetField(old: {
   step:
