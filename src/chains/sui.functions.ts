@@ -502,7 +502,6 @@ export async function refreshAssets(ctx: BotContext) {
   if(suiAsset) {
     ctx.session.suiAsset = suiAsset;
   }
-  ctx.session.assets = allCoinsAssets;
   let data: PriceApiPayload = { data: [] }
   allCoinsAssets.forEach(coin => {
     //move to price api
@@ -525,9 +524,10 @@ export async function refreshAssets(ctx: BotContext) {
     suiAsset.mcap = lastPriceApiResponseItem?.mcap || 0;
     suiAsset.priceChange1h = lastPriceApiResponseItem?.priceChange1h || 0;
     suiAsset.priceChange24h = lastPriceApiResponseItem?.priceChange24h || 0;
-    ctx.session.assets = allCoinsAssets;
   } catch (error) {
     console.error("ERROR during postPriceApi", error);
+  }finally {
+    ctx.session.assets = allCoinsAssets;
   }
   return {suiAsset, allCoinsAssets};
 }
@@ -1265,7 +1265,7 @@ export async function createAftermathPool(
 
         return createLpCoinTransaction;
       } catch (error) {
-        console.error(error);
+        console.error("Error calling AftermathSingleton.getCreateLpCoinTransaction", error);
 
         if (error instanceof Error) {
           console.error(
