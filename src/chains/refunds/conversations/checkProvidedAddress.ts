@@ -195,7 +195,9 @@ export async function checkProvidedAddress(
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
         `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
-        `${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
+        `${boostedClaimCap}</code>`+
+        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
+        `\n\nFeel free to ask our support for help!`,
       { reply_markup: goHome, parse_mode: 'HTML' },
     );
 
@@ -347,7 +349,9 @@ export async function checkProvidedAddress(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>!\n\n` +
         `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
         `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n` +
-        `<code>${boostedClaimCap}</code>\n\nFeel free to ask our support for help!`,
+        `<code>${boostedClaimCap}</code>\n\n` +
+        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
+        `Feel free to ask our support for help!`,
       {
         reply_markup: goHome,
         parse_mode: 'HTML',
