@@ -17,14 +17,11 @@ import {
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction
+  transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  WELCOME_BONUS_AMOUNT,
-  WELCOME_BONUS_MIN_TRADES_LIMIT,
-} from '../config/bot.config';
+import { imgs } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -35,7 +32,12 @@ import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nft_menu } from '../menu/nft';
 import positions_menu from '../menu/positions';
-import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
+import {
+  BotContext,
+  CoinAssetDataExtended,
+  MyConversation,
+  PriceApiPayload,
+} from '../types';
 import { ConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
@@ -183,66 +185,45 @@ export const getRouteManager = async () => {
   return routerManager;
 };
 
-export async function exportPrivateKey(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
-  } = ctx.session;
-  const isUserNotEligibleToExportPrivateKey =
-    isUserAgreeWithBonus &&
-    isUserClaimedBonus &&
-    tradesCount < WELCOME_BONUS_MIN_TRADES_LIMIT;
-
-  if (isUserNotEligibleToExportPrivateKey) {
-    await ctx.reply(
-      `🔐 Oops! It seems you're eager to export your private key. \nTo maintain the security of your assets and adhere to our bonus policy, you can only export your private key after completing ${WELCOME_BONUS_MIN_TRADES_LIMIT} trades. \n\nKeep trading to unlock this feature and secure your gains! \nHappy trading! 📈`,
-      { reply_markup: goHome },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Are you sure want to export private key? Please type <code>CONFIRM</code> if yes.`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
-  const messageData = await conversation.waitFor(':text');
-  const isExportConfirmed = messageData.msg.text === 'CONFIRM';
-
-  if (!isExportConfirmed) {
-    await ctx.reply(
-      `You've not typed CONFIRM. Ignoring your request of exporting private key.`,
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
-  await ctx.reply(
-    `Your private key is: <span class="tg-spoiler">${ctx.session.privateKey}</span>\n\nYou can now i.e. import the key into a wallet like Suiet.\nDelete this message once you are done.`,
-    { parse_mode: 'HTML', reply_markup: goHome },
-  );
-}
-
 export async function withdraw(
   conversation: MyConversation,
   ctx: BotContext,
 ): Promise<void> {
   const {
-    welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
-    tradesCount,
-  } = ctx.session;
+    welcomeBonus: {
+      isUserAgreeWithBonus,
+      isUserClaimedBonus,
+      amount: welcomeBonusAmount,
+    },
+    refund: { claimedBoostedRefund, boostedRefundAmount },
+  } = conversation.session;
   const isUserUsedWelcomeBonus = isUserAgreeWithBonus && isUserClaimedBonus;
 
-  if (isUserUsedWelcomeBonus) {
+  let nonWithdrawableAmountString = '';
+
+  if (claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount and ` +
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `are non-withdrawable.`;
+  } else if (!claimedBoostedRefund && isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the initial <code>${welcomeBonusAmount}</code> <b>SUI</b> bonus ` +
+      `is non-withdrawable.`;
+  } else if (claimedBoostedRefund && !isUserUsedWelcomeBonus) {
+    nonWithdrawableAmountString =
+      `the boosted <code>${boostedRefundAmount}</code> <b>SUI</b> refund amount ` +
+      `is non-withdrawable.`;
+  }
+
+  if (claimedBoostedRefund || isUserUsedWelcomeBonus) {
     await ctx.reply(
-      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nBut hey, the profits you make from trading? Those are yours to take! \nKeep growing that portfolio and enjoy the fruits of your trading strategies. \nHappy profiting! 🌈🚀`,
+      `💸 Hold on! Before you go withdrawing, a quick heads up. \n\nWhile you can deposit and trade more SUI, ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `But hey, the profits you make from trading? Those are yours to take!\n` +
+        `Keep growing that portfolio and enjoy the fruits of your trading strategies.\n` +
+        `Happy profiting! 🌈🚀`,
+      { parse_mode: 'HTML' },
     );
   }
 
@@ -287,20 +268,38 @@ export async function withdraw(
     return;
   }
 
-  const walletManager = await getWalletManager();
-  let { availableAmount, totalGasFee } =
-    await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
+  let { availableAmount, totalGasFee } = await conversation.external(
+    async () => {
+      const walletManager = await getWalletManager();
+      return await walletManager.getAvailableWithdrawSuiAmount(
+        ctx.session.publicKey,
+      );
+    },
+  );
 
-  // Decrease available amount in case user participate in the welcome bonus program
-  availableAmount = isUserUsedWelcomeBonus
-    ? (parseFloat(availableAmount) - WELCOME_BONUS_AMOUNT).toString()
-    : availableAmount;
+  let nonWithdrawableAmount = new BigNumber(0);
+
+  if (isUserUsedWelcomeBonus) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(welcomeBonusAmount);
+  }
+  if (claimedBoostedRefund && boostedRefundAmount !== null) {
+    nonWithdrawableAmount = nonWithdrawableAmount.plus(boostedRefundAmount);
+  }
+
+  // Decrease available amount with non-withdrawable amount (welcome bonus or/and boosted refund)
+  availableAmount = new BigNumber(availableAmount)
+    .minus(nonWithdrawableAmount)
+    .toString();
 
   // There is no sense to allow user reply with amount in case it's 0 or less than 0
   if (parseFloat(availableAmount) <= 0) {
     await ctx.reply(
-      `⚠️ Heads up! Your available balance is currently ${conversation.session.welcomeBonus.amount} SUI or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that the initial ${conversation.session.welcomeBonus.amount} SUI bonus is non-withdrawable. \n\nTrade strategically to build up your balance, and soon you'll be able to withdraw those well-earned profits. \nStay focused on your trading goals! 📊💼`,
-      { reply_markup: goHome },
+      `⚠️ Heads up! Your available balance is currently <code>${nonWithdrawableAmount}</code> <b>SUI</b> ` +
+        `or less. \n\nAt the moment, there are no funds available for withdrawal. Keep in mind that ` +
+        `${nonWithdrawableAmountString}\n\n` +
+        `Trade strategically to build up your balance, and soon you'll be able to withdraw those ` +
+        `well-earned profits. \nStay focused on your trading goals! 📊💼`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
     );
 
     return;
@@ -429,7 +428,7 @@ export async function availableBalance(ctx: BotContext): Promise<string> {
   const availableBalance = await walletManager.getAvailableSuiBalance(
     ctx.session.publicKey,
   );
-  return availableBalance
+  return availableBalance;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
@@ -457,7 +456,10 @@ export async function assets(ctx: BotContext): Promise<void> {
     const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
     if (isCoinAssetDataExtended(currentToken)) {
-      priceApiDataStr = calculate(currentToken.balance, currentToken.price) !== null ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + " " + currentToken.symbol + " / " + calculate(currentToken.balance, currentToken.price) + " USD"}</b>${currentToken.mcap === 0 ? '' : "\nMcap: <b>" + calculate("1", currentToken.mcap) + " USD</b>"}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : "\n1h: <b>" + (currentToken.priceChange1h! > 0 ? "+" + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + "%</b>"} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : " 24h: <b>" + (currentToken.priceChange24h! > 0 ? "+" + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + "%</b>"}` : ``;
+      priceApiDataStr =
+        calculate(currentToken.balance, currentToken.price) !== null
+          ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + ' ' + currentToken.symbol + ' / ' + calculate(currentToken.balance, currentToken.price) + ' USD'}</b>${currentToken.mcap === 0 ? '' : '\nMcap: <b>' + calculate('1', currentToken.mcap) + ' USD</b>'}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : '\n1h: <b>' + (currentToken.priceChange1h! > 0 ? '+' + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + '%</b>'} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : ' 24h: <b>' + (currentToken.priceChange24h! > 0 ? '+' + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + '%</b>'}`
+          : ``;
     } else {
       priceApiDataStr = '';
     }
@@ -475,7 +477,7 @@ export async function assets(ctx: BotContext): Promise<void> {
   }
 }
 
-export function generateWallet(): any {
+export function generateWallet() {
   return WalletManagerSingleton.generateWallet();
 }
 
@@ -526,14 +528,20 @@ export async function home(ctx: BotContext) {
   let positionOverview: string;
 
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI')
-    price = priceApiGetResponse?.data.data.price
+    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
+    price = priceApiGetResponse?.data.data.price;
   } catch (error) {
-    console.error(error)
-    price = undefined
+    if (error instanceof Error) {
+      console.error('[home] Price API error:', error.message)
+    } else {
+      console.error('[home] Price API error: unknown error')
+    }
+
+    price = undefined;
   }
-  const balance_usd = calculate(userBalance, price)
-  const avl_balance_usd = calculate(avl_balance, price)
+
+  const balance_usd = calculate(userBalance, price);
+  const avl_balance_usd = calculate(avl_balance, price);
 
   let totalBalanceStr: string;
 
@@ -542,14 +550,16 @@ export async function home(ctx: BotContext) {
     const {allCoinsAssets, suiAsset} = await refreshAssets(ctx);
     [...allCoinsAssets, suiAsset].forEach(coin => {
       //move to price api
-      data.data.push({ chainId: "sui", tokenAddress: coin.type })
-    })
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
 
     const response = await postPriceApi([...allCoinsAssets, suiAsset]);
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(coinsPriceApi!.map(coin => [coin.tokenAddress, coin.price]));
+    const priceMap = new Map(
+      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
+    );
 
     let balance = 0;
     [...allCoinsAssets, suiAsset].forEach(coin => {
@@ -558,51 +568,84 @@ export async function home(ctx: BotContext) {
         balance += +coin.balance * price;
       }
     });
-
-    totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
-
+    if (balance === 0) {
+      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    }
+    else {
+      totalBalanceStr = ''
+    }
   } catch (error) {
-    console.error('Error in calculating total balance: ', error)
-    totalBalanceStr = ``
+    console.error('Error in calculating total balance: ', error);
+    totalBalanceStr = ``;
   }
 
   try {
-    const {allCoinsAssets} = await refreshAssets(ctx);
+    const walletManager = await getWalletManager();
+    let allCoinsAssets: CoinAssetDataExtended[] =
+      await walletManager.getAllCoinAssets(ctx.session.publicKey);
+
+    ctx.session.assets = allCoinsAssets;
+    let data: PriceApiPayload = { data: [] };
+    allCoinsAssets.forEach((coin) => {
+      //move to price api
+      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
+    });
+    try {
+      const priceApiReponse = await postPriceApi(allCoinsAssets);
+      if (priceApiReponse !== undefined)
+        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
+          ...coin,
+          price: priceApiReponse.data.data[index].price,
+          timestamp: Date.now(),
+          mcap: priceApiReponse.data.data[index].mcap || 0,
+          priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
+          priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0,
+        }));
+      ctx.session.assets = allCoinsAssets;
+    } catch (error) {
+      console.error(error);
+    }
+
     if (allCoinsAssets?.length === 0) {
-      positionOverview = `You don't have tokens yet.`
+      positionOverview = `Your have no tokens yet.`;
     }
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {
       if (index > 4) {
-        assetsString += `<i>Please note: Only 5 positions are shown here. To view all your positions, please go to the <b>Sell and Manage</b> menu.</i>\n\n`
+        assetsString += `<i>Please note: Only 5 positions are shown here. To view all your positions, please go to the <b>Sell and Manage</b> menu.</i>\n\n`;
         break;
       }
       const token = allCoinsAssets[index];
       let priceApiDataStr: string;
       if (isCoinAssetDataExtended(token)) {
-        priceApiDataStr = formatTokenInfo(token)
+        priceApiDataStr = formatTokenInfo(token);
       } else {
         priceApiDataStr = '';
       }
 
-      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`;
+      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
+
+      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
   } catch (e) {
-    console.error(e)
-    positionOverview = ''
-  }
-  try {
-    const balanceSUIdStr = balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`
-    const avlBalanceSUIdStr = avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`
-    const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-    await ctx.replyWithPhoto(
-      'https://pbs.twimg.com/media/GF5lAl9WkAAOEus?format=jpg',
-      { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
-    );
-  }catch(e) {
     console.error(e);
+    positionOverview = '';
   }
+
+  const balanceSUIdStr =
+    balance_usd !== null
+      ? `<b>${userBalance} SUI / ${balance_usd} USD</b>`
+      : `<b>${userBalance} SUI</b>`;
+  const avlBalanceSUIdStr =
+    avl_balance_usd !== null
+      ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
+      : `<b>${avl_balance} SUI</b>`;
+
+  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)],
+    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
+  );
 }
 
 export async function nftHome(ctx: BotContext) {
@@ -624,11 +667,11 @@ export async function createAftermathPool(
 
   await ctx.reply(
     '<b>Note</b>: Currently, the Aftermath routing algorithm <b><i>indexes</i></b> pools with at least 1,000 SUI ' +
-    'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
-    'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
-    'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
-    'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
-    'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
+      'deposited into the pool (e.g., you create a pool with your COIN/SUI). This means that if you plan to ' +
+      'create a pool using Aftermath, you should consider depositing at least 1,000 SUI to be able to use your ' +
+      'pool for trading, such as conducting swaps.\n\nThis limitation is imposed by Aftermath and cannot be ' +
+      'bypassed. Therefore, you may want to explore alternatives, such as creating your own pool using Cetus, ' +
+      'or depositing 1,000 SUI to <b><i>enable</i></b> trading on your own pool.',
     { reply_markup: continueWithCloseKeyboard, parse_mode: 'HTML' },
   );
 
@@ -924,11 +967,11 @@ export async function createAftermathPool(
       if (foundCoin.balance < minAmountB) {
         await ctx.reply(
           'You have too small balance of this coin to add it to the pool relative to the amount ' +
-          `of the first coin you specified.\n\nTo create a pool with <code>${firstValidatedInputAmount}</code> ` +
-          `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type} and ` +
-          `${foundCoin.symbol || foundCoin.type}, you need at least <code>${minAmountB}</code> ` +
-          `${foundCoin.symbol || foundCoin.type}.\n\nPlease, specify another coin to add in pool or top up your ` +
-          `${foundCoin.symbol || foundCoin.type} balance.`,
+            `of the first coin you specified.\n\nTo create a pool with <code>${firstValidatedInputAmount}</code> ` +
+            `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type} and ` +
+            `${foundCoin.symbol || foundCoin.type}, you need at least <code>${minAmountB}</code> ` +
+            `${foundCoin.symbol || foundCoin.type}.\n\nPlease, specify another coin to add in pool or top up your ` +
+            `${foundCoin.symbol || foundCoin.type} balance.`,
           { reply_markup: closeConversation, parse_mode: 'HTML' },
         );
 
@@ -987,7 +1030,7 @@ export async function createAftermathPool(
     resultSecondCoinMinAmount = secondCoinMinAmount;
     resultSecondCoinMaxAmount =
       new BigNumber(availableSecondCoinMaxAmount) <
-        new BigNumber(secondCoinMaxAmount)
+      new BigNumber(secondCoinMaxAmount)
         ? availableSecondCoinMaxAmount
         : secondCoinMaxAmount;
   } else {
@@ -1560,7 +1603,7 @@ export async function createCoin(
   if (new BigNumber(suiBalance) < new BigNumber(1)) {
     await ctx.reply(
       'Please, top up your <b>SUI</b> balance. You need at least <code>1</code> ' +
-      '<b>SUI</b> to create a coin.',
+        '<b>SUI</b> to create a coin.',
       { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
@@ -1569,7 +1612,7 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin name</b>?\n\nExample: <code>My Awesome Coin</code>\n\n<span class="tg-spoiler">' +
-    '<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>',
+      '<b>Hint</b>: Coin name is a metadata info, which represents the name of your coin on SUI explorers.</span>',
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1604,9 +1647,9 @@ export async function createCoin(
 
   await ctx.reply(
     'What would be a <b>coin symbol</b>?\n\nExample: <code>MY_AWESOME_COIN</code>, or just <code>AWESOME</code>\n\n<span class="tg-spoiler">' +
-    '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
-    '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
-    '<u>AWESOME</u> here is the coin symbol.</span>',
+      '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
+      '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
+      '<u>AWESOME</u> here is the coin symbol.</span>',
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1693,8 +1736,8 @@ export async function createCoin(
 
   await ctx.reply(
     'Send a <b>coin image</b>.\n\n<b>Suggestions</b>:\n1. The coin image should be ' +
-    'square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your ' +
-    'image does not exceed the size of 320x320 pixels, no quality changes will occur.',
+      'square (<b>height = width</b>).\n2. <b>Use Telegram Image Compression</b>. If your ' +
+      'image does not exceed the size of 320x320 pixels, no quality changes will occur.',
     {
       reply_markup: closeWithSkipReplyMarkup,
       parse_mode: 'HTML',
@@ -1715,8 +1758,8 @@ export async function createCoin(
     if (imagesData === undefined) {
       await ctx.reply(
         'Invalid coin image. Please, send another image.\n\n<span class="tg-spoiler"><b>Hint</b>: If you are ' +
-        'sending an image as a file (without compression), consider sending it with compression. If your ' +
-        'image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>',
+          'sending an image as a file (without compression), consider sending it with compression. If your ' +
+          'image does not exceed the size of 320x320 pixels, no quality changes will occur.</span>',
         {
           reply_markup: closeWithSkipReplyMarkup,
           parse_mode: 'HTML',
@@ -1783,13 +1826,13 @@ export async function createCoin(
 
   await ctx.reply(
     'Enter <b>coin decimals</b>.\n\n<b>Default</b>: <code>9</code>\n' +
-    '<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n' +
-    '<span class="tg-spoiler"><b>Hint</b>: If you don\'t ' +
-    'know what to enter, just skip this step.</span>\n\n' +
-    '<span class="tg-spoiler">You should be aware, that the higher coin decimals you\'ll choose, the less total ' +
-    'supply you can use.\n\n' +
-    '<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals ' +
-    '&#8213; 999,999,999 total supply</span>',
+      '<b>Note</b>: Valid range for decimals is between <code>0</code> and <code>11</code>\n\n' +
+      '<span class="tg-spoiler"><b>Hint</b>: If you don\'t ' +
+      'know what to enter, just skip this step.</span>\n\n' +
+      '<span class="tg-spoiler">You should be aware, that the higher coin decimals you\'ll choose, the less total ' +
+      'supply you can use.\n\n' +
+      '<b>Example</b>:\n11 decimals &#8213; 99,999,999 total supply\n10 decimals ' +
+      '&#8213; 999,999,999 total supply</span>',
     { parse_mode: 'HTML', reply_markup: closeWithSkipReplyMarkup },
   );
 
@@ -1835,8 +1878,8 @@ export async function createCoin(
 
   await ctx.reply(
     'Enter <b>total supply</b>.\n\n<b>Example</b>: <code>1000000</code>\n\n' +
-    '<b>Hint</b>: Max total supply for selected decimals ' +
-    `(<code>${coinDecimals}</code>) is <code>${maxTotalSupply}</code>`,
+      '<b>Hint</b>: Max total supply for selected decimals ' +
+      `(<code>${coinDecimals}</code>) is <code>${maxTotalSupply}</code>`,
     { parse_mode: 'HTML', reply_markup: closeConversation },
   );
 
@@ -1879,7 +1922,7 @@ export async function createCoin(
   const yesOrNoWithCancelReplyMarkup = yesOrNo.clone().add(...closeButton);
   await ctx.reply(
     'Would supply be <b>fixed</b>?\n\n<span class="tg-spoiler"><b>Hint</b>:\nYes &#8213; Treasury Cap ' +
-    'will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>',
+      'will be sent to the burn address (0x0 address).\nNo &#8213; Treasury Cap will be sent to you.</span>',
     { parse_mode: 'HTML', reply_markup: yesOrNoWithCancelReplyMarkup },
   );
 

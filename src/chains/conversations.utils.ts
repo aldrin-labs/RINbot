@@ -17,7 +17,11 @@ import { isTransactionSuccessful } from './utils';
 export async function getTransactionFromMethod<
   T extends (
     params: Parameters<T>[0],
-  ) => Promise<TransactionBlock> | GetTransactionType,
+  ) =>
+    | Promise<TransactionBlock>
+    | TransactionBlock
+    | GetTransactionType
+    | Awaited<GetTransactionType>,
 >({
   conversation,
   ctx,
@@ -156,7 +160,7 @@ export async function signAndExecuteTransaction({
   conversation: MyConversation;
   ctx: BotContext;
   transaction: TransactionBlock;
-  signerPrivateKey?: string,
+  signerPrivateKey?: string;
 }): Promise<{
   digest?: string;
   result: TransactionResultStatus;
@@ -170,9 +174,8 @@ export async function signAndExecuteTransaction({
     try {
       const res = await provider.signAndExecuteTransactionBlock({
         transactionBlock: transaction,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          signerPrivateKey,
-        ),
+        signer:
+          WalletManagerSingleton.getKeyPairFromPrivateKey(signerPrivateKey),
         options: {
           showEffects: true,
         },

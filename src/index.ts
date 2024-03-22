@@ -16,14 +16,18 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { checkCurrentWallet } from './chains/refunds/conversations/checkCurrentWallet';
+import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
+import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import {
   createAftermathPool,
   createCoin,
-  exportPrivateKey,
   generateWallet,
   home,
   withdraw,
 } from './chains/sui.functions';
+import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
+import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import {
   BOT_TOKEN,
@@ -34,6 +38,7 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
@@ -48,7 +53,7 @@ function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
 }
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '3.0.0';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -77,7 +82,7 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false
           },
-          settings: { slippagePercentage: 20 },
+          settings: { slippagePercentage: DEFAULT_SLIPPAGE },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -94,6 +99,9 @@ async function startBot(): Promise<void> {
           },
           refund: {
             claimedBoostedRefund: false,
+            walletBeforeBoostedRefundClaim: null,
+            boostedRefundAmount: null,
+            boostedRefundAccount: null,
           },
         };
       },
@@ -104,6 +112,7 @@ async function startBot(): Promise<void> {
           2: enlargeDefaultSlippage,
           3: addTradeCoin,
           4: addBoostedRefund,
+          5: addRefundFields,
         },
       }),
     }),
@@ -153,10 +162,24 @@ async function startBot(): Promise<void> {
       id: ConversationId.WelcomeBonus,
     }),
   );
+  composer.use(
+    createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
+  );
+  composer.use(
+    createConversation(checkCurrentWallet, {
+      id: ConversationId.CheckCurrentWalletForRefund,
+    }),
+  );
+  composer.use(
+    createConversation(checkProvidedAddress, {
+      id: ConversationId.CheckProvidedAddressForRefund,
+    }),
+  );
 
   bot.errorBoundary(errorBoundaryHandler).use(composer);
   bot.use(menu);
 
+  // TODO: Move these `command` calls to separated file like with `useCallbackQueries`
   bot.command('version', async (ctx) => {
     await ctx.reply(`Version ${APP_VERSION}`);
   });
@@ -205,6 +228,10 @@ async function startBot(): Promise<void> {
     await ctx.conversation.exit();
   });
 
+  bot.command('importnewwallet', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -230,10 +257,12 @@ async function startBot(): Promise<void> {
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
+    { command: 'importnewwallet', description: 'Import new wallet' },
   ]);
 
   useCallbackQueries(bot);
 
+  // TODO: Move this to `useCallbackQueries`
   bot.callbackQuery('add-cetus-liquidity', async (ctx) => {
     await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
     await ctx.answerCallbackQuery();
