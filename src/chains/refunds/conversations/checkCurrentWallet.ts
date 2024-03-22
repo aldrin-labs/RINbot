@@ -25,7 +25,7 @@ export async function checkCurrentWallet(
     .add(...closeButtons);
 
   const checkingMessage = await ctx.reply(
-    '<b>Checking your current wallet address, it may take some time....</b>',
+    '<b>Checking your current account address. This may take some time...</b>',
     {
       parse_mode: 'HTML',
     },
