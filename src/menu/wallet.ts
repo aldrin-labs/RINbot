@@ -1,14 +1,13 @@
 import { Menu } from '@grammyjs/menu';
 import { getExplorerLink } from '../chains/sui.functions';
 import { BotContext } from '../types';
+import { ConversationId } from '../chains/conversations.config';
 
 const wallet_menu = new Menu<BotContext>('wallet-menu')
   .dynamic(async (ctx, range) => {
     range.url('View in explorer', getExplorerLink(ctx));
   })
-  .back('Home', (ctx) => {
-    ctx.session.step = 'main';
-  })
+  .back('Home')
   .row()
   .text('Deposit', async (ctx) => {
     await ctx.reply(
@@ -18,13 +17,15 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
       },
     );
   })
-  .text('Withdraw X amount', async (ctx: any) => {
-    ctx.session.step = 'wallet-withdraw';
-    await ctx.conversation.enter('withdraw');
+  .text('Withdraw X amount', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.Withdraw);
   })
   .row()
-  .text('Export private key', async (ctx: BotContext) => {
-    await ctx.conversation.enter('exportPrivateKey');
+  .text('Export Private Key', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
+  })
+  .text('Import New Wallet', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.ImportNewWallet);
   })
   .row();
 

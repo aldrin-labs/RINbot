@@ -15,10 +15,12 @@ import { nft_exit_menu, nft_menu } from './nft';
 import poolsMenu from './pools';
 import positions_menu from './positions';
 import refer_menu from './refer';
+import refundsMenu from './refunds';
 import settings_menu from './settings';
 import wallet_menu from './wallet';
 import deposit_menu from './wallet_deposit';
 import withdraw_menu from './wallet_withdraw';
+import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -39,10 +41,6 @@ const menu = new Menu<BotContext>('main')
     ctx.session.step = 'nft-menu';
     await nftHome(ctx);
   })
-  //await ctx.reply('This feature will be implemented soon, please follow <a href="https://twitter.com/aldrin_labs">@aldrin_labs</a> to stay tunes', {parse_mode: "HTML", link_preview_options: {is_disabled: true},
-  //reply_markup: nft_menu})})
-  //.text("Refer friends", (ctx) => ctx.menu.nav("refer-menu"))
-  //.text("Alerts", (ctx) => ctx.menu.nav("alerts-menu")).row()
   .text('Wallet', async (ctx) => {
     ctx.session.step = 'wallet';
     ctx.menu.nav('wallet-menu');
@@ -68,13 +66,14 @@ const menu = new Menu<BotContext>('main')
       { parse_mode: 'HTML', reply_markup: goHome },
     );
   })
-  // .row()
-  // .text('Aldrin Bridge')
   .text('Fees', async (ctx) => {
     await showFeesPage(ctx);
   })
   .row()
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
+  .text('Refunds', async (ctx) => {
+    await showRefundsPage(ctx);
+  })
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const {
       isUserEligibleToGetBonus,
@@ -108,5 +107,6 @@ menu.register(withdraw_menu, 'wallet-menu');
 menu.register(poolsMenu);
 menu.register(launchpadMenu);
 menu.register(feesMenu);
+menu.register(refundsMenu);
 
 export default menu;

@@ -246,7 +246,7 @@ async function instantSell(
 ): Promise<void> {
 
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantSell];
-  await ctx.reply('Initiating swap...');
+  await ctx.reply('Finding the best route to save your money… ☺️');
 
   const tx = await conversation.external({
     task: async () => {
@@ -302,14 +302,14 @@ async function instantSell(
   });
 
   if (!tx) {
-    await ctx.reply('Transaction creation failed', {
+    await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
 
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
 
   const resultOfSwap: {
     digest?: string;
@@ -352,7 +352,7 @@ async function instantSell(
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap successful ✅\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
@@ -363,12 +363,12 @@ async function instantSell(
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap failed ❌\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
     return;
   }
 
-  await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed. ❌', { reply_markup: retryButton });
 }

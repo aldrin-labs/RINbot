@@ -1,4 +1,5 @@
 import {
+  FeeManager,
   LONG_SUI_COIN_TYPE,
   RouteManager,
   SHORT_SUI_COIN_TYPE,
@@ -173,7 +174,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    await ctx.reply('Initiating swap...' + random_uuid);
+    await ctx.reply('Finding the best route to save your money… ☺️' + random_uuid);
 
     validatedInputAmount = inputAmount;
     return true;
@@ -199,7 +200,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
 
   const {tradeAmount, tradeCoin: {coinType: resCoinType}} = ctx.session;
   
-  const feeAmount = RouteManager.calculateFeeAmountIn({
+  const feeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
     amount: tradeAmount,
     tokenDecimals: SUI_DECIMALS,
@@ -265,14 +266,14 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
   });
 
   if (!tx) {
-    await ctx.reply('Transaction creation failed.', {
+    await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
 
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction...' + random_uuid);
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
 
   const resultOfSwap = await conversation.external(async () => {
     try {
@@ -310,7 +311,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful!\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap successful ✅\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
@@ -321,12 +322,12 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap failed ❌\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
       { reply_markup: retryButton },
     );
 
     return;
   }
 
-  await ctx.reply('Transaction sending failed.', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed ❌', { reply_markup: retryButton });
 }
