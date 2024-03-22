@@ -35,7 +35,7 @@ export async function claimBaseRefund({
 
   if (transaction === undefined) {
     await ctx.reply(
-      'Failed to create transaction for <b>base refund</b>. Please, try again or contact support.',
+      'Failed to create transaction for <b>base refund</b>. Please, try again or reach out to us.',
       { reply_markup: retryButton, parse_mode: 'HTML' },
     );
 
@@ -132,7 +132,7 @@ export async function claimBoostedRefund({
 
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
-      'This is not secure to continue because of failed store process. ' +
+      "It's not safe to continue due to the failed backup account process. " +
         'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
@@ -160,7 +160,7 @@ export async function claimBoostedRefund({
 
   if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
-      'This is not secure to continue because of failed backup process. ' +
+      "It's not safe to continue due to the failed backup account process. " +
         'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
@@ -173,7 +173,7 @@ export async function claimBoostedRefund({
 
   if (conversation.session.refund.boostedRefundAccount === null) {
     await ctx.reply(
-      'This is not secure to continue because of unexpected case of dialog scenario. ' +
+      "It's not safe to continue because of unexpected case of dialog scenario. " +
         'Please, try again later or contact support.',
       { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
     );
