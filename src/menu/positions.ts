@@ -27,8 +27,11 @@ async function updateMessage(ctx: BotContext) {
       netWorth += +coin.balance * coin.price;
     }
   });
-
-  const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+  let totalNetWorth;
+  if (netWorth === 0)
+    totalNetWorth = ''
+  else
+    totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
   let priceApiDataStr: string;
   if (isCoinAssetDataExtended(currentToken)) {
     priceApiDataStr = formatTokenInfo(currentToken)
@@ -156,7 +159,11 @@ const positions_menu = new Menu<BotContext>('positions-menu')
         await updateMessage(ctx)
       }
     } catch (error) {
-      console.error(error)
+      if (error instanceof Error) {
+        console.error('[Refresh] Price API error:', error.message)
+      } else {
+        console.error('[Refresh] Price API error: unknown error')
+      }
     }
 
   })

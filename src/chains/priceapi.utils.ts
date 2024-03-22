@@ -43,14 +43,14 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
 
         const startTime = Date.now();
 
-        const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data)
+        const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data, { timeout: 300 })
 
         const endTime = Date.now();
         const requestTime = endTime - startTime;
         console.log(`Price API post response time: ${requestTime}ms`);
         return response
     } catch (error) {
-        console.error('Price API error: ', error);
+        // console.error('Price API error: ', error);
         return undefined
     }
 }
@@ -59,6 +59,7 @@ export async function getPriceApi(chainId: string, tokenAddress: string) {
     try {
         const startTime = Date.now();
         const response = await axios.get<AxiosPriceApiResponseGet>(`${PRICE_API_URL}/api/assets`, {
+            timeout: 300,
             params: {
                 chainId,
                 tokenAddress
@@ -69,7 +70,11 @@ export async function getPriceApi(chainId: string, tokenAddress: string) {
         console.log(`Price API get response time: ${requestTime}ms`);
         return response
     } catch (error) {
-        console.error('Price API error: ', error);
+        if (error instanceof Error) {
+            console.error('Price API error:', error.message)
+        } else {
+            console.error('Price API error: unknown error')
+        }
         return undefined
     }
 }
