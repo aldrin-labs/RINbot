@@ -329,7 +329,8 @@ export async function claimBoostedRefund({
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
-      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,
+      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n`+
+      `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
       {
         reply_markup: assetsWithHomeKeyboard,
         parse_mode: 'HTML',
