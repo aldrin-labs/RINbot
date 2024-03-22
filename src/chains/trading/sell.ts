@@ -153,7 +153,6 @@ async function handleInputAmount(ctx: BotContext, conversation: MyConversation, 
 
       return false;
     }
-    console.log('INPUT AMOUNT', inputAmount);
     result = inputAmount;
     return true;
   });

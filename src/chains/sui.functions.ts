@@ -492,18 +492,24 @@ export async function refreshAssets(ctx: BotContext) {
   );
 
   let allCoinsAssets = allCoinsAssetsResponse.filter(c => c.type !== LONG_SUI_COIN_TYPE && c.type !== SHORT_SUI_COIN_TYPE);
-  const suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE || c.type === SHORT_SUI_COIN_TYPE);
+  const suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE || c.type === SHORT_SUI_COIN_TYPE) || {
+    type: LONG_SUI_COIN_TYPE,
+    symbol: 'SUI',
+    balance: '0',
+    decimals: 9,
+    noDecimals: false
+  };
   if(suiAsset) {
     ctx.session.suiAsset = suiAsset;
   }
-  ctx.session.assets = allCoinsAssets || [];
+  ctx.session.assets = allCoinsAssets;
   let data: PriceApiPayload = { data: [] }
   allCoinsAssets.forEach(coin => {
     //move to price api
     data.data.push({ chainId: "sui", tokenAddress: coin.type })
   })
   try {
-    const priceApiReponse = await postPriceApi(allCoinsAssets)
+    const priceApiReponse = await postPriceApi([...allCoinsAssets, suiAsset]);
     if (priceApiReponse !== undefined)
       allCoinsAssets = allCoinsAssets.map((coin, index) => ({
         ...coin,
@@ -513,6 +519,12 @@ export async function refreshAssets(ctx: BotContext) {
         priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
         priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0
       }));
+    const lastPriceApiResponseItem = priceApiReponse?.data.data[priceApiReponse.data.data.length - 1];
+    suiAsset.price = lastPriceApiResponseItem?.price;
+    suiAsset.timestamp = Date.now();
+    suiAsset.mcap = lastPriceApiResponseItem?.mcap || 0;
+    suiAsset.priceChange1h = lastPriceApiResponseItem?.priceChange1h || 0;
+    suiAsset.priceChange24h = lastPriceApiResponseItem?.priceChange24h || 0;
     ctx.session.assets = allCoinsAssets;
   } catch (error) {
     console.error("ERROR during postPriceApi", error);
@@ -524,7 +536,7 @@ export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
   const avl_balance = await availableBalance(ctx);
   let price;
-  let positionOverview: string;
+  let positionOverview = '';
 
   try {
     const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
@@ -545,66 +557,22 @@ export async function home(ctx: BotContext) {
   let totalBalanceStr: string;
 
   try {
-    const data: PriceApiPayload = { data: [] }
     const {allCoinsAssets, suiAsset} = await refreshAssets(ctx);
-    [...allCoinsAssets, suiAsset].forEach(coin => {
-      //move to price api
-      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
-    });
-
-    const response = await postPriceApi([...allCoinsAssets, suiAsset]);
-
-    const coinsPriceApi = response?.data.data;
-
-    const priceMap = new Map(
-      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
-    );
 
     let balance = 0;
     [...allCoinsAssets, suiAsset].forEach(coin => {
-      const price = priceMap.get(coin.type);
+      const price = coin.price;
       if (price !== undefined) {
         balance += +coin.balance * price;
       }
     });
+
     if (balance === 0) {
       totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
     }
     else {
       totalBalanceStr = ''
     }
-  } catch (error) {
-    console.error('Error in calculating total balance: ', error);
-    totalBalanceStr = ``;
-  }
-
-  try {
-    const walletManager = await getWalletManager();
-    let allCoinsAssets: CoinAssetDataExtended[] =
-      await walletManager.getAllCoinAssets(ctx.session.publicKey);
-
-    ctx.session.assets = allCoinsAssets;
-    let data: PriceApiPayload = { data: [] };
-    allCoinsAssets.forEach((coin) => {
-      //move to price api
-      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
-    });
-    try {
-      const priceApiReponse = await postPriceApi(allCoinsAssets);
-      if (priceApiReponse !== undefined)
-        allCoinsAssets = allCoinsAssets.map((coin, index) => ({
-          ...coin,
-          price: priceApiReponse.data.data[index].price,
-          timestamp: Date.now(),
-          mcap: priceApiReponse.data.data[index].mcap || 0,
-          priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
-          priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0,
-        }));
-      ctx.session.assets = allCoinsAssets;
-    } catch (error) {
-      console.error("ERROR during postPriceApi", error);
-    }
-
     if (allCoinsAssets?.length === 0) {
       positionOverview = `Your have no tokens yet.`;
     }
@@ -627,9 +595,9 @@ export async function home(ctx: BotContext) {
       assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
-  } catch (e) {
-    console.error("ERROR during position overview calculation", e);
-    positionOverview = '';
+  } catch (error) {
+    console.error('Error in calculating total balance: ', error);
+    totalBalanceStr = ``;
   }
 
   const balanceSUIdStr =
