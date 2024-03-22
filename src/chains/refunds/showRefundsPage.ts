@@ -30,27 +30,36 @@ export async function showRefundsPage(ctx: BotContext) {
   switch (currentPhase) {
     case RefundPhase.Addition:
       phaseString =
-        'We are currently adding affected accounts to our smart contract to provide refund opportunity. ' +
-        'Come back a bit later 😉';
+        'Phase 1: Address Addition\n' +
+        'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
+        'Please check back later for updates 😉';
       break;
     case RefundPhase.Funding:
       phaseString =
-        'We are currently adding funds to our smart contract to provide refund opportunity. ' +
-        'Come back a bit later 😉';
+        'Phase 2: Funding\n' +
+        'We are currently gathering funds into the smart contract to facilitate the refund process. ' +
+        'Please check back later for updates 😉';
       break;
     case RefundPhase.Claim:
-      phaseString = 'Let us check it out and come with refund ways.';
+      phaseString = 
+        'Phase 3: Claim\n' +
+        "We are now processing refund requests. If you've been affected, please proceed with your claim. " +
+        'Use the menu provided for refund options.';
       phaseMenu = refundsMenu;
       break;
     case RefundPhase.Reclaim:
       phaseString =
-        'We are sorry, but the refund promotion has already been completed. Feel free to contact our support!';
+      'Phase 4: Reclaim\n' +
+        "We regret to inform you that the refund process has concluded." + 
+        "If you have any further inquiries, please don't hesitate to contact our support team.!";
       break;
   }
 
   await ctx.replyWithPhoto(REFUND_PAGE_IMAGE_URL, {
     caption:
-      '🚨 <b>Has your account been affected by the Romas Rug Pull incident?</b> 🚨\n\n' +
+      '🚨 <b>Affected by recent $PIKKA coin pre-sale?</b> 🚨\n\n' +
+      "If you've been affected, we're here to assist you through the refund process." +
+      "Please check the current phase below for updates on how to proceed.\n\n" +
       phaseString,
     reply_markup: phaseMenu,
     parse_mode: 'HTML',
@@ -65,5 +74,8 @@ export async function showRefundsPage(ctx: BotContext) {
     );
   }
 
+  // Regardless if it's failed or not, we'll check the existance of backup account during the refund process
+  // In case if do not exists, we'll simply fail the operation and ask to try again.
+  // So it's safe to backup without any additional check
   backupCurrentAccount(ctx);
 }
