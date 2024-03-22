@@ -42,6 +42,8 @@ export async function claimBaseRefund({
     return;
   }
 
+  await ctx.reply('<b>Claiming the base refund...</b>', { parse_mode: 'HTML' });
+
   const result = await signAndExecuteTransaction({
     conversation,
     ctx,
