@@ -133,7 +133,7 @@ export async function claimBoostedRefund({
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
       'This is not secure to continue because of failed store process. ' +
-        'Please, try again later or contact support.',
+      'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
         parse_mode: 'HTML',
@@ -161,7 +161,7 @@ export async function claimBoostedRefund({
   if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
       'This is not secure to continue because of failed backup process. ' +
-        'Please, try again later or contact support.',
+      'Please, try again later or contact support.',
       {
         reply_markup: refundsKeyboard,
         parse_mode: 'HTML',
@@ -174,7 +174,7 @@ export async function claimBoostedRefund({
   if (conversation.session.refund.boostedRefundAccount === null) {
     await ctx.reply(
       'This is not secure to continue because of unexpected case of dialog scenario. ' +
-        'Please, try again later or contact support.',
+      'Please, try again later or contact support.',
       { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
     );
 
@@ -236,7 +236,7 @@ export async function claimBoostedRefund({
     ) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
-          ` the <b>boosted refund</b> claim!`,
+        ` the <b>boosted refund</b> claim!`,
         {
           parse_mode: 'HTML',
         },
@@ -247,7 +247,7 @@ export async function claimBoostedRefund({
     ) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
-          `the <b>boosted claim</b>. Please, try again or contact support.`,
+        `the <b>boosted claim</b>. Please, try again or contact support.`,
         { reply_markup: retryButton, parse_mode: 'HTML' },
       );
 
@@ -344,7 +344,7 @@ export async function claimBoostedRefund({
     result.digest !== undefined
   ) {
     await ctx.reply(
-      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>.`,
+      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..`,
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -354,7 +354,7 @@ export async function claimBoostedRefund({
     return;
   }
 
-  await ctx.reply('Failed to claim the <b>boosted refund</b>.', {
+  await ctx.reply('Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..', {
     reply_markup: retryButton,
     parse_mode: 'HTML',
   });
