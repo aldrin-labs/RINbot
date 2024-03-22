@@ -137,16 +137,14 @@ export async function checkProvidedAddress(
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.\n\n` +
+    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for your account.\n\n` +
       '✎ There are 2 ways, please choose one of them:\n\n' +
       '<b>1.</b> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
       "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
-      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b> and free to ` +
-      `withdraw/export private key.\n` +
-      `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, new secure ` +
-      `account, ability to use all ` +
-      `the features of RINbot, but you can withdraw only profit. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
-      `non-withdrawable. Also export private key feature will be disabled.\n\n` +
+      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b> ` +
+      `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, ` +
+      `but you can withdraw only profit that you've earned. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
+      `non-withdrawable.\n\n` +
       '<b>2.</b> Continue to work without importing. Only <b>Boosted Refund</b> is enabled this way. ' +
       'We will prepare boosted refund claim, but you will have to manually use github example to sign and ' +
       'execute required for refund transaction.',
