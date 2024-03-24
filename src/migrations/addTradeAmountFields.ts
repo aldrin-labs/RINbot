@@ -1,6 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
-export function addTradeAmountField(old: {
+export function addTradeAmountFields(old: {
   step:
     | 'main'
     | 'buy'
@@ -27,14 +27,18 @@ export function addTradeAmountField(old: {
   };
   refund: {
     claimedBoostedRefund: boolean;
-    walletBeforeBoostedRefundClaim: null,
-    boostedRefundAmount: null,
-    boostedRefundAccount: null,
+    walletBeforeBoostedRefundClaim: null;
+    boostedRefundAmount: null;
+    boostedRefundAccount: null;
   };
-  suiAsset: CoinAssetData
+  suiAsset: CoinAssetData;
 }) {
   return {
     ...old,
-    tradeAmountPercentage: '0'
+    tradeCoin: {
+      ...old.tradeCoin,
+      tradeAmount: '',
+      tradeAmountPercentage: '',
+    },
   };
 }

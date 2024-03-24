@@ -78,10 +78,11 @@ export interface SessionData {
   };
   tradesCount: number;
   createdAt: number;
-  tradeAmountPercentage: string;
   tradeCoin: {
     coinType: string;
     useSpecifiedCoin: boolean;
+    tradeAmount: string;
+    tradeAmountPercentage: string;
   };
   refund: {
     claimedBoostedRefund: boolean;

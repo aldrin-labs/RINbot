@@ -19,6 +19,7 @@ import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfd
 import { checkCurrentWallet } from './chains/refunds/conversations/checkCurrentWallet';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
+import { DEFAULT_SUI_ASSET } from './chains/sui.config';
 import {
   createAftermathPool,
   createCoin,
@@ -26,6 +27,8 @@ import {
   home,
   withdraw,
 } from './chains/sui.functions';
+import { buy, instantBuy } from './chains/trading/buy';
+import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -39,16 +42,12 @@ import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
+import { addSuiAssetField } from './migrations/addSuiAssetField';
+import { addTradeAmountFields } from './migrations/addTradeAmountFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { BotContext, SessionData } from './types';
-import { buy, instantBuy } from './chains/trading/buy';
-import { sell } from './chains/trading/sell';
-import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
-import { addSuiAssetField } from './migrations/addSuiAssetField';
-import { addTradeAmountField } from './migrations/addTradeAmountPercentage';
-
 
 function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
@@ -76,13 +75,7 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
-          suiAsset: {
-            type: LONG_SUI_COIN_TYPE,
-            symbol: 'SUI',
-            balance: '0',
-            decimals: 9,
-            noDecimals: false
-          },
+          suiAsset: DEFAULT_SUI_ASSET,
           settings: { slippagePercentage: DEFAULT_SLIPPAGE },
           assets: [],
           welcomeBonus: {
@@ -91,12 +84,13 @@ async function startBot(): Promise<void> {
             isUserClaimedBonus: null,
             isUserAgreeWithBonus: null,
           },
-          tradeAmountPercentage: '0',
           tradesCount: 0,
           createdAt: Date.now(),
           tradeCoin: {
             coinType: '',
             useSpecifiedCoin: false,
+            tradeAmount: '',
+            tradeAmountPercentage: '',
           },
           refund: {
             claimedBoostedRefund: false,
@@ -115,7 +109,7 @@ async function startBot(): Promise<void> {
           4: addBoostedRefund,
           5: addRefundFields,
           6: addSuiAssetField,
-          7: addTradeAmountField,
+          7: addTradeAmountFields,
         },
       }),
     }),
@@ -128,7 +122,9 @@ async function startBot(): Promise<void> {
   composer.use(conversations());
 
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
-  composer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
+  composer.use(
+    createConversation(instantBuy, { id: ConversationId.InstantBuy }),
+  );
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
   composer.use(
     createConversation(exportPrivateKey, {
@@ -281,7 +277,7 @@ async function startBot(): Promise<void> {
 
   // bot.errorBoundary(errorBoundaryHandler)
 
-  if(ENVIRONMENT === 'local'){ 
+  if (ENVIRONMENT === 'local') {
     await bot.start();
   }
 }
