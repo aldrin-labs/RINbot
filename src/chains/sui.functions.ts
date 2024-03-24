@@ -14,6 +14,7 @@ import {
   clmmMainnet,
   getLpCoinDecimals,
   getSuiProvider,
+  isSuiCoinType,
   isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
@@ -49,6 +50,14 @@ import {
   validateTotalSupply,
 } from './createCoin.utils';
 import {
+  calculate,
+  formatTokenInfo,
+  getPriceApi,
+  isCoinAssetDataExtended,
+  postPriceApi,
+} from './priceapi.utils';
+import {
+  DEFAULT_SUI_ASSET,
   SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS,
   SUI_PROVIDER_URL,
 } from './sui.config';
@@ -57,6 +66,7 @@ import {
   extractCoinTypeFromLink,
   findCoinInAssets,
   getAftermathPoolLink,
+  getSuiScanCoinLink,
   getSuiVisionCoinLink,
   getSuitableCoinImageData,
   getTelegramFileUrl,
@@ -67,9 +77,6 @@ import {
   sleep,
   swapTokenTypesAreEqual,
 } from './utils';
-
-import { calculate, formatTokenInfo, getPriceApi, isCoinAssetDataExtended, postPriceApi } from './priceapi.utils';
-import { InlineKeyboard } from 'grammy';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -439,18 +446,21 @@ export async function balance(ctx: BotContext): Promise<string> {
 
 export async function assets(ctx: BotContext): Promise<void> {
   try {
-    const {allCoinsAssets} = await refreshAssets(ctx);
+    const { allCoinsAssets } = await refreshAssets(ctx);
     let netWorth = 0;
-    allCoinsAssets.forEach(coin => {
+    allCoinsAssets.forEach((coin) => {
       if (coin.price !== undefined) {
         netWorth += +coin.balance * coin.price;
       }
     });
-    const currentToken = allCoinsAssets[0]
-    if(!currentToken) {
-      ctx.reply(`You don't own any assets to manage yet. Buy them and come back here again`, {
-        reply_markup: goHome,
-      });
+    const currentToken = allCoinsAssets[0];
+    if (!currentToken) {
+      ctx.reply(
+        `You don't own any assets to manage yet. Buy them and come back here again.`,
+        {
+          reply_markup: goHome,
+        },
+      );
       return;
     }
     const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
@@ -467,11 +477,15 @@ export async function assets(ctx: BotContext): Promise<void> {
     const suiBalance = await balance(ctx);
     const suiAvlBalance = await availableBalance(ctx);
 
-    const newMessage = `🪙<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
-    await ctx.reply(newMessage, { reply_markup: positions_menu, parse_mode: 'HTML', link_preview_options: { is_disabled: true } });
+    const newMessage = `🪙<a href="${getSuiScanCoinLink(currentToken.type)}>${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+    await ctx.reply(newMessage, {
+      reply_markup: positions_menu,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    });
   } catch (e) {
-    console.log(e); 
-    ctx.reply('Failed to fetch assets. Please, try again.', {
+    console.log(e);
+    await ctx.reply('Failed to fetch assets. Please, try again.', {
       reply_markup: goHome,
     });
   }
@@ -487,49 +501,48 @@ export function getExplorerLink(ctx: BotContext): string {
 
 export async function refreshAssets(ctx: BotContext) {
   const walletManager = await getWalletManager();
-  const allCoinsAssetsResponse: CoinAssetDataExtended[] = await walletManager.getAllCoinAssets(
-    ctx.session.publicKey,
-  );
+  const allCoinsAssetsResponse: CoinAssetDataExtended[] =
+    await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
-  let allCoinsAssets = allCoinsAssetsResponse.filter(c => c.type !== LONG_SUI_COIN_TYPE && c.type !== SHORT_SUI_COIN_TYPE);
-  const suiAsset = allCoinsAssetsResponse.find(c => c.type === LONG_SUI_COIN_TYPE || c.type === SHORT_SUI_COIN_TYPE) || {
-    type: LONG_SUI_COIN_TYPE,
-    symbol: 'SUI',
-    balance: '0',
-    decimals: 9,
-    noDecimals: false
-  };
-  if(suiAsset) {
-    ctx.session.suiAsset = suiAsset;
-  }
-  let data: PriceApiPayload = { data: [] }
-  allCoinsAssets.forEach(coin => {
-    //move to price api
-    data.data.push({ chainId: "sui", tokenAddress: coin.type })
-  })
+  let allCoinsAssets = allCoinsAssetsResponse.filter(
+    (c) => !isSuiCoinType(c.type),
+  );
+  const suiAsset =
+    allCoinsAssetsResponse.find((c) => isSuiCoinType(c.type)) ||
+    DEFAULT_SUI_ASSET;
+
   try {
     const priceApiReponse = await postPriceApi([...allCoinsAssets, suiAsset]);
-    if (priceApiReponse !== undefined)
-      allCoinsAssets = allCoinsAssets.map((coin, index) => ({
-        ...coin,
-        price: priceApiReponse.data.data[index].price,
-        timestamp: Date.now(),
-        mcap: priceApiReponse.data.data[index].mcap || 0,
-        priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
-        priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0
-      }));
-    const lastPriceApiResponseItem = priceApiReponse?.data.data[priceApiReponse.data.data.length - 1];
+
+    if (priceApiReponse !== undefined) {
+      allCoinsAssets = allCoinsAssets.map((coin, index) => {
+        const correspondingPriceItem = priceApiReponse.data.data[index];
+
+        return {
+          ...coin,
+          price: correspondingPriceItem.price,
+          timestamp: Date.now(),
+          mcap: correspondingPriceItem.mcap || 0,
+          priceChange1h: correspondingPriceItem.priceChange1h || 0,
+          priceChange24h: correspondingPriceItem.priceChange24h || 0,
+        };
+      });
+    }
+
+    const lastPriceApiResponseItem =
+      priceApiReponse?.data.data[priceApiReponse.data.data.length - 1];
     suiAsset.price = lastPriceApiResponseItem?.price;
     suiAsset.timestamp = Date.now();
     suiAsset.mcap = lastPriceApiResponseItem?.mcap || 0;
     suiAsset.priceChange1h = lastPriceApiResponseItem?.priceChange1h || 0;
     suiAsset.priceChange24h = lastPriceApiResponseItem?.priceChange24h || 0;
   } catch (error) {
-    console.error("ERROR during postPriceApi", error);
-  }finally {
+    console.error('ERROR during postPriceApi:', error);
+  } finally {
     ctx.session.assets = allCoinsAssets;
+    ctx.session.suiAsset = suiAsset;
   }
-  return {suiAsset, allCoinsAssets};
+  return { suiAsset, allCoinsAssets };
 }
 
 export async function home(ctx: BotContext) {
@@ -539,13 +552,13 @@ export async function home(ctx: BotContext) {
   let positionOverview = '';
 
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
+    const priceApiGetResponse = await getPriceApi('sui', SHORT_SUI_COIN_TYPE);
     price = priceApiGetResponse?.data.data.price;
   } catch (error) {
     if (error instanceof Error) {
-      console.error('[home] Price API error:', error.message)
+      console.error('[home] Price API error:', error.message);
     } else {
-      console.error('[home] Price API error: unknown error')
+      console.error('[home] Price API error: unknown error');
     }
 
     price = undefined;
@@ -557,10 +570,10 @@ export async function home(ctx: BotContext) {
   let totalBalanceStr: string;
 
   try {
-    const {allCoinsAssets, suiAsset} = await refreshAssets(ctx);
+    const { allCoinsAssets, suiAsset } = await refreshAssets(ctx);
 
     let balance = 0;
-    [...allCoinsAssets, suiAsset].forEach(coin => {
+    [...allCoinsAssets, suiAsset].forEach((coin) => {
       const price = coin.price;
       if (price !== undefined) {
         balance += +coin.balance * price;
@@ -569,9 +582,8 @@ export async function home(ctx: BotContext) {
 
     if (balance === 0) {
       totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
-    }
-    else {
-      totalBalanceStr = ''
+    } else {
+      totalBalanceStr = '';
     }
     if (allCoinsAssets?.length === 0) {
       positionOverview = `Your have no tokens yet.`;
@@ -590,9 +602,12 @@ export async function home(ctx: BotContext) {
         priceApiDataStr = '';
       }
 
-      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
+      const symbol =
+        token.symbol === undefined
+          ? token.type.split('::').pop()
+          : token.symbol;
 
-      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
+      assetsString += `🪙<a href="${getSuiScanCoinLink(token.type)}">${symbol}</a>${priceApiDataStr}\n\n`;
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
   } catch (error) {
@@ -610,9 +625,11 @@ export async function home(ctx: BotContext) {
       : `<b>${avl_balance} SUI</b>`;
 
   const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)],
-    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
-  );
+  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)], {
+    caption: welcome_text,
+    reply_markup: menu,
+    parse_mode: 'HTML',
+  });
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
@@ -1265,7 +1282,10 @@ export async function createAftermathPool(
 
         return createLpCoinTransaction;
       } catch (error) {
-        console.error("Error calling AftermathSingleton.getCreateLpCoinTransaction", error);
+        console.error(
+          'Error calling AftermathSingleton.getCreateLpCoinTransaction',
+          error,
+        );
 
         if (error instanceof Error) {
           console.error(
