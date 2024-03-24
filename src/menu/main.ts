@@ -24,12 +24,6 @@ import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
-    ctx.session.step = 'buy';
-    ctx.session.tradeAmountPercentage = '0';
-    ctx.session.tradeCoin = {
-      coinType: '',
-      useSpecifiedCoin: false
-    };
     await ctx.conversation.enter('buy');
   })
   .text('Sell & Manage', async (ctx) => {
