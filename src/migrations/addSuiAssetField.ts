@@ -1,4 +1,5 @@
-import { CoinAssetData, LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
+import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
+import { DEFAULT_SUI_ASSET } from '../chains/sui.config';
 
 export function addSuiAssetField(old: {
   step:
@@ -37,12 +38,6 @@ export function addSuiAssetField(old: {
 }) {
   return {
     ...old,
-    suiAsset: {
-      type: LONG_SUI_COIN_TYPE,
-      symbol: 'SUI',
-      balance: '0',
-      decimals: 9,
-      noDecimals: false
-    }
+    suiAsset: DEFAULT_SUI_ASSET,
   };
 }
