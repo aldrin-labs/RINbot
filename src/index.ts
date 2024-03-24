@@ -91,11 +91,11 @@ async function startBot(): Promise<void> {
             isUserClaimedBonus: null,
             isUserAgreeWithBonus: null,
           },
-          tradeAmountPercentage: '0',
           tradesCount: 0,
           createdAt: Date.now(),
           tradeCoin: {
             coinType: '',
+            tradeAmountPercentage: '0',
             useSpecifiedCoin: false,
           },
           refund: {

@@ -78,9 +78,9 @@ export interface SessionData {
   };
   tradesCount: number;
   createdAt: number;
-  tradeAmountPercentage: string;
   tradeCoin: {
     coinType: string;
+    tradeAmountPercentage: string;
     useSpecifiedCoin: boolean;
   };
   refund: {

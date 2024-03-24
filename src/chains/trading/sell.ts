@@ -104,6 +104,7 @@ async function parseCoinTypeResponse(
     }
     ctx.session.tradeCoin = {
       coinType: foundCoin.type,
+      tradeAmountPercentage: '0',
       useSpecifiedCoin: false
     }; 
 
@@ -228,10 +229,10 @@ export async function sell(
     return;
   }
   const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
-  if(ctx.session.tradeAmountPercentage === '0') {
-    ctx.session.tradeAmountPercentage = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
+  if(ctx.session.tradeCoin.tradeAmountPercentage === '0') {
+    ctx.session.tradeCoin.tradeAmountPercentage = await handleInputAmount(ctx, conversation, validCoinToSell, priceOutput);
   }
-  const percentage = new BigNumber(ctx.session.tradeAmountPercentage).dividedBy(100);
+  const percentage = new BigNumber(ctx.session.tradeCoin.tradeAmountPercentage).dividedBy(100);
 
   const tradeAmountPercentage = new BigNumber(validCoinToSell.balance).multipliedBy(percentage);
   

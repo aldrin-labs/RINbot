@@ -35,6 +35,10 @@ export function addTradeAmountField(old: {
 }) {
   return {
     ...old,
-    tradeAmountPercentage: '0'
+    tradeCoin: {
+      coinType: '',
+      useSpecifiedCoin: false,
+      tradeAmountPercentage: '0'
+    }
   };
 }

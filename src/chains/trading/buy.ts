@@ -125,6 +125,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   ctx.session.tradeCoin = {
     coinType: validatedCoinType,
+    tradeAmountPercentage: '0',
     useSpecifiedCoin: false
   }; 
   const resCoinType = validatedCoinType;
@@ -187,7 +188,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     return;
   }
-  ctx.session.tradeAmountPercentage = validatedInputAmount; 
+  ctx.session.tradeCoin.tradeAmountPercentage = validatedInputAmount; 
   await instantBuy(conversation, ctx);
 }
 
@@ -198,7 +199,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     await conversation.external(() => getUserFeePercentage(ctx))
   ).toString();
 
-  const {tradeAmountPercentage, tradeCoin: {coinType: resCoinType}} = ctx.session;
+  const {tradeCoin: {coinType: resCoinType, tradeAmountPercentage}} = ctx.session;
   
   const feeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
