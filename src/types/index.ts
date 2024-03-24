@@ -80,6 +80,7 @@ export interface SessionData {
   createdAt: number;
   tradeCoin: {
     coinType: string;
+    tradeAmountPercentage: string;
     useSpecifiedCoin: boolean;
     tradeAmount: string;
     tradeAmountPercentage: string;

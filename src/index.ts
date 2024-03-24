@@ -88,6 +88,7 @@ async function startBot(): Promise<void> {
           createdAt: Date.now(),
           tradeCoin: {
             coinType: '',
+            tradeAmountPercentage: '0',
             useSpecifiedCoin: false,
             tradeAmount: '',
             tradeAmountPercentage: '',
