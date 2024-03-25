@@ -2,16 +2,17 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.5.9":
-  version "2.5.9"
-  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.5.9.tgz#adfdf710eb3bfe08274901d82a532afb81542f6e"
-  integrity sha512-W5wBfbFAZoYrQUEKAmqOQVNtaCI+/re837e2Vxp9Mm6e8OhsDZeqTzao8HXHU3WbyAM+psQdfJl3VZb3zg1LlA==
+"@avernikoz/rinbot-sui-sdk@^2.6.0":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.6.0.tgz#e8195591c99fceba581fc309a9eed011ef5ac70d"
+  integrity sha512-aEx0GBlSWHUZAxMMQIaPRbpWqh0wzl9XYkCAe2dquEghJfPXPxjM4Rl+JHDskeDg8cIOn8zJBBd8ySXwK7jRIw==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
     "@mysten/sui.js" "^0.42.0"
     "@types/redis" "^4.0.11"
     aftermath-ts-sdk "^1.1.32"
+    bech32 "^2.0.0"
     bignumber.js "^9.1.2"
     decimal.js "^10.4.3"
     turbos-clmm-sdk "^2.1.0"
@@ -1228,6 +1229,11 @@ base64-js@^1.3.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
+
+bech32@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bech32/-/bech32-2.0.0.tgz#078d3686535075c8c79709f054b1b226a133b355"
+  integrity sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==
 
 bignumber.js@^9.1.2:
   version "9.1.2"
