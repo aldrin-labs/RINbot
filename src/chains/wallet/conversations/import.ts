@@ -11,6 +11,7 @@ import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../utils';
+import continueWithRefundKeyboard from '../../../inline-keyboards/refunds/continue-with-refund';
 
 export async function importNewWallet(
   conversation: MyConversation,
@@ -101,8 +102,22 @@ export async function importNewWallet(
   conversation.session.privateKey =
     WalletManagerSingleton.getPrivateKeyFromKeyPair(newKeypair);
 
+  let successfullyImportedKeyboard = goHome;
+
+  // Add `Continue With Refund` button in case user imported wallet from `CheckProvidedAddressForRefund` conversation
+  if (conversation.session.refund.importedWalletFromRefund) {
+    const continueWithRefundButtons =
+      continueWithRefundKeyboard.inline_keyboard[0];
+
+    successfullyImportedKeyboard = successfullyImportedKeyboard
+      .clone()
+      .add(...continueWithRefundButtons);
+
+    conversation.session.refund.importedWalletFromRefund = false;
+  }
+
   await ctx.reply('New wallet is <b>successfully imported</b>!', {
-    reply_markup: goHome,
+    reply_markup: successfullyImportedKeyboard,
     parse_mode: 'HTML',
   });
 
