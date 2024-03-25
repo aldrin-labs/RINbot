@@ -15,8 +15,8 @@ export async function createBoostedRefundAccount(ctx: BotContext) {
       Item: {
         pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
         sk: `${new Date().getTime()}`,
-        privateKey: ctx.session.privateKey,
-        publicKey: ctx.session.publicKey
+        privateKey,
+        publicKey
       }
     }).catch(e => console.error('ERROR creating boosted account', e));
     ctx.session.refund.boostedRefundAccount = {
