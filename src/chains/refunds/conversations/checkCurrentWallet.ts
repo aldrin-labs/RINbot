@@ -2,7 +2,7 @@ import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import confirmWithCloseKeyboard from '../../../inline-keyboards/mixed/confirm-with-close';
-import refundOptionsKeyboard from '../../../inline-keyboards/refund-options';
+import refundOptionsKeyboard from '../../../inline-keyboards/refunds/refund-options';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
@@ -45,9 +45,12 @@ export async function checkCurrentWallet(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply('🛑 Oops! Something went wrong while retrieving the available refund amount. Please try again.', {
-      reply_markup: retryButton,
-    });
+    await ctx.reply(
+      '🛑 Oops! Something went wrong while retrieving the available refund amount. Please try again.',
+      {
+        reply_markup: retryButton,
+      },
+    );
 
     return;
   }
@@ -57,7 +60,7 @@ export async function checkCurrentWallet(
       checkingMessage.chat.id,
       checkingMessage.message_id,
       '✅ Your account is either not affected or you have already claimed the refund. If you have any questions ' +
-      'feel free to reach out to us.',
+        'feel free to reach out to us.',
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -84,7 +87,7 @@ export async function checkCurrentWallet(
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
       '</code> <b>SUI</b>.\n\n' +
       `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
-      "</code> <b>SUI</b>.\nWhile all features " +
+      '</code> <b>SUI</b>.\nWhile all features ' +
       'of the RINbot remain accessible, ' +
       `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
     {

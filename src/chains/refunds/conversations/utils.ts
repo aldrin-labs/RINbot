@@ -2,7 +2,7 @@ import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
 import { InlineKeyboard } from 'grammy';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import assetsWithHomeKeyboard from '../../../inline-keyboards/mixed/assets-with-home';
-import refundsKeyboard from '../../../inline-keyboards/refunds';
+import refundsKeyboard from '../../../inline-keyboards/refunds/refunds';
 import { BotContext, MyConversation } from '../../../types';
 import {
   getTransactionFromMethod,
@@ -236,7 +236,7 @@ export async function claimBoostedRefund({
     ) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
-        ` the <b>boosted refund</b> claim!`,
+          ` the <b>boosted refund</b> claim!`,
         {
           parse_mode: 'HTML',
         },
@@ -247,7 +247,7 @@ export async function claimBoostedRefund({
     ) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
-        `the <b>boosted claim</b>. Please, try again or contact support.`,
+          `the <b>boosted claim</b>. Please, try again or contact support.`,
         { reply_markup: retryButton, parse_mode: 'HTML' },
       );
 
@@ -329,8 +329,8 @@ export async function claimBoostedRefund({
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
-      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n`+
-      `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
+      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +
+        `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
       {
         reply_markup: assetsWithHomeKeyboard,
         parse_mode: 'HTML',
@@ -355,10 +355,13 @@ export async function claimBoostedRefund({
     return;
   }
 
-  await ctx.reply('Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..', {
-    reply_markup: retryButton,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    'Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..',
+    {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    },
+  );
 
   return;
 }
