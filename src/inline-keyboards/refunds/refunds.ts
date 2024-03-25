@@ -1,5 +1,5 @@
 import { InlineKeyboard } from 'grammy';
-import { CallbackQueryData } from '../types/callback-queries-data';
+import { CallbackQueryData } from '../../types/callback-queries-data';
 
 const refundsKeyboard = new InlineKeyboard().text(
   'Refunds',
