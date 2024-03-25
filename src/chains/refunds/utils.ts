@@ -1,19 +1,6 @@
 import { isValidSuiAddress } from '@avernikoz/rinbot-sui-sdk';
 import { getRedisClient } from '../../config/redis.config';
 import { BotContext } from '../../types';
-import { generateWallet } from '../sui.functions';
-
-export async function createBoostedRefundAccount(ctx: BotContext) {
-  const userHasAccount = await userHasBoostedRefundAccount(ctx);
-
-  if (!userHasAccount) {
-    const { publicKey, privateKey } = generateWallet();
-    ctx.session.refund.boostedRefundAccount = {
-      publicKey,
-      privateKey,
-    };
-  }
-}
 
 export function backupCurrentAccount(ctx: BotContext) {
   ctx.session.refund.walletBeforeBoostedRefundClaim = {
