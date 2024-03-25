@@ -141,7 +141,7 @@ export async function checkProvidedAddress(
       '✎ There are 2 ways, please choose one of them:\n\n' +
       '<b>1.</b> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
       "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
-      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b> ` +
+      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b>\n ` +
       `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, ` +
       `but you can withdraw only profit that you've earned. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
       `non-withdrawable.\n\n` +
