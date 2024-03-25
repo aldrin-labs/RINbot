@@ -44,6 +44,7 @@ import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { fillBoostedRefundAccount } from './migrations/fillBoostedRefundAccount';
 import { BotContext, SessionData } from './types';
 
 function errorBoundaryHandler(err: BotError) {
@@ -68,6 +69,8 @@ async function startBot(): Promise<void> {
     session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
+        const boostedRefundAccount = generateWallet();
+
         return {
           step: 'main',
           privateKey,
@@ -90,7 +93,7 @@ async function startBot(): Promise<void> {
             claimedBoostedRefund: false,
             walletBeforeBoostedRefundClaim: null,
             boostedRefundAmount: null,
-            boostedRefundAccount: null,
+            boostedRefundAccount,
           },
         };
       },
@@ -102,6 +105,7 @@ async function startBot(): Promise<void> {
           3: addTradeCoin,
           4: addBoostedRefund,
           5: addRefundFields,
+          6: fillBoostedRefundAccount,
         },
       }),
     }),

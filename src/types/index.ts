@@ -91,7 +91,7 @@ export interface SessionData {
     boostedRefundAccount: {
       publicKey: string;
       privateKey: string;
-    } | null;
+    };
   };
 }
 
