@@ -92,6 +92,7 @@ export interface SessionData {
       publicKey: string;
       privateKey: string;
     } | null;
+    importedWalletFromRefund: boolean;
   };
 }
 

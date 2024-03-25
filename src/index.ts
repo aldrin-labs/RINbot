@@ -40,6 +40,7 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addImportWalletForRefundField } from './migrations/addImportWalletForRefundField';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
@@ -91,6 +92,7 @@ async function startBot(): Promise<void> {
             walletBeforeBoostedRefundClaim: null,
             boostedRefundAmount: null,
             boostedRefundAccount: null,
+            importedWalletFromRefund: false,
           },
         };
       },
@@ -102,6 +104,7 @@ async function startBot(): Promise<void> {
           3: addTradeCoin,
           4: addBoostedRefund,
           5: addRefundFields,
+          6: addImportWalletForRefundField,
         },
       }),
     }),
