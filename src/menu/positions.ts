@@ -54,9 +54,6 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('Home', async (ctx) => {
     await home(ctx);
   })
-  .text('Close', async (ctx) => {
-    await home(ctx);
-  })
   .row()
   .text((ctx) => {
     const userBalance = ctx.session.suiAsset.balance;
