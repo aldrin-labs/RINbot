@@ -453,7 +453,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       }
     });
     const currentToken = allCoinAssets[0];
-    const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+    const totalNetWorth = netWorth === 0 ? `` : `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
     if (isCoinAssetDataExtended(currentToken)) {
       priceApiDataStr =
@@ -537,10 +537,10 @@ export async function home(ctx: BotContext) {
       }
     });
     if (balance === 0) {
-      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+      totalBalanceStr = ''
     }
     else {
-      totalBalanceStr = ''
+      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
     }
   } catch (error) {
     console.error('Error in calculating total balance: ', error);
