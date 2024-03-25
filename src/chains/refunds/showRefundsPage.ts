@@ -58,7 +58,7 @@ export async function showRefundsPage(ctx: BotContext) {
   await ctx.replyWithPhoto(REFUND_PAGE_IMAGE_URL, {
     caption:
       '🚨 <b>Affected by recent $PIKKA coin pre-sale?</b> 🚨\n\n' +
-      "If you've been affected, we're here to assist you through the refund process." +
+      "If you've been affected, we're here to assist you through the refund process. " +
       "Please check the current phase below for updates on how to proceed.\n\n" +
       phaseString,
     reply_markup: phaseMenu,
