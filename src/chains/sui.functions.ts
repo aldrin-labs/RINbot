@@ -21,7 +21,7 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import { imgs } from '../config/bot.config';
+import { HISTORY_TABLE, imgs } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -76,6 +76,7 @@ import {
   isCoinAssetDataExtended,
   postPriceApi,
 } from './priceapi.utils';
+import { documentClient } from '../services/aws';
 
 export enum TransactionResultStatus {
   Success = 'success',
