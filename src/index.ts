@@ -187,13 +187,13 @@ async function startBot(): Promise<void> {
     await ctx.conversation.enter(ConversationId.CreateAftermathPool);
   });
 
-  bot.command('createcetuspool', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CreateCetusPool);
-  });
+  // bot.command('createcetuspool', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.CreateCetusPool);
+  // });
 
-  bot.command('addcetuspoolliquidity', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
-  });
+  // bot.command('addcetuspoolliquidity', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
+  // });
 
   bot.command('createcoin', async (ctx) => {
     await ctx.conversation.enter(ConversationId.CreateCoin);
