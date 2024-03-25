@@ -525,21 +525,23 @@ export async function home(ctx: BotContext) {
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(
-      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
-    );
-
     let balance = 0;
-    allCoinAssets.forEach((coin) => {
-      const price = priceMap.get(coin.type);
-      if (price !== undefined) {
-        balance += +coin.balance * price;
-      }
-    });
-    if (balance === 0) {
-      totalBalanceStr = ''
+    if (coinsPriceApi !== undefined) {
+      const priceMap = new Map(
+        coinsPriceApi.map((coin) => [coin.tokenAddress, coin.price]),
+      );
+
+      allCoinAssets.forEach((coin) => {
+        const price = priceMap.get(coin.type);
+        if (price !== undefined) {
+          balance += +coin.balance * price;
+        }
+      });
     }
-    else {
+
+    if (balance === 0) {
+      totalBalanceStr = '';
+    } else {
       totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
     }
   } catch (error) {
