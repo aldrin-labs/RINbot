@@ -1,17 +1,16 @@
 import {
   WalletManagerSingleton,
   isValidPrivateKey,
-  isValidSeedPhrase,
 } from '@avernikoz/rinbot-sui-sdk';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
+import continueWithRefundKeyboard from '../../../inline-keyboards/refunds/continue-with-refund';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../utils';
-import continueWithRefundKeyboard from '../../../inline-keyboards/refunds/continue-with-refund';
 
 export async function importNewWallet(
   conversation: MyConversation,
@@ -23,6 +22,13 @@ export async function importNewWallet(
     'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +
     'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the private key</b></i> ' +
     'may result in <i><b>loss of access to your current funds</b></i>.';
+
+  // Storing `importedWalletFromRefund` value at the conversation start to use it further and clean up
+  // source session field.
+  const fromRefund = await conversation.external(
+    () => conversation.session.refund.importedWalletFromRefund,
+  );
+  conversation.session.refund.importedWalletFromRefund = false;
 
   const warnWithCheckAndPrintSucceeded =
     await warnWithCheckAndPrivateKeyPrinting({
@@ -105,15 +111,13 @@ export async function importNewWallet(
   let successfullyImportedKeyboard = goHome;
 
   // Add `Continue With Refund` button in case user imported wallet from `CheckProvidedAddressForRefund` conversation
-  if (conversation.session.refund.importedWalletFromRefund) {
+  if (fromRefund) {
     const continueWithRefundButtons =
       continueWithRefundKeyboard.inline_keyboard[0];
 
     successfullyImportedKeyboard = successfullyImportedKeyboard
       .clone()
       .add(...continueWithRefundButtons);
-
-    conversation.session.refund.importedWalletFromRefund = false;
   }
 
   await ctx.reply('New wallet is <b>successfully imported</b>!', {
