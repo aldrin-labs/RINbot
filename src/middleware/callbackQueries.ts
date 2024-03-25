@@ -96,4 +96,9 @@ function useRefundsCallbackQueries(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
     await showRefundsPage(ctx);
   });
+
+  bot.callbackQuery(CallbackQueryData.ContinueWithRefund, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.CheckCurrentWalletForRefund);
+  });
 }

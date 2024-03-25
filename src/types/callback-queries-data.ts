@@ -10,4 +10,5 @@ export enum CallbackQueryData {
   ImportWallet = 'import-wallet',
   Continue = 'continue',
   Refunds = 'refunds',
+  ContinueWithRefund = 'continueWithRefund',
 }
