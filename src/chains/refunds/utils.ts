@@ -1,28 +1,38 @@
 import { isValidSuiAddress } from '@avernikoz/rinbot-sui-sdk';
-import { getRedisClient } from '../../config/redis.config';
-import { BotContext } from '../../types';
-import { generateWallet } from '../sui.functions';
-import { documentClient } from '../../services/aws';
 import { HISTORY_TABLE } from '../../config/bot.config';
+import { getRedisClient } from '../../config/redis.config';
+import { documentClient } from '../../services/aws';
+import { BotContext } from '../../types';
 
 export function backupCurrentAccount(ctx: BotContext) {
-  documentClient
-    .put({
-      TableName: HISTORY_TABLE,
-      Item: {
-        pk: `${ctx.from?.id}#BACKUP_WALLET`,
-        sk: `${new Date().getTime()}`,
-        privateKey: ctx.session.privateKey,
-        publicKey: ctx.session.publicKey,
-      },
-    })
-    .catch((e) =>
-      console.error('ERROR creating backup account in the history', e),
-    );
-  ctx.session.refund.walletBeforeBoostedRefundClaim = {
-    publicKey: ctx.session.publicKey,
-    privateKey: ctx.session.privateKey,
-  };
+  const currentAccountIsAlreadyBackuped =
+    ctx.session.refund.walletBeforeBoostedRefundClaim?.privateKey ===
+      ctx.session.privateKey &&
+    ctx.session.refund.walletBeforeBoostedRefundClaim?.publicKey ===
+      ctx.session.publicKey;
+
+  if (!currentAccountIsAlreadyBackuped) {
+    // Store into AWS Table
+    documentClient
+      .put({
+        TableName: HISTORY_TABLE,
+        Item: {
+          pk: `${ctx.from?.id}#BACKUP_WALLET`,
+          sk: `${new Date().getTime()}`,
+          privateKey: ctx.session.privateKey,
+          publicKey: ctx.session.publicKey,
+        },
+      })
+      .catch((e) =>
+        console.error('ERROR creating backup account in the history', e),
+      );
+
+    // Store into session
+    ctx.session.refund.walletBeforeBoostedRefundClaim = {
+      publicKey: ctx.session.publicKey,
+      privateKey: ctx.session.privateKey,
+    };
+  }
 }
 
 export async function userHasBoostedRefundAccount(ctx: BotContext) {
