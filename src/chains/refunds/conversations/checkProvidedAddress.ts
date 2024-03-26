@@ -180,48 +180,6 @@ export async function checkProvidedAddress(
     return;
   }
 
-  let boostedClaimCap = await conversation.external(async () => {
-    try {
-      return await refundManager.getBoostedClaimCap({
-        ownerAddress: affectedPublicKey,
-      });
-    } catch (error) {
-      console.error(
-        '[checkProvidedAddress] Error while getBoostedClaimCap():',
-        error,
-      );
-
-      return;
-    }
-  });
-
-  if (boostedClaimCap) {
-    await ctx.reply(
-      '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
-        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
-        `${boostedClaimCap}</code>\n\n` +
-        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
-        `\n\nFeel free to ask our support for help!`,
-      { reply_markup: goHome, parse_mode: 'HTML' },
-    );
-
-    return;
-  }
-
-  // Exporting current wallet private key
-  const warnWithCheckAndPrintSucceeded =
-    await warnWithCheckAndPrivateKeyPrinting({
-      conversation,
-      ctx,
-      operation: 'boosted refund',
-      retryButton,
-      warnMessage: boostedRefundExportPrivateKeyWarnMessage,
-    });
-
-  if (!warnWithCheckAndPrintSucceeded) {
-    return;
-  }
-
   const userHasStoredBoostedRefundAccount = await conversation.external(
     async () => {
       try {
@@ -288,6 +246,53 @@ export async function checkProvidedAddress(
     return;
   }
 
+  let boostedClaimCap = await conversation.external(async () => {
+    try {
+      if (conversation.session.refund.boostedRefundAccount === null) {
+        return;
+      }
+
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress: affectedPublicKey,
+        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+      });
+    } catch (error) {
+      console.error(
+        '[checkProvidedAddress] Error while getBoostedClaimCap():',
+        error,
+      );
+
+      return;
+    }
+  });
+
+  if (boostedClaimCap) {
+    await ctx.reply(
+      '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
+        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
+        `${boostedClaimCap}</code>\n\n` +
+        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
+        `\n\nFeel free to ask our support for help!`,
+      { reply_markup: goHome, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
+  // Exporting current wallet private key
+  const warnWithCheckAndPrintSucceeded =
+    await warnWithCheckAndPrivateKeyPrinting({
+      conversation,
+      ctx,
+      operation: 'boosted refund',
+      retryButton,
+      warnMessage: boostedRefundExportPrivateKeyWarnMessage,
+    });
+
+  if (!warnWithCheckAndPrintSucceeded) {
+    return;
+  }
+
   // Allow user to claim boosted refund
   const transaction = await getTransactionFromMethod({
     conversation,
@@ -336,8 +341,14 @@ export async function checkProvidedAddress(
     // Updating boosted claim cap
     boostedClaimCap = await conversation.external(async () => {
       try {
+        if (conversation.session.refund.boostedRefundAccount === null) {
+          return;
+        }
+
         return await refundManager.getBoostedClaimCap({
           ownerAddress: affectedPublicKey,
+          newAddress:
+            conversation.session.refund.boostedRefundAccount.publicKey,
         });
       } catch (error) {
         console.error(
