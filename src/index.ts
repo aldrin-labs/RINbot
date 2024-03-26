@@ -44,6 +44,7 @@ import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
@@ -131,6 +132,7 @@ async function startBot(): Promise<void> {
           3: addTradeCoin,
           4: addBoostedRefund,
           5: addRefundFields,
+          6: createBoostedRefundAccount(ctx),
         },
       }),
     });
