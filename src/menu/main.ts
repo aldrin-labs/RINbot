@@ -66,10 +66,9 @@ const menu = new Menu<BotContext>('main')
   })
   .row()
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
-  // TODO: Uncomment when release
-  // .text('Refunds', async (ctx) => {
-  //   await showRefundsPage(ctx);
-  // })
+  .text('Refunds', async (ctx) => {
+    await showRefundsPage(ctx);
+  })
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const {
       isUserEligibleToGetBonus,
