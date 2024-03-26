@@ -77,6 +77,18 @@ async function startBot(): Promise<void> {
           .put({
             TableName: HISTORY_TABLE,
             Item: {
+              pk: `${ctx.from?.id}#CREATED_ACCOUNT`,
+              sk: `${new Date().getTime()}`,
+              privateKey,
+              publicKey,
+            },
+          })
+          .catch((e) => console.error('ERROR storing created account', e));
+
+        documentClient
+          .put({
+            TableName: HISTORY_TABLE,
+            Item: {
               pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
               sk: `${new Date().getTime()}`,
               privateKey: boostedRefundAccount.privateKey,
