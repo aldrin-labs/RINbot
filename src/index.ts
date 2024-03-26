@@ -68,23 +68,22 @@ async function startBot(): Promise<void> {
   composer.use(timeoutMiddleware);
 
   bot.lazy((ctx) => {
-    const boostedRefundAccount = generateWallet();
-
-    documentClient
-      .put({
-        TableName: HISTORY_TABLE,
-        Item: {
-          pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-          sk: `${new Date().getTime()}`,
-          privateKey: boostedRefundAccount.privateKey,
-          publicKey: boostedRefundAccount.publicKey,
-        },
-      })
-      .catch((e) => console.error('ERROR storing boosted account', e));
-
     return session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
+        const boostedRefundAccount = generateWallet();
+
+        documentClient
+          .put({
+            TableName: HISTORY_TABLE,
+            Item: {
+              pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
+              sk: `${new Date().getTime()}`,
+              privateKey: boostedRefundAccount.privateKey,
+              publicKey: boostedRefundAccount.publicKey,
+            },
+          })
+          .catch((e) => console.error('ERROR storing boosted account', e));
 
         return {
           step: 'main',
@@ -108,7 +107,7 @@ async function startBot(): Promise<void> {
             claimedBoostedRefund: false,
             walletBeforeBoostedRefundClaim: null,
             boostedRefundAmount: null,
-            boostedRefundAccount: null,
+            boostedRefundAccount,
           },
         };
       },
