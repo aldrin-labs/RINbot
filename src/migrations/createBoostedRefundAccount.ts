@@ -23,7 +23,7 @@ export function createBoostedRefundAccount(ctx: BotContext) {
           TableName: HISTORY_TABLE,
           Item: {
             pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-            sk: `${new Date().getTime()}`,
+            sk: new Date().getTime(),
             privateKey: boostedRefundAccount.privateKey,
             publicKey: boostedRefundAccount.publicKey,
           },
@@ -41,7 +41,7 @@ export function createBoostedRefundAccount(ctx: BotContext) {
           TableName: HISTORY_TABLE,
           Item: {
             pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-            sk: `${new Date().getTime()}`,
+            sk: new Date().getTime(),
             privateKey: currentBoostedRefundAccount.privateKey,
             publicKey: currentBoostedRefundAccount.publicKey,
           },
