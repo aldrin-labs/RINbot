@@ -3,31 +3,6 @@ import { HISTORY_TABLE } from '../../config/bot.config';
 import { getRedisClient } from '../../config/redis.config';
 import { documentClient } from '../../services/aws';
 import { BotContext } from '../../types';
-import { generateWallet } from '../sui.functions';
-
-// TODO: Remove after migration creation
-export async function createBoostedRefundAccount(ctx: BotContext) {
-  const userHasAccount = await userHasBoostedRefundAccount(ctx);
-
-  if (!userHasAccount) {
-    const { publicKey, privateKey } = generateWallet();
-    documentClient
-      .put({
-        TableName: HISTORY_TABLE,
-        Item: {
-          pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-          sk: `${new Date().getTime()}`,
-          privateKey,
-          publicKey,
-        },
-      })
-      .catch((e) => console.error('ERROR creating boosted account', e));
-    ctx.session.refund.boostedRefundAccount = {
-      publicKey,
-      privateKey,
-    };
-  }
-}
 
 export function backupCurrentAccount(ctx: BotContext) {
   const currentAccountIsAlreadyBackuped =

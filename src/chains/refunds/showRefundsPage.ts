@@ -7,7 +7,7 @@ import { BotContext } from '../../types';
 import { REFUND_PAGE_IMAGE_URL } from './config';
 import { RefundPhase } from './conversations/config';
 import { getRefundManager } from './getRefundManager';
-import { backupCurrentAccount, createBoostedRefundAccount } from './utils';
+import { backupCurrentAccount } from './utils';
 
 export async function showRefundsPage(ctx: BotContext) {
   const refundManager = getRefundManager();
@@ -64,16 +64,6 @@ export async function showRefundsPage(ctx: BotContext) {
     reply_markup: phaseMenu,
     parse_mode: 'HTML',
   });
-
-  // TODO: Remove after migration creation
-  try {
-    await createBoostedRefundAccount(ctx);
-  } catch (error) {
-    console.error(
-      '[showRefundsPage] Error while createBoostedRefundAccount():',
-      error,
-    );
-  }
 
   // Regardless if it's failed or not, we'll check the existance of backup account during the refund process
   // In case if do not exists, we'll simply fail the operation and ask to try again.
