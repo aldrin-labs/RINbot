@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@avernikoz/rinbot-sui-sdk@^2.6.2":
-  version "2.6.2"
-  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.6.2.tgz#c7c5642b5ffa086766daad1d5361432d0cf23c3f"
-  integrity sha512-mMg3HAJVk5Dj4HrWeCr5uKJqiHUeyFl6WiGLHwA26ChXJTRk9ragsu7ULkNekQALfBHM6OFq2YjBSXWG7dSs6A==
+"@avernikoz/rinbot-sui-sdk@^2.6.3":
+  version "2.6.3"
+  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.6.3.tgz#bf44fb4c64fb4c8724e2b4cbdb979cad2d69d83b"
+  integrity sha512-O5wMrLCKbYwlQQf+cd3Z8nfSKsGViBhRrKx0HJ60GVYtP5CdDtUR80S81NPhn26OZEtSP0C/4I+z3S5Q+XgDtQ==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
