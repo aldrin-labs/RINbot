@@ -67,10 +67,10 @@ async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
   composer.use(timeoutMiddleware);
 
-  bot.lazy(async (ctx) => {
+  bot.lazy((ctx) => {
     const boostedRefundAccount = generateWallet();
 
-    await documentClient
+    documentClient
       .put({
         TableName: HISTORY_TABLE,
         Item: {
