@@ -1,7 +1,6 @@
 import {
   WalletManagerSingleton,
   isValidPrivateKey,
-  isValidSeedPhrase,
 } from '@avernikoz/rinbot-sui-sdk';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
@@ -39,8 +38,8 @@ export async function importNewWallet(
   // Asking user for new private key or seed phrase
   await ctx.reply(
     'Enter a <b>private key</b> of the wallet you want to import.\n\n' +
-      '<b>Hind</b>: We do support private keys only in <code>hex</code> format. <code>Bech32</code> ' +
-      'encoding is not supported yet.',
+      '<b>Hint</b>: We do support private keys in both <code>hex</code> and <code>Bech32</code> ' +
+      '(starts with <code>suiprivkey</code>) formats.',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 

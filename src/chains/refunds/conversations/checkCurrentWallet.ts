@@ -7,8 +7,10 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
+import { balance } from '../../sui.functions';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { getRefundManager } from '../getRefundManager';
+import { MINIMUM_SUI_BALANCE_FOR_REFUND } from './config';
 import { claimBaseRefund, claimBoostedRefund } from './utils';
 
 export async function checkCurrentWallet(
@@ -31,6 +33,24 @@ export async function checkCurrentWallet(
     },
   );
 
+  const suiBalance = await conversation.external(async () => {
+    return await balance(ctx);
+  });
+
+  if (new BigNumber(suiBalance).isLessThan(MINIMUM_SUI_BALANCE_FOR_REFUND)) {
+    await ctx.api.editMessageText(
+      checkingMessage.chat.id,
+      checkingMessage.message_id,
+      `You need at least <code>${MINIMUM_SUI_BALANCE_FOR_REFUND}</code> <b>SUI</b> to start refund.`,
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+      },
+    );
+
+    return;
+  }
+
   // Check current wallet
   let normalRefund;
   let boostedRefund;
@@ -45,9 +65,14 @@ export async function checkCurrentWallet(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply('🛑 Oops! Something went wrong while retrieving the available refund amount. Please try again.', {
-      reply_markup: retryButton,
-    });
+    await ctx.api.editMessageText(
+      checkingMessage.chat.id,
+      checkingMessage.message_id,
+      '🛑 Oops! Something went wrong while retrieving the available refund amount. Please try again.',
+      {
+        reply_markup: retryButton,
+      },
+    );
 
     return;
   }
@@ -57,7 +82,7 @@ export async function checkCurrentWallet(
       checkingMessage.chat.id,
       checkingMessage.message_id,
       '✅ Your account is either not affected or you have already claimed the refund. If you have any questions ' +
-      'feel free to reach out to us.',
+        'feel free to reach out to us.',
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -84,7 +109,7 @@ export async function checkCurrentWallet(
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
       '</code> <b>SUI</b>.\n\n' +
       `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
-      "</code> <b>SUI</b>.\nWhile all features " +
+      '</code> <b>SUI</b>.\nWhile all features ' +
       'of the RINbot remain accessible, ' +
       `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
     {

@@ -39,10 +39,13 @@ export async function checkProvidedAddress(
     retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
 
   // Ask user for address he wants to check
-  await ctx.reply('Please enter the <b>address</b> of your wallet that you wish to check.', {
-    reply_markup: closeConversation,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    'Please enter the <b>address</b> of your wallet that you wish to check.',
+    {
+      reply_markup: closeConversation,
+      parse_mode: 'HTML',
+    },
+  );
 
   const affectedPublicKeyContext = await conversation.wait();
   const affectedPublicKeyCallbackQueryData =
@@ -101,9 +104,12 @@ export async function checkProvidedAddress(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply('An error occurred while retrieving the claim amount. Please try again.', {
-      reply_markup: retryButton,
-    });
+    await ctx.reply(
+      'An error occurred while retrieving the claim amount. Please try again.',
+      {
+        reply_markup: retryButton,
+      },
+    );
 
     return;
   }
@@ -113,8 +119,8 @@ export async function checkProvidedAddress(
       checkingMessage.chat.id,
       checkingMessage.message_id,
       '✅ Your account is either not affected or you have already claimed the refund. ' +
-      'If you have any questions, feel free to reach out to us.' +
-      '\n\nNow you can enter another address to check.',
+        'If you have any questions, feel free to reach out to us.' +
+        '\n\nNow you can enter another address to check.',
       {
         reply_markup: closeConversation,
         parse_mode: 'HTML',
@@ -141,7 +147,7 @@ export async function checkProvidedAddress(
       '✎ There are 2 ways, please choose one of them:\n\n' +
       '<b>1.</b> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
       "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
-      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b> ` +
+      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b>\n` +
       `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, ` +
       `but you can withdraw only profit that you've earned. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
       `non-withdrawable.\n\n` +
@@ -193,7 +199,7 @@ export async function checkProvidedAddress(
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
         `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
-        `${boostedClaimCap}</code>\n\n`+
+        `${boostedClaimCap}</code>\n\n` +
         `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
         `\n\nFeel free to ask our support for help!`,
       { reply_markup: goHome, parse_mode: 'HTML' },

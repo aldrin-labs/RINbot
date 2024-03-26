@@ -453,7 +453,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       }
     });
     const currentToken = allCoinAssets[0];
-    const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+    const totalNetWorth = netWorth === 0 ? `` : `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
     if (isCoinAssetDataExtended(currentToken)) {
       priceApiDataStr =
@@ -525,22 +525,24 @@ export async function home(ctx: BotContext) {
 
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(
-      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
-    );
-
     let balance = 0;
-    allCoinAssets.forEach((coin) => {
-      const price = priceMap.get(coin.type);
-      if (price !== undefined) {
-        balance += +coin.balance * price;
-      }
-    });
-    if (balance === 0) {
-      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    if (coinsPriceApi !== undefined) {
+      const priceMap = new Map(
+        coinsPriceApi.map((coin) => [coin.tokenAddress, coin.price]),
+      );
+
+      allCoinAssets.forEach((coin) => {
+        const price = priceMap.get(coin.type);
+        if (price !== undefined) {
+          balance += +coin.balance * price;
+        }
+      });
     }
-    else {
-      totalBalanceStr = ''
+
+    if (balance === 0) {
+      totalBalanceStr = '';
+    } else {
+      totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
     }
   } catch (error) {
     console.error('Error in calculating total balance: ', error);
