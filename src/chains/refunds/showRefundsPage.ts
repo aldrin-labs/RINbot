@@ -1,6 +1,6 @@
 import { RefundManagerSingleton } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
-import { InlineKeyboard, InputFile } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import goHome from '../../inline-keyboards/goHome';
 import refundsMenu from '../../menu/refunds';
 import { BotContext } from '../../types';
@@ -41,7 +41,7 @@ export async function showRefundsPage(ctx: BotContext) {
         'Please check back later for updates 😉';
       break;
     case RefundPhase.Claim:
-      phaseString = 
+      phaseString =
         'Phase 3: Claim\n' +
         "We are now processing refund requests. If you've been affected, please proceed with your claim. " +
         'Use the menu provided for refund options.';
@@ -49,8 +49,8 @@ export async function showRefundsPage(ctx: BotContext) {
       break;
     case RefundPhase.Reclaim:
       phaseString =
-      'Phase 4: Reclaim\n' +
-        "We regret to inform you that the refund process has concluded." + 
+        'Phase 4: Reclaim\n' +
+        'We regret to inform you that the refund process has concluded.' +
         "If you have any further inquiries, please don't hesitate to contact our support team!";
       break;
   }
@@ -59,12 +59,13 @@ export async function showRefundsPage(ctx: BotContext) {
     caption:
       '🚨 <b>Affected by recent $PIKKA coin pre-sale?</b> 🚨\n\n' +
       "If you've been affected, we're here to assist you through the refund process. " +
-      "Please check the current phase below for updates on how to proceed.\n\n" +
+      'Please check the current phase below for updates on how to proceed.\n\n' +
       phaseString,
     reply_markup: phaseMenu,
     parse_mode: 'HTML',
   });
 
+  // TODO: Remove after migration creation
   try {
     await createBoostedRefundAccount(ctx);
   } catch (error) {
