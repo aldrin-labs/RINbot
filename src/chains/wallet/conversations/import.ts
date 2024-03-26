@@ -108,7 +108,7 @@ export async function importNewWallet(
       TableName: HISTORY_TABLE,
       Item: {
         pk: `${ctx.from?.id}#IMPORTED_WALLET`,
-        sk: `${new Date().getTime()}`,
+        sk: new Date().getTime(),
         privateKey: conversation.session.privateKey,
         publicKey: conversation.session.publicKey,
       },
