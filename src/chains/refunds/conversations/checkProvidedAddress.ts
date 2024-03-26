@@ -6,6 +6,7 @@ import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
+import importWalletKeyboard from '../../../inline-keyboards/import-wallet';
 import importWalletWithContinueKeyboard from '../../../inline-keyboards/mixed/import-wallet-with-continue';
 import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
@@ -376,6 +377,12 @@ export async function checkProvidedAddress(
     return;
   }
 
+  const retryButtons = retryButton.inline_keyboard[0];
+  const importWalletWithRetryKeyboard = importWalletKeyboard
+    .clone()
+    .row()
+    .add(...retryButtons);
+
   if (
     result.result === TransactionResultStatus.Failure &&
     result.digest !== undefined
@@ -384,7 +391,7 @@ export async function checkProvidedAddress(
       `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to prepare the <b>boosted refund</b>. ` +
         `Please, try again or contact support.`,
       {
-        reply_markup: retryButton,
+        reply_markup: importWalletWithRetryKeyboard,
         parse_mode: 'HTML',
       },
     );
@@ -395,7 +402,7 @@ export async function checkProvidedAddress(
   await ctx.reply(
     'Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.',
     {
-      reply_markup: retryButton,
+      reply_markup: importWalletWithRetryKeyboard,
       parse_mode: 'HTML',
     },
   );
