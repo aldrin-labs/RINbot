@@ -5,37 +5,20 @@ import { generateWallet } from '../sui.functions';
 import { documentClient } from '../../services/aws';
 import { HISTORY_TABLE } from '../../config/bot.config';
 
-export async function createBoostedRefundAccount(ctx: BotContext) {
-  const userHasAccount = await userHasBoostedRefundAccount(ctx);
-
-  if (!userHasAccount) {
-    const { publicKey, privateKey } = generateWallet();
-    documentClient.put({
+export function backupCurrentAccount(ctx: BotContext) {
+  documentClient
+    .put({
       TableName: HISTORY_TABLE,
       Item: {
-        pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
+        pk: `${ctx.from?.id}#BACKUP_WALLET`,
         sk: `${new Date().getTime()}`,
-        privateKey,
-        publicKey
-      }
-    }).catch(e => console.error('ERROR creating boosted account', e));
-    ctx.session.refund.boostedRefundAccount = {
-      publicKey,
-      privateKey,
-    };
-  }
-}
-
-export function backupCurrentAccount(ctx: BotContext) {
-  documentClient.put({
-    TableName: HISTORY_TABLE,
-    Item: {
-      pk: `${ctx.from?.id}#BACKUP_WALLET`,
-      sk: `${new Date().getTime()}`,
-      privateKey: ctx.session.privateKey,
-      publicKey: ctx.session.publicKey
-    }
-  }).catch(e => console.error('ERROR creating backup account in the history', e));
+        privateKey: ctx.session.privateKey,
+        publicKey: ctx.session.publicKey,
+      },
+    })
+    .catch((e) =>
+      console.error('ERROR creating backup account in the history', e),
+    );
   ctx.session.refund.walletBeforeBoostedRefundClaim = {
     publicKey: ctx.session.publicKey,
     privateKey: ctx.session.privateKey,

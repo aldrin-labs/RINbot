@@ -7,7 +7,7 @@ import { BotContext } from '../../types';
 import { REFUND_PAGE_IMAGE_URL } from './config';
 import { RefundPhase } from './conversations/config';
 import { getRefundManager } from './getRefundManager';
-import { backupCurrentAccount, createBoostedRefundAccount } from './utils';
+import { backupCurrentAccount } from './utils';
 
 export async function showRefundsPage(ctx: BotContext) {
   const refundManager = getRefundManager();
@@ -41,7 +41,7 @@ export async function showRefundsPage(ctx: BotContext) {
         'Please check back later for updates 😉';
       break;
     case RefundPhase.Claim:
-      phaseString = 
+      phaseString =
         'Phase 3: Claim\n' +
         "We are now processing refund requests. If you've been affected, please proceed with your claim. " +
         'Use the menu provided for refund options.';
@@ -49,8 +49,8 @@ export async function showRefundsPage(ctx: BotContext) {
       break;
     case RefundPhase.Reclaim:
       phaseString =
-      'Phase 4: Reclaim\n' +
-        "We regret to inform you that the refund process has concluded." + 
+        'Phase 4: Reclaim\n' +
+        'We regret to inform you that the refund process has concluded.' +
         "If you have any further inquiries, please don't hesitate to contact our support team!";
       break;
   }
@@ -59,20 +59,11 @@ export async function showRefundsPage(ctx: BotContext) {
     caption:
       '🚨 <b>Affected by recent $PIKKA coin pre-sale?</b> 🚨\n\n' +
       "If you've been affected, we're here to assist you through the refund process. " +
-      "Please check the current phase below for updates on how to proceed.\n\n" +
+      'Please check the current phase below for updates on how to proceed.\n\n' +
       phaseString,
     reply_markup: phaseMenu,
     parse_mode: 'HTML',
   });
-
-  try {
-    await createBoostedRefundAccount(ctx);
-  } catch (error) {
-    console.error(
-      '[showRefundsPage] Error while createBoostedRefundAccount():',
-      error,
-    );
-  }
 
   // Regardless if it's failed or not, we'll check the existance of backup account during the refund process
   // In case if do not exists, we'll simply fail the operation and ask to try again.
