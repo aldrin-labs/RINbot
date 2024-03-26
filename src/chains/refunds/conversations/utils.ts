@@ -181,7 +181,70 @@ export async function claimBoostedRefund({
     return;
   }
 
-  let boostedClaimCap = await conversation.external(async () => {
+  await ctx.reply('<b>Preparing boosted claim...</b>', {
+    parse_mode: 'HTML',
+  });
+
+  const allowBoostedClaimTransaction = await getTransactionFromMethod({
+    conversation,
+    ctx,
+    method: RefundManagerSingleton.getAllowBoostedClaim,
+    params: {
+      affectedAddress: conversation.session.publicKey,
+      newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+      poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+      publisherObjectId: RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
+    },
+  });
+
+  if (allowBoostedClaimTransaction === undefined) {
+    await ctx.reply(
+      'Failed to create transaction for allowing boosted claim. Please, try again later or contact support.',
+      { reply_markup: retryButton },
+    );
+
+    return;
+  }
+
+  const allowBoostedClaimResult = await signAndExecuteTransaction({
+    conversation,
+    ctx,
+    transaction: allowBoostedClaimTransaction,
+    signerPrivateKey: ALDRIN_AUTHORITY,
+  });
+
+  if (
+    allowBoostedClaimResult.result === TransactionResultStatus.Success &&
+    allowBoostedClaimResult.digest !== undefined
+  ) {
+    await ctx.reply(
+      `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
+        ` the <b>boosted refund</b> claim!`,
+      {
+        parse_mode: 'HTML',
+      },
+    );
+  } else if (
+    allowBoostedClaimResult.result === TransactionResultStatus.Failure &&
+    allowBoostedClaimResult.digest !== undefined
+  ) {
+    await ctx.reply(
+      `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
+        `the <b>boosted claim</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
+    );
+
+    return;
+  } else {
+    await ctx.reply(
+      `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
+    );
+
+    return;
+  }
+
+  const boostedClaimCap = await conversation.external(async () => {
     try {
       return await refundManager.getBoostedClaimCap({
         ownerAddress: conversation.session.publicKey,
@@ -195,87 +258,6 @@ export async function claimBoostedRefund({
       return;
     }
   });
-
-  if (boostedClaimCap === undefined) {
-    await ctx.reply('<b>Preparing boosted claim...</b>', {
-      parse_mode: 'HTML',
-    });
-
-    const allowBoostedClaimTransaction = await getTransactionFromMethod({
-      conversation,
-      ctx,
-      method: RefundManagerSingleton.getAllowBoostedClaim,
-      params: {
-        affectedAddress: conversation.session.publicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-        publisherObjectId:
-          RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
-      },
-    });
-
-    if (allowBoostedClaimTransaction === undefined) {
-      await ctx.reply(
-        'Failed to create transaction for allowing boosted claim. Please, try again later or contact support.',
-        { reply_markup: retryButton },
-      );
-
-      return;
-    }
-
-    const allowBoostedClaimResult = await signAndExecuteTransaction({
-      conversation,
-      ctx,
-      transaction: allowBoostedClaimTransaction,
-      signerPrivateKey: ALDRIN_AUTHORITY,
-    });
-
-    if (
-      allowBoostedClaimResult.result === TransactionResultStatus.Success &&
-      allowBoostedClaimResult.digest !== undefined
-    ) {
-      await ctx.reply(
-        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
-        ` the <b>boosted refund</b> claim!`,
-        {
-          parse_mode: 'HTML',
-        },
-      );
-    } else if (
-      allowBoostedClaimResult.result === TransactionResultStatus.Failure &&
-      allowBoostedClaimResult.digest !== undefined
-    ) {
-      await ctx.reply(
-        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
-        `the <b>boosted claim</b>. Please, try again or contact support.`,
-        { reply_markup: retryButton, parse_mode: 'HTML' },
-      );
-
-      return;
-    } else {
-      await ctx.reply(
-        `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
-        { reply_markup: retryButton, parse_mode: 'HTML' },
-      );
-
-      return;
-    }
-
-    boostedClaimCap = await conversation.external(async () => {
-      try {
-        return await refundManager.getBoostedClaimCap({
-          ownerAddress: conversation.session.publicKey,
-        });
-      } catch (error) {
-        console.error(
-          '[claimBoostedRefund] Error while getBoostedClaimCap():',
-          error,
-        );
-
-        return;
-      }
-    });
-  }
 
   if (boostedClaimCap === undefined) {
     await ctx.reply(
@@ -329,8 +311,8 @@ export async function claimBoostedRefund({
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
-      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n`+
-      `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
+      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +
+        `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
       {
         reply_markup: assetsWithHomeKeyboard,
         parse_mode: 'HTML',
@@ -355,10 +337,13 @@ export async function claimBoostedRefund({
     return;
   }
 
-  await ctx.reply('Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..', {
-    reply_markup: retryButton,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    'Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..',
+    {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    },
+  );
 
   return;
 }
