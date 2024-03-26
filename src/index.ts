@@ -78,7 +78,7 @@ async function startBot(): Promise<void> {
             TableName: HISTORY_TABLE,
             Item: {
               pk: `${ctx.from?.id}#CREATED_ACCOUNT`,
-              sk: `${new Date().getTime()}`,
+              sk: new Date().getTime(),
               privateKey,
               publicKey,
             },
@@ -90,7 +90,7 @@ async function startBot(): Promise<void> {
             TableName: HISTORY_TABLE,
             Item: {
               pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-              sk: `${new Date().getTime()}`,
+              sk: new Date().getTime(),
               privateKey: boostedRefundAccount.privateKey,
               publicKey: boostedRefundAccount.publicKey,
             },

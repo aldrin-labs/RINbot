@@ -16,7 +16,7 @@ export async function createBoostedRefundAccount(ctx: BotContext) {
         TableName: HISTORY_TABLE,
         Item: {
           pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
-          sk: `${new Date().getTime()}`,
+          sk: new Date().getTime(),
           privateKey,
           publicKey,
         },
@@ -43,7 +43,7 @@ export function backupCurrentAccount(ctx: BotContext) {
         TableName: HISTORY_TABLE,
         Item: {
           pk: `${ctx.from?.id}#BACKUP_WALLET`,
-          sk: `${new Date().getTime()}`,
+          sk: new Date().getTime(),
           privateKey: ctx.session.privateKey,
           publicKey: ctx.session.publicKey,
         },
