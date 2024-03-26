@@ -12,6 +12,12 @@ export function createBoostedRefundAccount(ctx: BotContext) {
       // we create & store it to AWS Table and in his session.
       const boostedRefundAccount = generateWallet();
 
+      console.warn(
+        `[createBoostedRefundAccount migration] Creating and storing boosted refund account for user ${ctx.from?.id}. ` +
+          `His public key: ${old.publicKey}. ` +
+          `His new boostedRefundAccount.publicKey: ${boostedRefundAccount.publicKey}`,
+      );
+
       documentClient
         .put({
           TableName: HISTORY_TABLE,
