@@ -354,7 +354,7 @@ export async function checkProvidedAddress(
         `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
         `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n` +
         `<code>${boostedClaimCap}</code>\n\n` +
-        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
+        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account.\n` +
         `Feel free to ask our support for help!`,
       {
         reply_markup: goHome,
