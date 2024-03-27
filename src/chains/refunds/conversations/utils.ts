@@ -181,114 +181,128 @@ export async function claimBoostedRefund({
     return;
   }
 
-  let boostedClaimCap = await conversation.external(async () => {
-    try {
-      if (conversation.session.refund.boostedRefundAccount === null) {
-        return;
-      }
-
-      return await refundManager.getBoostedClaimCap({
-        ownerAddress: conversation.session.publicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-      });
-    } catch (error) {
-      console.error(
-        '[claimBoostedRefund] Error while getBoostedClaimCap():',
-        error,
-      );
-
-      return;
-    }
+  let boostedClaimCap = await getBoostedClaimCap({
+    conversation,
+    refundManager,
   });
 
   if (boostedClaimCap === undefined) {
-    await ctx.reply('<b>Preparing boosted claim...</b>', {
-      parse_mode: 'HTML',
-    });
+    await ctx.reply(
+      'Something went wrong while fetching preparing state. Please, try again later or contact support.',
+      { reply_markup: retryButton },
+    );
 
-    const allowBoostedClaimTransaction = await getTransactionFromMethod({
+    return;
+  }
+
+  let {
+    boostedClaimCapObjectId,
+    isAnyBoostedClaimCapExists,
+    boostedClaimCapNotAssociatedWithNewAddressObjectId,
+  } = boostedClaimCap;
+
+  // If there is no any boosted claim cap — just create it.
+  if (!isAnyBoostedClaimCapExists) {
+    const createdSuccessfully = await createBoostedClaimCap({
       conversation,
       ctx,
-      method: RefundManagerSingleton.getAllowBoostedClaim,
+      retryButton,
+    });
+
+    if (!createdSuccessfully) {
+      return;
+    }
+
+    boostedClaimCap = await getBoostedClaimCap({
+      conversation,
+      refundManager,
+    });
+  } else if (
+    boostedClaimCapObjectId === null &&
+    isAnyBoostedClaimCapExists &&
+    boostedClaimCapNotAssociatedWithNewAddressObjectId !== null
+  ) {
+    // If boosted claim cap exists, but with not corresponding `newAddress` — burn it and create a new one.
+    await ctx.reply(
+      '<b>Inappropriate boosted claim cap found. Burning it to safely bring your money...</b>',
+      { parse_mode: 'HTML' },
+    );
+
+    const burnTransaction = await getTransactionFromMethod({
+      conversation,
+      ctx,
+      method: RefundManagerSingleton.getReturnBoosterCapTransaction,
       params: {
-        affectedAddress: conversation.session.publicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
         poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
-        publisherObjectId:
-          RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
+        boostedClaimCap: boostedClaimCapNotAssociatedWithNewAddressObjectId,
       },
     });
 
-    if (allowBoostedClaimTransaction === undefined) {
+    if (burnTransaction === undefined) {
       await ctx.reply(
-        'Failed to create transaction for allowing boosted claim. Please, try again later or contact support.',
+        'Failed to create transaction for burning inappropriate boosted claim cap. ' +
+          'Please, try again later or contact support.',
         { reply_markup: retryButton },
       );
 
       return;
     }
 
-    const allowBoostedClaimResult = await signAndExecuteTransaction({
+    const burnResult = await signAndExecuteTransaction({
       conversation,
       ctx,
-      transaction: allowBoostedClaimTransaction,
-      signerPrivateKey: ALDRIN_AUTHORITY,
+      transaction: burnTransaction,
     });
 
     if (
-      allowBoostedClaimResult.result === TransactionResultStatus.Success &&
-      allowBoostedClaimResult.digest !== undefined
+      burnResult.result === TransactionResultStatus.Success &&
+      burnResult.digest !== undefined
     ) {
       await ctx.reply(
-        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
-          ` the <b>boosted refund</b> claim!`,
-        {
-          parse_mode: 'HTML',
-        },
+        `<a href="${getSuiVisionTransactionLink(burnResult.digest)}">Successfully burned</a> inappropriate boosted ` +
+          'claim cap.',
+        { reply_markup: retryButton, parse_mode: 'HTML' },
       );
     } else if (
-      allowBoostedClaimResult.result === TransactionResultStatus.Failure &&
-      allowBoostedClaimResult.digest !== undefined
+      burnResult.result === TransactionResultStatus.Failure &&
+      burnResult.digest !== undefined
     ) {
       await ctx.reply(
-        `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
-          `the <b>boosted claim</b>. Please, try again or contact support.`,
+        `<a href="${getSuiVisionTransactionLink(burnResult.digest)}">Failed</a> to burn inappropriate boosted ` +
+          'claim cap. Please, try again later or contact support.',
         { reply_markup: retryButton, parse_mode: 'HTML' },
       );
 
       return;
     } else {
       await ctx.reply(
-        `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
-        { reply_markup: retryButton, parse_mode: 'HTML' },
+        'Failed to burn inappropriate boosted claim cap. Please, try again later or contact support.',
+        { reply_markup: retryButton },
       );
 
       return;
     }
 
-    boostedClaimCap = await conversation.external(async () => {
-      try {
-        if (conversation.session.refund.boostedRefundAccount === null) {
-          return;
-        }
+    const createdSuccessfully = await createBoostedClaimCap({
+      conversation,
+      ctx,
+      retryButton,
+    });
 
-        return await refundManager.getBoostedClaimCap({
-          ownerAddress: conversation.session.publicKey,
-          newAddress:
-            conversation.session.refund.boostedRefundAccount.publicKey,
-        });
-      } catch (error) {
-        console.error(
-          '[claimBoostedRefund] Error while getBoostedClaimCap():',
-          error,
-        );
+    if (!createdSuccessfully) {
+      return;
+    }
 
-        return;
-      }
+    boostedClaimCap = await getBoostedClaimCap({
+      conversation,
+      refundManager,
     });
   }
 
-  if (boostedClaimCap === undefined) {
+  if (
+    boostedClaimCap === undefined ||
+    boostedClaimCap.boostedClaimCapObjectId === null
+  ) {
     await ctx.reply(
       `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
       { reply_markup: retryButton, parse_mode: 'HTML' },
@@ -296,6 +310,8 @@ export async function claimBoostedRefund({
 
     return;
   }
+
+  boostedClaimCapObjectId = boostedClaimCap.boostedClaimCapObjectId;
 
   await ctx.reply('<b>Claiming the boosted refund...</b>', {
     parse_mode: 'HTML',
@@ -307,7 +323,9 @@ export async function claimBoostedRefund({
     ctx,
     method: RefundManagerSingleton.getClaimRefundBoostedTransaction,
     params: {
-      boostedClaimCap,
+      userRinbotRefundDestinationAddress:
+        conversation.session.refund.boostedRefundAccount.publicKey,
+      boostedClaimCap: boostedClaimCapObjectId,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
     },
   });
@@ -375,4 +393,119 @@ export async function claimBoostedRefund({
   );
 
   return;
+}
+
+async function createBoostedClaimCap({
+  conversation,
+  ctx,
+  retryButton,
+}: {
+  conversation: MyConversation;
+  ctx: BotContext;
+  retryButton: InlineKeyboard;
+}): Promise<boolean> {
+  if (conversation.session.refund.boostedRefundAccount === null) {
+    await ctx.reply(
+      "It's not safe to continue because of unexpected case of dialog scenario. " +
+        'Please, try again later or contact support.',
+      { reply_markup: refundsKeyboard, parse_mode: 'HTML' },
+    );
+
+    return false;
+  }
+
+  await ctx.reply('<b>Preparing boosted claim...</b>', {
+    parse_mode: 'HTML',
+  });
+
+  const allowBoostedClaimTransaction = await getTransactionFromMethod({
+    conversation,
+    ctx,
+    method: RefundManagerSingleton.getAllowBoostedClaim,
+    params: {
+      affectedAddress: conversation.session.publicKey,
+      newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+      poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
+      publisherObjectId: RefundManagerSingleton.REFUND_POOL_PUBLISHER_OBJECT_ID,
+    },
+  });
+
+  if (allowBoostedClaimTransaction === undefined) {
+    await ctx.reply(
+      'Failed to create transaction for allowing boosted claim. Please, try again later or contact support.',
+      { reply_markup: retryButton },
+    );
+
+    return false;
+  }
+
+  const allowBoostedClaimResult = await signAndExecuteTransaction({
+    conversation,
+    ctx,
+    transaction: allowBoostedClaimTransaction,
+    signerPrivateKey: ALDRIN_AUTHORITY,
+  });
+
+  if (
+    allowBoostedClaimResult.result === TransactionResultStatus.Success &&
+    allowBoostedClaimResult.digest !== undefined
+  ) {
+    await ctx.reply(
+      `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Successfully prepared</a>` +
+        ` the <b>boosted refund</b> claim!`,
+      {
+        parse_mode: 'HTML',
+      },
+    );
+
+    return true;
+  } else if (
+    allowBoostedClaimResult.result === TransactionResultStatus.Failure &&
+    allowBoostedClaimResult.digest !== undefined
+  ) {
+    await ctx.reply(
+      `<a href="${getSuiVisionTransactionLink(allowBoostedClaimResult.digest)}">Failed to prepare</a> ` +
+        `the <b>boosted claim</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
+    );
+
+    return false;
+  } else {
+    await ctx.reply(
+      `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
+      { reply_markup: retryButton, parse_mode: 'HTML' },
+    );
+
+    return false;
+  }
+}
+
+export async function getBoostedClaimCap({
+  conversation,
+  refundManager,
+  ownerAddress = conversation.session.publicKey,
+}: {
+  conversation: MyConversation;
+  refundManager: RefundManagerSingleton;
+  ownerAddress?: string;
+}) {
+  return await conversation.external(async () => {
+    try {
+      if (conversation.session.refund.boostedRefundAccount === null) {
+        return;
+      }
+
+      return await refundManager.getBoostedClaimCap({
+        ownerAddress,
+        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
+      });
+    } catch (error) {
+      console.error(
+        '[claimBoostedRefund] Error while getBoostedClaimCap():',
+        error,
+      );
+
+      return;
+    }
+  });
 }

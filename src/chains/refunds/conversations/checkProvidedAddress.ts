@@ -6,6 +6,7 @@ import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
+import importWalletKeyboard from '../../../inline-keyboards/import-wallet';
 import importWalletWithContinueKeyboard from '../../../inline-keyboards/mixed/import-wallet-with-continue';
 import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
@@ -29,6 +30,7 @@ import {
   BOOSTED_REFUND_EXAMPLE_FOR_USER_URL,
   boostedRefundExportPrivateKeyWarnMessage,
 } from './config';
+import { getBoostedClaimCap } from './utils';
 
 export async function checkProvidedAddress(
   conversation: MyConversation,
@@ -37,6 +39,17 @@ export async function checkProvidedAddress(
   const refundManager = getRefundManager();
   const retryButton =
     retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
+
+  const retryButtons = retryButton.inline_keyboard[0];
+  const importWalletWithRetryKeyboard = importWalletKeyboard
+    .clone()
+    .row()
+    .add(...retryButtons);
+
+  const closeButtons = closeConversation.inline_keyboard[0];
+  const importWalletWithCancelKeyboard = importWalletKeyboard
+    .clone()
+    .add(...closeButtons);
 
   // Ask user for address he wants to check
   await ctx.reply(
@@ -246,35 +259,48 @@ export async function checkProvidedAddress(
     return;
   }
 
-  let boostedClaimCap = await conversation.external(async () => {
-    try {
-      if (conversation.session.refund.boostedRefundAccount === null) {
-        return;
-      }
-
-      return await refundManager.getBoostedClaimCap({
-        ownerAddress: affectedPublicKey,
-        newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
-      });
-    } catch (error) {
-      console.error(
-        '[checkProvidedAddress] Error while getBoostedClaimCap():',
-        error,
-      );
-
-      return;
-    }
+  let boostedClaimCap = await getBoostedClaimCap({
+    conversation,
+    refundManager,
+    ownerAddress: affectedPublicKey,
   });
 
-  if (boostedClaimCap) {
+  if (boostedClaimCap === undefined) {
+    await ctx.reply(
+      'Something went wrong while fetching preparing state. Please, try again later or contact support.',
+      { reply_markup: retryButton },
+    );
+
+    return;
+  }
+
+  let {
+    boostedClaimCapObjectId,
+    boostedClaimCapNotAssociatedWithNewAddressObjectId,
+    isAnyBoostedClaimCapExists,
+  } = boostedClaimCap;
+
+  if (boostedClaimCapObjectId !== null) {
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
         `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
-        `${boostedClaimCap}</code>\n\n` +
+        `${boostedClaimCapObjectId}</code>\n\n` +
         `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
         `\n\nFeel free to ask our support for help!`,
       { reply_markup: goHome, parse_mode: 'HTML' },
     );
+
+    return;
+  } else if (
+    boostedClaimCapObjectId === null &&
+    isAnyBoostedClaimCapExists &&
+    boostedClaimCapNotAssociatedWithNewAddressObjectId !== null
+  ) {
+    // If boosted claim cap exists, but with not corresponding `newAddress` — notify user and exit conversation.
+    await ctx.reply('Consider importing the wallet.', {
+      reply_markup: importWalletWithCancelKeyboard,
+      parse_mode: 'HTML',
+    });
 
     return;
   }
@@ -339,32 +365,17 @@ export async function checkProvidedAddress(
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     // Updating boosted claim cap
-    boostedClaimCap = await conversation.external(async () => {
-      try {
-        if (conversation.session.refund.boostedRefundAccount === null) {
-          return;
-        }
-
-        return await refundManager.getBoostedClaimCap({
-          ownerAddress: affectedPublicKey,
-          newAddress:
-            conversation.session.refund.boostedRefundAccount.publicKey,
-        });
-      } catch (error) {
-        console.error(
-          '[checkProvidedAddress] Error while getBoostedClaimCap():',
-          error,
-        );
-
-        return;
-      }
+    boostedClaimCap = await getBoostedClaimCap({
+      conversation,
+      refundManager,
+      ownerAddress: affectedPublicKey,
     });
 
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>!\n\n` +
         `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
         `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n` +
-        `<code>${boostedClaimCap}</code>\n\n` +
+        `<code>${boostedClaimCap?.boostedClaimCapObjectId}</code>\n\n` +
         `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account.\n` +
         `Feel free to ask our support for help!`,
       {
@@ -384,7 +395,7 @@ export async function checkProvidedAddress(
       `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to prepare the <b>boosted refund</b>. ` +
         `Please, try again or contact support.`,
       {
-        reply_markup: retryButton,
+        reply_markup: importWalletWithRetryKeyboard,
         parse_mode: 'HTML',
       },
     );
@@ -395,7 +406,7 @@ export async function checkProvidedAddress(
   await ctx.reply(
     'Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.',
     {
-      reply_markup: retryButton,
+      reply_markup: importWalletWithRetryKeyboard,
       parse_mode: 'HTML',
     },
   );
