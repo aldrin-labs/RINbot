@@ -30,6 +30,7 @@ import {
   isValidCoinLink,
   userMustUseCoinWhitelist,
 } from '../utils';
+import { RINBOT_CHAT_URL } from '../sui.config';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -128,10 +129,15 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         );
 
         if (requiredCoinInWhitelist === undefined) {
-          // TODO: Update this message
           await ctx.reply(
-            'This coin is not in the whitelist. Please, specify another one or contact support.',
-            { reply_markup: closeConversation },
+            'This coin is not in the whitelist. Please, specify another one or contact support.\n\n' +
+              '<span class="tg-spoiler"><b>Hint</b>: you can request coin whitelisting in ' +
+              `<a href="${RINBOT_CHAT_URL}">RINbot_chat</a>.</span>`,
+            {
+              reply_markup: closeConversation,
+              parse_mode: 'HTML',
+              link_preview_options: { is_disabled: true },
+            },
           );
 
           return false;
