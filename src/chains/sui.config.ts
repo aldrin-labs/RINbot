@@ -10,3 +10,5 @@ export const RINCEL_COIN_TYPE =
 
 export const COIN_WHITELIST_URL =
   'https://rinbot-dev.vercel.app/api/coin-whitelist';
+
+export const RINBOT_CHAT_URL = 'https://t.me/rinbot_chat';
