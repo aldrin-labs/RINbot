@@ -294,6 +294,11 @@ export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
   const whitelistJson = await whitelist.json();
 
   if (!isCoinWhitelistItemArray(whitelistJson)) {
+    console.warn(
+      '[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:',
+      whitelistJson,
+    );
+
     return null;
   }
 
