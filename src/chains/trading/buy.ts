@@ -1,10 +1,9 @@
 import {
   FeeManager,
   LONG_SUI_COIN_TYPE,
-  RouteManager,
-  SHORT_SUI_COIN_TYPE,
   SUI_DECIMALS,
   WalletManagerSingleton,
+  isSuiCoinType,
   isValidTokenAddress,
   isValidTokenAmount,
   transactionFromSerializedTransaction,
@@ -25,11 +24,13 @@ import {
 } from '../sui.functions';
 import {
   extractCoinTypeFromLink,
+  getCoinWhitelist,
   getPriceOutputData,
   isTransactionSuccessful,
   isValidCoinLink,
-  swapTokenTypesAreEqual,
+  userMustUseCoinWhitelist,
 } from '../utils';
+import { RINBOT_CHAT_URL } from '../sui.config';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -98,9 +99,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         return false;
       }
 
-      const tokenToBuyIsSui: boolean =
-        swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
-        swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
+      const tokenToBuyIsSui: boolean = isSuiCoinType(fetchedCoin.type);
 
       if (tokenToBuyIsSui) {
         await ctx.reply(
@@ -109,6 +108,40 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         );
 
         return false;
+      }
+
+      if (userMustUseCoinWhitelist(ctx)) {
+        const coinWhitelist = await conversation.external(() =>
+          getCoinWhitelist(),
+        );
+
+        if (coinWhitelist === null) {
+          await ctx.reply(
+            'Failed to fetch coin whitelist. Please, try again later or contact support.',
+            { reply_markup: closeConversation },
+          );
+
+          return false;
+        }
+
+        const requiredCoinInWhitelist = coinWhitelist.find(
+          (coin) => coin.type === fetchedCoin.type,
+        );
+
+        if (requiredCoinInWhitelist === undefined) {
+          await ctx.reply(
+            'This coin is not in the whitelist. Please, specify another one or contact support.\n\n' +
+              '<span class="tg-spoiler"><b>Hint</b>: you can request coin whitelisting in ' +
+              `<a href="${RINBOT_CHAT_URL}">RINbot_chat</a>.</span>`,
+            {
+              reply_markup: closeConversation,
+              parse_mode: 'HTML',
+              link_preview_options: { is_disabled: true },
+            },
+          );
+
+          return false;
+        }
       }
 
       validatedCoinType = fetchedCoin.type;
@@ -176,7 +209,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    await ctx.reply('Finding the best route to save your money… ☺️' + random_uuid);
+    await ctx.reply(
+      'Finding the best route to save your money… ☺️' + random_uuid,
+    );
 
     validatedInputAmount = inputAmount;
     return true;
@@ -269,7 +304,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
+  await ctx.reply(
+    'Route for swap found, sending transaction... 🔄' + random_uuid,
+  );
 
   const resultOfSwap = await conversation.external(async () => {
     try {
@@ -325,5 +362,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  await ctx.reply('Transaction sending failed ❌', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed ❌', {
+    reply_markup: retryButton,
+  });
 }
