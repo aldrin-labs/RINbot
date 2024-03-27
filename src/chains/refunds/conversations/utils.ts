@@ -374,7 +374,7 @@ export async function claimBoostedRefund({
     result.digest !== undefined
   ) {
     await ctx.reply(
-      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..`,
+      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>.`,
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -384,13 +384,10 @@ export async function claimBoostedRefund({
     return;
   }
 
-  await ctx.reply(
-    'Failed to claim the <b>boosted refund</b>. Please think about adding more funds to your wallet to cover the transaction fee..',
-    {
-      reply_markup: retryButton,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.reply('Failed to claim the <b>boosted refund</b>.', {
+    reply_markup: retryButton,
+    parse_mode: 'HTML',
+  });
 
   return;
 }
