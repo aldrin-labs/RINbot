@@ -231,8 +231,9 @@ export async function claimBoostedRefund({
     const burnTransaction = await getTransactionFromMethod({
       conversation,
       ctx,
-      method: RefundManagerSingleton.getBurnBoostedClaimCapTransaction,
+      method: RefundManagerSingleton.getReturnBoosterCapTransaction,
       params: {
+        poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
         boostedClaimCap: boostedClaimCapNotAssociatedWithNewAddressObjectId,
       },
     });
@@ -322,6 +323,8 @@ export async function claimBoostedRefund({
     ctx,
     method: RefundManagerSingleton.getClaimRefundBoostedTransaction,
     params: {
+      userRinbotRefundDestinationAddress:
+        conversation.session.refund.boostedRefundAccount.publicKey,
       boostedClaimCap: boostedClaimCapObjectId,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
     },
