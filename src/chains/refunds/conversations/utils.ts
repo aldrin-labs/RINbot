@@ -491,6 +491,7 @@ export async function getBoostedClaimCap({
 }) {
   return await conversation.external(async () => {
     try {
+      // We have to make sure that user has `boostedRefundAccount`
       if (conversation.session.refund.boostedRefundAccount === null) {
         return;
       }
