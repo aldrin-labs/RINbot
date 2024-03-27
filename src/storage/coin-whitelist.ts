@@ -1,3 +1,4 @@
+// Source: https://dexscreener.com/sui?rankBy=trendingScoreH6&order=desc&minLiq=30000&minFdv=150000&minAge=72
 export default [
   {
     symbol: 'FUD',
