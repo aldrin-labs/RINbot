@@ -290,19 +290,25 @@ export function userMustUseCoinWhitelist(ctx: BotContext) {
 }
 
 export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
-  const whitelist = await fetch(COIN_WHITELIST_URL);
-  const whitelistJson = await whitelist.json();
+  try {
+    const whitelist = await fetch(COIN_WHITELIST_URL);
+    const whitelistJson = await whitelist.json();
 
-  if (!isCoinWhitelistItemArray(whitelistJson)) {
-    console.warn(
-      '[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:',
-      whitelistJson,
-    );
+    if (!isCoinWhitelistItemArray(whitelistJson)) {
+      console.warn(
+        '[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:',
+        whitelistJson,
+      );
+
+      return null;
+    }
+
+    return whitelistJson;
+  } catch (error) {
+    console.error('[getCoinWhitelist] Error occured:', error);
 
     return null;
   }
-
-  return whitelistJson;
 }
 
 export function isCoinWhitelistItemArray(
