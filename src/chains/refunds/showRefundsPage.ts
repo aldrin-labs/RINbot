@@ -32,13 +32,13 @@ export async function showRefundsPage(ctx: BotContext) {
       phaseString =
         'Phase 1: Address Addition\n' +
         'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
-        'Please check back later for updates 😉';
+        'Please check back later for updates.';
       break;
     case RefundPhase.Funding:
       phaseString =
         'Phase 2: Funding\n' +
         'We are currently gathering funds into the smart contract to facilitate the refund process. ' +
-        'Please check back later for updates 😉';
+        'Please check back later for updates.';
       break;
     case RefundPhase.Claim:
       phaseString =
