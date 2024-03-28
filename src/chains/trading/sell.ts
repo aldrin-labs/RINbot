@@ -1,33 +1,35 @@
 import {
   CoinAssetData,
-  isValidTokenAddress,
   LONG_SUI_COIN_TYPE,
   SHORT_SUI_COIN_TYPE,
+  WalletManagerSingleton,
+  isValidTokenAddress,
   isValidTokenAmount,
   transactionFromSerializedTransaction,
-  WalletManagerSingleton,
 } from '@avernikoz/rinbot-sui-sdk';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import { MyConversation, BotContext } from '../../types';
+import { BotContext, MyConversation } from '../../types';
 import { ConversationId } from '../conversations.config';
-import { getPriceApi } from '../priceapi.utils';
+import { SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS } from '../sui.config';
 import {
-  getWalletManager,
+  TransactionResultStatus,
   getCoinManager,
   getRouteManager,
-  random_uuid,
-  TransactionResultStatus,
+  getWalletManager,
   provider,
+  random_uuid,
 } from '../sui.functions';
 import {
-  isValidCoinLink,
   extractCoinTypeFromLink,
-  swapTokenTypesAreEqual,
   findCoinInAssets,
+  formatMilliseconds,
+  getPriceOutputData,
   isCoinAssetData,
   isTransactionSuccessful,
-  getPriceOutputData,
+  isValidCoinLink,
+  swapTokenTypesAreEqual,
+  userMustUseCoinWhitelist,
 } from '../utils';
 
 export async function sell(
@@ -150,6 +152,40 @@ export async function sell(
       return false;
     }
 
+    if (userMustUseCoinWhitelist(ctx)) {
+      const selectedCoinTradesInfo =
+        conversation.session.trades[foundCoin.type];
+
+      if (selectedCoinTradesInfo !== undefined) {
+        const { lastTradeTimestamp } = selectedCoinTradesInfo;
+
+        const notAllowedToSellCoin =
+          lastTradeTimestamp + SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS >
+          Date.now();
+
+        if (notAllowedToSellCoin) {
+          const remainingTimeToAllowSell =
+            lastTradeTimestamp +
+            SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS -
+            Date.now();
+
+          const formattedRemainingTime = formatMilliseconds(
+            remainingTimeToAllowSell,
+          );
+
+          await ctx.reply(
+            `You won't be able to sell <b>${foundCoin.symbol || foundCoin.type}</b> you've just ` +
+              `purchased for the next <i><b>${formattedRemainingTime}</b></i>. This is a temporary restriction put ` +
+              'in place to maintain fairness and prevent any misuse of our boosted refund feature.\n\nYou can try ' +
+              "to sell any other coin you'd like.",
+            { reply_markup: closeConversation, parse_mode: 'HTML' },
+          );
+
+          return false;
+        }
+      }
+    }
+
     validatedCoin = foundCoin;
     return true;
   });
@@ -167,7 +203,9 @@ export async function sell(
 
   const validCoinToSell = validatedCoin as CoinAssetData;
 
-  const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
+  const priceOutput = await conversation.external(() =>
+    getPriceOutputData(validCoinToSell),
+  );
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
@@ -281,7 +319,9 @@ export async function sell(
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
+  await ctx.reply(
+    'Route for swap found, sending transaction... 🔄' + random_uuid,
+  );
 
   const resultOfSwap: {
     digest?: string;
@@ -305,7 +345,6 @@ export async function sell(
         : TransactionResultStatus.Failure;
 
       return { digest: res.digest, result };
-
     } catch (error) {
       if (error instanceof Error) {
         console.error(
@@ -342,5 +381,7 @@ export async function sell(
     return;
   }
 
-  await ctx.reply('Transaction sending failed. ❌', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed. ❌', {
+    reply_markup: retryButton,
+  });
 }

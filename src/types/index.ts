@@ -93,6 +93,7 @@ export interface SessionData {
       privateKey: string;
     } | null;
   };
+  trades: { [coinType: string]: { lastTradeTimestamp: number } };
 }
 
 export type BotContext = Context &

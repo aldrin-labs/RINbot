@@ -325,3 +325,26 @@ export function isCoinWhitelistItemArray(
     )
   );
 }
+
+export function formatMilliseconds(milliseconds: number): string {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  let result = '';
+
+  if (hours > 0) {
+    result += `${hours} hour`;
+    if (hours > 1) result += 's';
+    result += ` ${minutes % 60} minute`;
+    if (minutes % 60 > 1) result += 's';
+  } else if (minutes > 0) {
+    result += `${minutes} minute`;
+    if (minutes > 1) result += 's';
+  } else {
+    result += `${seconds} second`;
+    if (seconds > 1) result += 's';
+  }
+
+  return result;
+}

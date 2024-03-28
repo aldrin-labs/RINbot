@@ -350,6 +350,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
+    if (userMustUseCoinWhitelist(ctx)) {
+      conversation.session.trades[resCoinType] = {
+        lastTradeTimestamp: Date.now(),
+      };
+    }
+
     return;
   }
 
