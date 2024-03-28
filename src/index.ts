@@ -34,6 +34,7 @@ import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import {
   BOT_TOKEN,
   ENVIRONMENT,
+  HISTORY_TABLE,
   WELCOME_BONUS_AMOUNT,
 } from './config/bot.config';
 import menu from './menu/main';
@@ -43,7 +44,9 @@ import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
+import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
 function errorBoundaryHandler(err: BotError) {
@@ -64,10 +67,37 @@ const composer = new Composer<BotContext>();
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
   composer.use(timeoutMiddleware);
-  bot.use(
-    session({
+
+  bot.lazy((ctx) => {
+    return session({
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
+        const boostedRefundAccount = generateWallet();
+
+        documentClient
+          .put({
+            TableName: HISTORY_TABLE,
+            Item: {
+              pk: `${ctx.from?.id}#CREATED_ACCOUNT`,
+              sk: new Date().getTime(),
+              privateKey,
+              publicKey,
+            },
+          })
+          .catch((e) => console.error('ERROR storing created account', e));
+
+        documentClient
+          .put({
+            TableName: HISTORY_TABLE,
+            Item: {
+              pk: `${ctx.from?.id}#BOOSTED_ACCOUNT`,
+              sk: new Date().getTime(),
+              privateKey: boostedRefundAccount.privateKey,
+              publicKey: boostedRefundAccount.publicKey,
+            },
+          })
+          .catch((e) => console.error('ERROR storing boosted account', e));
+
         return {
           step: 'main',
           privateKey,
@@ -90,7 +120,7 @@ async function startBot(): Promise<void> {
             claimedBoostedRefund: false,
             walletBeforeBoostedRefundClaim: null,
             boostedRefundAmount: null,
-            boostedRefundAccount: null,
+            boostedRefundAccount,
           },
         };
       },
@@ -102,10 +132,11 @@ async function startBot(): Promise<void> {
           3: addTradeCoin,
           4: addBoostedRefund,
           5: addRefundFields,
+          6: createBoostedRefundAccount(ctx),
         },
       }),
-    }),
-  );
+    });
+  });
 
   bot.api.config.use(
     autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),

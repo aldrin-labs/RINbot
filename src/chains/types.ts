@@ -13,3 +13,8 @@ export type CetusPool = Exclude<
   Awaited<ReturnType<Awaited<ReturnType<typeof getCetus>>['getPool']>>,
   null
 >;
+
+export type CoinWhitelistItem = {
+  symbol: string;
+  type: string;
+};

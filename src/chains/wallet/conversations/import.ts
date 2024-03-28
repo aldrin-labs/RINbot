@@ -2,9 +2,11 @@ import {
   WalletManagerSingleton,
   isValidPrivateKey,
 } from '@avernikoz/rinbot-sui-sdk';
+import { HISTORY_TABLE } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
+import { documentClient } from '../../../services/aws';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
@@ -99,6 +101,19 @@ export async function importNewWallet(
   conversation.session.publicKey = newKeypair.getPublicKey().toSuiAddress();
   conversation.session.privateKey =
     WalletManagerSingleton.getPrivateKeyFromKeyPair(newKeypair);
+
+  // Storing imported wallet into AWS Table
+  documentClient
+    .put({
+      TableName: HISTORY_TABLE,
+      Item: {
+        pk: `${ctx.from?.id}#IMPORTED_WALLET`,
+        sk: new Date().getTime(),
+        privateKey: conversation.session.privateKey,
+        publicKey: conversation.session.publicKey,
+      },
+    })
+    .catch((e) => console.error('ERROR storing imported wallet', e));
 
   await ctx.reply('New wallet is <b>successfully imported</b>!', {
     reply_markup: goHome,
