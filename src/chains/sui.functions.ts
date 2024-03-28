@@ -453,7 +453,10 @@ export async function assets(ctx: BotContext): Promise<void> {
       }
     });
     const currentToken = allCoinAssets[0];
-    const totalNetWorth = netWorth === 0 ? `` : `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+    const totalNetWorth =
+      netWorth === 0
+        ? ``
+        : `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
     if (isCoinAssetDataExtended(currentToken)) {
       priceApiDataStr =
@@ -500,9 +503,9 @@ export async function home(ctx: BotContext) {
     price = priceApiGetResponse?.data.data.price;
   } catch (error) {
     if (error instanceof Error) {
-      console.error('[home] Price API error:', error.message)
+      console.error('[home] Price API error:', error.message);
     } else {
-      console.error('[home] Price API error: unknown error')
+      console.error('[home] Price API error: unknown error');
     }
 
     price = undefined;
@@ -593,7 +596,10 @@ export async function home(ctx: BotContext) {
         priceApiDataStr = '';
       }
 
-      const symbol = token.symbol === undefined ? token.type.split("::").pop() : token.symbol;
+      const symbol =
+        token.symbol === undefined
+          ? token.type.split('::').pop()
+          : token.symbol;
 
       assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
@@ -612,10 +618,12 @@ export async function home(ctx: BotContext) {
       ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
       : `<b>${avl_balance} SUI</b>`;
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)],
-    { caption: welcome_text, reply_markup: menu, parse_mode: 'HTML' },
-  );
+  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)], {
+    caption: welcome_text,
+    reply_markup: menu,
+    parse_mode: 'HTML',
+  });
 }
 export async function nftHome(ctx: BotContext) {
   await ctx.reply(
