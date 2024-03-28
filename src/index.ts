@@ -43,6 +43,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addTradeCoin } from './migrations/addTradeCoin';
+import { addTradesField } from './migrations/addTradesField';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
@@ -122,6 +123,7 @@ async function startBot(): Promise<void> {
             boostedRefundAmount: null,
             boostedRefundAccount,
           },
+          trades: {},
         };
       },
       storage: enhanceStorage({
@@ -133,6 +135,7 @@ async function startBot(): Promise<void> {
           4: addBoostedRefund,
           5: addRefundFields,
           6: createBoostedRefundAccount(ctx),
+          7: addTradesField,
         },
       }),
     });
