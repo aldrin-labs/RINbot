@@ -32,24 +32,24 @@ export async function showRefundsPage(ctx: BotContext) {
       phaseString =
         'Phase 1: Address Addition\n' +
         'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
-        'Please check back later for updates 😉';
+        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.';
       break;
     case RefundPhase.Funding:
       phaseString =
-        'Phase 2: Funding\n' +
-        'We are currently gathering funds into the smart contract to facilitate the refund process. ' +
-        'Please check back later for updates 😉';
+        'Phase 1: Address Addition\n' +
+        'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
+        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.';
       break;
     case RefundPhase.Claim:
       phaseString =
-        'Phase 3: Claim\n' +
+        'Phase 2: Claim\n' +
         "We are now processing refund requests. If you've been affected, please proceed with your claim. " +
         'Use the menu provided for refund options.';
       phaseMenu = refundsMenu;
       break;
     case RefundPhase.Reclaim:
       phaseString =
-        'Phase 4: Reclaim\n' +
+        'Phase 3: Reclaim\n' +
         'We regret to inform you that the refund process has concluded.' +
         "If you have any further inquiries, please don't hesitate to contact our support team!";
       break;
