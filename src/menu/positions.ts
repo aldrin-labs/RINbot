@@ -1,16 +1,16 @@
-import { CoinAssetData, isSuiCoinType } from '@avernikoz/rinbot-sui-sdk';
 import { Menu } from '@grammyjs/menu';
 import { ConversationId } from '../chains/conversations.config';
 import {
   formatTokenInfo,
+  getExtendedWithGetPriceApiResponseDataCoin,
   getPriceApi,
-  isCoinAssetDataExtended,
+  hasDefinedPrice,
 } from '../chains/priceapi.utils';
 import { availableBalance, balance, home } from '../chains/sui.functions';
-import { BotContext } from '../types';
+import { BotContext, CoinAssetDataExtended } from '../types';
 
 let currentTokenIndex: number = 0;
-let currentToken: CoinAssetData;
+let currentToken: CoinAssetDataExtended;
 
 function updateCurrentToken(ctx: BotContext, direction: 'next' | 'prev') {
   const assets = ctx.session.assets;
@@ -35,12 +35,10 @@ async function updateMessage(ctx: BotContext) {
   if (netWorth === 0) totalNetWorth = '';
   else totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
   let priceApiDataStr: string;
-  if (isCoinAssetDataExtended(currentToken)) {
+  if (hasDefinedPrice(currentToken)) {
     priceApiDataStr = formatTokenInfo(currentToken);
   } else {
-    priceApiDataStr = isSuiCoinType(currentToken.type)
-      ? ''
-      : `\n\nToken Balance: <b>${currentToken.balance} ${currentToken.symbol || currentToken.type}</b>`;
+    priceApiDataStr = `\n\nToken Balance: <b>${currentToken.balance} ${currentToken.symbol || currentToken.type}</b>`;
   }
 
   const suiBalance = await balance(ctx);
@@ -57,25 +55,6 @@ async function updateMessage(ctx: BotContext) {
 }
 
 const positions_menu = new Menu<BotContext>('positions-menu')
-  .text('Sell', async (ctx) => {
-    ctx.session.step = 'sell';
-    await ctx.conversation.enter('sell');
-  })
-  .row()
-  .text('⬅️', async (ctx) => {
-    updateCurrentToken(ctx, 'prev');
-    await updateMessage(ctx);
-  })
-  .text((ctx) => {
-    const assets = ctx.session.assets;
-    const tokenToUse = currentToken ?? assets[currentTokenIndex];
-    return tokenToUse.symbol ?? tokenToUse.type;
-  })
-  .text('➡️', async (ctx) => {
-    updateCurrentToken(ctx, 'next');
-    await updateMessage(ctx);
-  })
-  .row()
   .text('Home', async (ctx) => {
     await home(ctx);
   })
@@ -124,31 +103,26 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     await ctx.conversation.enter(ConversationId.Buy);
   })
   .row()
-  .dynamic(async (ctx, component) => {
+  .dynamic(async (ctx, range) => {
     const assets = ctx.session.assets;
+    currentTokenIndex = 0;
+    currentToken = ctx.session.assets[currentTokenIndex];
+
     if (assets.length > 1) {
-      component.text('⬅️', async (ctx) => {
-        updateCurrentToken(ctx, 'prev');
-        await updateMessage(ctx);
-      });
-    }
-  })
-  .text(async (ctx) => {
-    const sessionAssets = ctx.session.assets;
-    const tokenToUse = currentToken ?? sessionAssets[currentTokenIndex];
-    return tokenToUse.symbol ?? tokenToUse.type;
-  })
-  .dynamic(async (ctx, component) => {
-    const assets = ctx.session.assets;
-    if (assets.length > 1) {
-      component.text(
-        '➡️',
-        async (ctx) => {
+      range
+        .text('⬅️', async (ctx) => {
+          updateCurrentToken(ctx, 'prev');
+          await updateMessage(ctx);
+        })
+        .text(async (ctx) => {
+          const sessionAssets = ctx.session.assets;
+          const tokenToUse = sessionAssets[currentTokenIndex];
+          return tokenToUse.symbol ?? tokenToUse.type;
+        })
+        .text('➡️', async (ctx) => {
           updateCurrentToken(ctx, 'next');
           await updateMessage(ctx);
-        },
-        (ctx) => ctx.menu.update(),
-      );
+        });
     }
   })
   .row()
@@ -191,11 +165,28 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .row()
   .text('Refresh', async (ctx) => {
     try {
-      if (isCoinAssetDataExtended(currentToken)) {
-        const priceApiGetResponse = await getPriceApi('sui', currentToken.type);
-        currentToken.price = priceApiGetResponse?.data.data.price;
-        await updateMessage(ctx);
+      const selectedCoin =
+        currentToken || ctx.session.assets[currentTokenIndex];
+
+      const priceApiGetResponse = await getPriceApi(
+        'sui',
+        selectedCoin.type,
+        false,
+      );
+
+      if (priceApiGetResponse === undefined) {
+        console.warn(
+          '[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.',
+        );
+        return;
       }
+
+      currentToken = getExtendedWithGetPriceApiResponseDataCoin(
+        currentToken,
+        priceApiGetResponse.data.data,
+      );
+
+      await updateMessage(ctx);
     } catch (error) {
       if (error instanceof Error) {
         console.error('[Refresh] Price API error:', error.message);
