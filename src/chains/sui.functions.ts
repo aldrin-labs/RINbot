@@ -72,10 +72,10 @@ import {
   calculate,
   formatTokenInfo,
   getPriceApi,
+  hasDefinedPrice,
   isCoinAssetDataExtended,
   postPriceApi,
 } from './priceapi.utils';
-import { InlineKeyboard } from 'grammy';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -464,13 +464,13 @@ export async function assets(ctx: BotContext): Promise<void> {
     }
     const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
-    if (isCoinAssetDataExtended(currentToken)) {
+    if (hasDefinedPrice(currentToken)) {
       priceApiDataStr =
         calculate(currentToken.balance, currentToken.price) !== null
           ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + ' ' + currentToken.symbol + ' / ' + calculate(currentToken.balance, currentToken.price) + ' USD'}</b>${currentToken.mcap === 0 ? '' : '\nMcap: <b>' + calculate('1', currentToken.mcap) + ' USD</b>'}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : '\n1h: <b>' + (currentToken.priceChange1h! > 0 ? '+' + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + '%</b>'} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : ' 24h: <b>' + (currentToken.priceChange24h! > 0 ? '+' + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + '%</b>'}`
           : ``;
     } else {
-      priceApiDataStr = '';
+      priceApiDataStr = `\n\nToken Balance: <b>${currentToken.balance} ${currentToken.symbol || currentToken.type}</b>`;
     }
 
     const suiBalance = await balance(ctx);
@@ -590,9 +590,6 @@ export async function home(ctx: BotContext) {
     } else {
       totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
     }
-    if (allCoinsAssets?.length === 0) {
-      positionOverview = `Your have no tokens yet.`;
-    }
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {
       if (index > 4) {
@@ -614,7 +611,10 @@ export async function home(ctx: BotContext) {
 
       assetsString += `🪙 <a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
-    positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
+
+    if (assetsString !== '') {
+      positionOverview = `<b>Your positions:</b>\n\n${assetsString}`;
+    }
   } catch (error) {
     console.error('Error in calculating total balance: ', error);
     totalBalanceStr = ``;
@@ -629,7 +629,7 @@ export async function home(ctx: BotContext) {
       ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
       : `<b>${avl_balance} SUI</b>`;
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
   await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)], {
     caption: welcome_text,
     reply_markup: menu,
