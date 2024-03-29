@@ -69,11 +69,13 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       const userBalance = ctx.session.suiAsset.balance;
       const amount = parseFloat(userBalance) * 0.25;
       const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
       ctx.session.tradeCoin = {
         coinType: tokenToUse.type,
         tradeAmountPercentage: amount.toString(),
         useSpecifiedCoin: true,
       };
+
       await ctx.conversation.enter(ConversationId.InstantBuy);
     },
   )
@@ -87,25 +89,31 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       const userBalance = ctx.session.suiAsset.balance;
       const amount = parseFloat(userBalance) * 0.5;
       const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
       ctx.session.tradeCoin = {
         coinType: tokenToUse.type,
         tradeAmountPercentage: amount.toString(),
         useSpecifiedCoin: true,
       };
+
       await ctx.conversation.enter(ConversationId.InstantBuy);
     },
   )
   .text('Buy X SUI', async (ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
-    ctx.session.tradeCoin.coinType = tokenToUse.type;
-    ctx.session.tradeCoin.useSpecifiedCoin = true;
+
+    ctx.session.tradeCoin = {
+      coinType: tokenToUse.type,
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: true,
+    };
+
     await ctx.conversation.enter(ConversationId.Buy);
   })
   .row()
   .dynamic(async (ctx, range) => {
     const assets = ctx.session.assets;
-    currentTokenIndex = 0;
     currentToken = ctx.session.assets[currentTokenIndex];
 
     if (assets.length > 1) {
@@ -129,31 +137,46 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .text('Sell 25%', async (ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
     ctx.session.tradeCoin = {
       coinType: tokenToUse.type,
       tradeAmountPercentage: '25',
-      useSpecifiedCoin: true,
+      // TODO: Make it work by design.
+      // Set `useSpecifiedCoin` to false, because it won't be changed in Sell conversation,
+      // but can affect the next Buy conversation
+      useSpecifiedCoin: false,
     };
+
     await ctx.conversation.enter(ConversationId.Sell);
   })
   .text('Sell 100%', async (ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
     ctx.session.tradeCoin = {
       coinType: tokenToUse.type,
       tradeAmountPercentage: '100',
-      useSpecifiedCoin: true,
+      // TODO: Make it work by design.
+      // Set `useSpecifiedCoin` to false, because it won't be changed in Sell conversation,
+      // but can affect the next Buy conversation
+      useSpecifiedCoin: false,
     };
+
     await ctx.conversation.enter(ConversationId.Sell);
   })
   .text('Sell X%', async (ctx) => {
     const assets = ctx.session.assets;
     const tokenToUse = currentToken ?? assets[currentTokenIndex];
+
     ctx.session.tradeCoin = {
       coinType: tokenToUse.type,
       tradeAmountPercentage: '0',
-      useSpecifiedCoin: true,
+      // TODO: Make it work by design.
+      // Set `useSpecifiedCoin` to false, because it won't be changed in Sell conversation,
+      // but can affect the next Buy conversation
+      useSpecifiedCoin: false,
     };
+
     await ctx.conversation.enter(ConversationId.Sell);
   })
   .row()
@@ -165,12 +188,9 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .row()
   .text('Refresh', async (ctx) => {
     try {
-      const selectedCoin =
-        currentToken || ctx.session.assets[currentTokenIndex];
-
       const priceApiGetResponse = await getPriceApi(
         'sui',
-        selectedCoin.type,
+        currentToken.type,
         false,
       );
 
