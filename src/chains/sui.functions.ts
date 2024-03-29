@@ -21,7 +21,6 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { v4 as uuidv4 } from 'uuid';
-import { imgs } from '../config/bot.config';
 import { getRedisClient } from '../config/redis.config';
 import closeConversation from '../inline-keyboards/closeConversation';
 import continueKeyboard from '../inline-keyboards/continue';
@@ -682,11 +681,11 @@ export async function home(ctx: BotContext) {
       ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
       : `<b>${avl_balance} SUI</b>`;
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address: <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.replyWithPhoto(imgs[Math.floor(Math.random() * 4)], {
-    caption: welcome_text,
+  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  await ctx.reply(welcome_text, {
     reply_markup: menu,
     parse_mode: 'HTML',
+    link_preview_options: { is_disabled: true },
   });
 }
 
