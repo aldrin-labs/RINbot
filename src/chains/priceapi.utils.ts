@@ -64,7 +64,10 @@ export function hasDefinedPrice(data: unknown) {
   );
 }
 
-export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
+export async function postPriceApi(
+  allCoinsAssets: CoinAssetData[],
+  useTimeout: boolean = true,
+) {
   try {
     let data: PriceApiPayload = { data: [] };
     allCoinsAssets.forEach((coin) => {
@@ -76,7 +79,7 @@ export async function postPriceApi(allCoinsAssets: CoinAssetData[]) {
     const response = await axios.post<AxiosPriceApiResponsePost>(
       `${PRICE_API_URL}/assets`,
       data,
-      { timeout: 300 },
+      { timeout: useTimeout ? 300 : undefined },
     );
 
     const endTime = Date.now();
