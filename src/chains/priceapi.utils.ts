@@ -7,6 +7,8 @@ import {
   PriceApiPayload,
 } from '../types';
 import { PRICE_API_URL } from '../config/bot.config';
+// Import the Redis singleton
+import Redis from './redis-priceapi';
 
 export function calculate(balance: string, price: number | undefined) {
   if (price === undefined) return null;
@@ -92,17 +94,12 @@ export async function postPriceApi(
   }
 }
 
-export async function getPriceApi(
-  chainId: string,
-  tokenAddress: string,
-  useTimeout: boolean = true,
-) {
+export async function getPriceApi(chainId: string, tokenAddress: string) {
   try {
     const startTime = Date.now();
     const response = await axios.get<AxiosPriceApiResponseGet>(
       `${PRICE_API_URL}/api/assets`,
       {
-        timeout: useTimeout ? 300 : undefined,
         params: {
           chainId,
           tokenAddress,
@@ -135,4 +132,31 @@ export function getExtendedWithGetPriceApiResponseDataCoin(
     priceChange1h: priceApiResponseData.priceChange1h || 0,
     priceChange24h: priceApiResponseData.priceChange24h || 0,
   };
+}
+
+// Temporary solution
+
+export async function pullFromPriceAPIdb(allCoinsAssets: CoinAssetData[]) {
+  // Initialize the Redis client
+  Redis.init();
+
+  const redisClient = Redis.getInstance().getRedisClient();
+
+  const keys = allCoinsAssets.map(async (coinAsset) => {
+    try {
+      // Fetch the value for each key from Redis
+      if (coinAsset.symbol === 'Sui') coinAsset.type = '0x2::sui::SUI';
+
+      const value = await redisClient.get(`sui:${coinAsset.type}`);
+      return value; // value could be null if the key doesn't exist in Redis
+    } catch (error) {
+      console.error(`Error fetching data for ${coinAsset.type}:`, error);
+      return null; // Return null in case of an error (or choose another fallback value)
+    }
+  });
+
+  // Wait for all promises to resolve and collect the results
+  const results = await Promise.all(keys);
+
+  return results;
 }

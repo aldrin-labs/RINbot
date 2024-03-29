@@ -188,11 +188,7 @@ const positions_menu = new Menu<BotContext>('positions-menu')
   .row()
   .text('Refresh', async (ctx) => {
     try {
-      const priceApiGetResponse = await getPriceApi(
-        'sui',
-        currentToken.type,
-        false,
-      );
+      const priceApiGetResponse = await getPriceApi('sui', currentToken.type);
 
       if (priceApiGetResponse === undefined) {
         console.warn(

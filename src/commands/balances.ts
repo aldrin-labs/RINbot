@@ -26,11 +26,7 @@ export const balances = async (ctx: BotContext) => {
   let totalBalanceStr: string = '';
 
   try {
-    const priceApiGetResponse = await getPriceApi(
-      'sui',
-      SHORT_SUI_COIN_TYPE,
-      false,
-    );
+    const priceApiGetResponse = await getPriceApi('sui', SHORT_SUI_COIN_TYPE);
 
     price = priceApiGetResponse?.data.data.price;
   } catch (error) {
