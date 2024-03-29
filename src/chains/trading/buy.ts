@@ -2,26 +2,25 @@ import {
   FeeManager,
   LONG_SUI_COIN_TYPE,
   SUI_DECIMALS,
-  WalletManagerSingleton,
   isSuiCoinType,
   isValidTokenAddress,
   isValidTokenAmount,
-  transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../types';
 import { ConversationId } from '../conversations.config';
+import {
+  getTransactionFromMethod,
+  signAndExecuteTransaction,
+} from '../conversations.utils';
 import { getUserFeePercentage } from '../fees/utils';
-import { showSlippageConfiguration } from '../slippage/showSlippageConfiguration';
 import { RINBOT_CHAT_URL } from '../sui.config';
 import {
-  TransactionResultStatus,
   getCoinManager,
   getRouteManager,
   getWalletManager,
-  provider,
   random_uuid,
 } from '../sui.functions';
 import {
@@ -29,14 +28,9 @@ import {
   getCoinWhitelist,
   getPriceOutputData,
   getSuiVisionTransactionLink,
-  isTransactionSuccessful,
   isValidCoinLink,
   userMustUseCoinWhitelist,
 } from '../utils';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransaction,
-} from '../conversations.utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
@@ -214,10 +208,6 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       return false;
     }
 
-    await ctx.reply(
-      'Finding the best route to save your money… ☺️' + random_uuid,
-    );
-
     validatedInputAmount = inputAmount;
     return true;
   });
@@ -240,6 +230,10 @@ export const instantBuy = async (
   conversation: MyConversation,
   ctx: BotContext,
 ) => {
+  await ctx.reply(
+    'Finding the best route to save your money… ☺️' + random_uuid,
+  );
+
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
   const routerManager = await getRouteManager();
 
@@ -297,7 +291,11 @@ export const instantBuy = async (
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
       `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`,
-      { reply_markup: retryButton },
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      },
     );
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
@@ -314,9 +312,15 @@ export const instantBuy = async (
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
       `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`,
-      { reply_markup: retryButton },
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      },
     );
 
+    // TODO: It doesn't work for now. Come back later and fix.
+    /*
     const continueContext = await conversation.waitFor('callback_query:data');
     const continueCallbackQueryData = continueContext.callbackQuery.data;
 
@@ -330,6 +334,7 @@ export const instantBuy = async (
         instantBuy(conversation, ctx);
       }
     }
+    */
 
     return;
   }
