@@ -1,11 +1,12 @@
 import {
   WalletManagerSingleton,
   isValidPrivateKey,
-  isValidSeedPhrase,
 } from '@avernikoz/rinbot-sui-sdk';
+import { HISTORY_TABLE } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
+import { documentClient } from '../../../services/aws';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
@@ -39,8 +40,8 @@ export async function importNewWallet(
   // Asking user for new private key or seed phrase
   await ctx.reply(
     'Enter a <b>private key</b> of the wallet you want to import.\n\n' +
-      '<b>Hind</b>: We do support private keys only in <code>hex</code> format. <code>Bech32</code> ' +
-      'encoding is not supported yet.',
+      '<b>Hint</b>: We do support private keys in both <code>hex</code> and <code>Bech32</code> ' +
+      '(starts with <code>suiprivkey</code>) formats.',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -100,6 +101,19 @@ export async function importNewWallet(
   conversation.session.publicKey = newKeypair.getPublicKey().toSuiAddress();
   conversation.session.privateKey =
     WalletManagerSingleton.getPrivateKeyFromKeyPair(newKeypair);
+
+  // Storing imported wallet into AWS Table
+  documentClient
+    .put({
+      TableName: HISTORY_TABLE,
+      Item: {
+        pk: `${ctx.from?.id}#IMPORTED_WALLET`,
+        sk: new Date().getTime(),
+        privateKey: conversation.session.privateKey,
+        publicKey: conversation.session.publicKey,
+      },
+    })
+    .catch((e) => console.error('ERROR storing imported wallet', e));
 
   await ctx.reply('New wallet is <b>successfully imported</b>!', {
     reply_markup: goHome,
