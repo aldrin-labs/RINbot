@@ -61,7 +61,6 @@ export async function getPriceApi(chainId: string, tokenAddress: string) {
     try {
         const startTime = Date.now();
         const response = await axios.get<AxiosPriceApiResponseGet>(`${PRICE_API_URL}/api/assets`, {
-            timeout: 4000,
             params: {
                 chainId,
                 tokenAddress
