@@ -2,6 +2,7 @@ export const BOT_TOKEN = process.env.BOT_TOKEN || '';
 export const ENVIRONMENT = process.env.NODE_ENV || '';
 export const VERCEL_URL = process.env.WEBHOOK_URL || '';
 export const BOT_PRIVATE_KEY = process.env.BOT_PRIVATE_KEY || '';
+export const HISTORY_TABLE = process.env.HISTORY_TABLE;
 export const ENABLE_WELCOME_BONUS =
   process.env.ENABLE_WELCOME_BONUS?.length &&
   process.env.ENABLE_WELCOME_BONUS === 'true';
