@@ -166,7 +166,6 @@ async function startBot(): Promise<void> {
     createConversation(instantBuy, { id: ConversationId.InstantBuy }),
   );
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
-  composer.use(createConversation(balances, { id: ConversationId.Balances }));
   composer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
@@ -224,11 +223,23 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('buy', async (ctx) => {
+    ctx.session.tradeCoin = {
+      coinType: '',
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: false,
+    };
+
     await ctx.conversation.enter(ConversationId.Buy);
   });
 
   bot.command('sell', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.Sell, { overwrite: true });
+    ctx.session.tradeCoin = {
+      coinType: '',
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: false,
+    };
+
+    await ctx.conversation.enter(ConversationId.Sell);
   });
 
   bot.command('withdrawal', async (ctx) => {
@@ -236,7 +247,7 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('balances', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.Balances);
+    await balances(ctx);
   });
 
   bot.command('createaftermathpool', async (ctx) => {
