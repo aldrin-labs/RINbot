@@ -7,8 +7,10 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
+import { balance } from '../../sui.functions';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { getRefundManager } from '../getRefundManager';
+import { MINIMUM_SUI_BALANCE_FOR_REFUND } from './config';
 import { claimBaseRefund, claimBoostedRefund } from './utils';
 
 export async function checkCurrentWallet(
@@ -25,11 +27,29 @@ export async function checkCurrentWallet(
     .add(...closeButtons);
 
   const checkingMessage = await ctx.reply(
-    '<b>Checking this account, it may take some time....</b>',
+    '<b>Checking your current account address. This may take some time...</b>',
     {
       parse_mode: 'HTML',
     },
   );
+
+  const suiBalance = await conversation.external(async () => {
+    return await balance(ctx);
+  });
+
+  if (new BigNumber(suiBalance).isLessThan(MINIMUM_SUI_BALANCE_FOR_REFUND)) {
+    await ctx.api.editMessageText(
+      checkingMessage.chat.id,
+      checkingMessage.message_id,
+      `You need at least <code>${MINIMUM_SUI_BALANCE_FOR_REFUND}</code> <b>SUI</b> to start refund.`,
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+      },
+    );
+
+    return;
+  }
 
   // Check current wallet
   let normalRefund;
@@ -45,9 +65,14 @@ export async function checkCurrentWallet(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply('Something went wrong. Please, try again.', {
-      reply_markup: retryButton,
-    });
+    await ctx.api.editMessageText(
+      checkingMessage.chat.id,
+      checkingMessage.message_id,
+      '🛑 Oops! Something went wrong while retrieving the available refund amount. Please try again.',
+      {
+        reply_markup: retryButton,
+      },
+    );
 
     return;
   }
@@ -56,8 +81,8 @@ export async function checkCurrentWallet(
     await ctx.api.editMessageText(
       checkingMessage.chat.id,
       checkingMessage.message_id,
-      '✅ Your account is not affected or you already have claimed the refund. If you do not agree, please ' +
-        'contact the support service.',
+      '✅ Your account is either not affected or you have already claimed the refund. If you have any questions ' +
+        'feel free to reach out to us.',
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -73,27 +98,25 @@ export async function checkCurrentWallet(
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for this account.`,
+    `✅ We have identified <code>${baseRefundAmount}</code> <b>SUI</b> available for refunding to your account.`,
     {
       parse_mode: 'HTML',
     },
   );
 
   await ctx.reply(
-    '✎ Here are <b>two options</b> for the refund:\n\n' +
+    '📝 Here are <b>two options</b> for the refund:\n\n' +
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
-      '</code> <b>SUI</b>.\nYou can withdraw funds and export your private key as usual.\n\n' +
+      '</code> <b>SUI</b>.\n\n' +
       `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
-      "</code> <b>SUI</b>.\nWe'll create a new secure account for you and send the funds there. All the features " +
-      'of the RINbot are opened, ' +
-      `but you can withdraw only profit. <code>${boostedRefundAmount}</code> <b>SUI</b> are non-withdrawable. ` +
-      'Also export private key feature will be disabled.',
+      '</code> <b>SUI</b>.\nWhile all features ' +
+      'of the RINbot remain accessible, ' +
+      `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
     {
       reply_markup: optionsWithCloseKeyboard,
       parse_mode: 'HTML',
     },
   );
-
   let userConfirmedChoise = false;
   do {
     const choiseContext = await conversation.wait();
@@ -105,7 +128,7 @@ export async function checkCurrentWallet(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        `Please, confirm your choise — <b>base refund</b> (<code>${baseRefundAmount}</code> <b>SUI</b>).`,
+        `Please, confirm your choice — <b>base refund</b> (<code>${baseRefundAmount}</code> <b>SUI</b>).`,
         {
           reply_markup: confirmWithCloseKeyboard,
           parse_mode: 'HTML',
@@ -139,7 +162,7 @@ export async function checkCurrentWallet(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        `Please, confirm your choise — <b>boosted refund</b> (<code>${boostedRefundAmount}</code> <b>SUI</b>).`,
+        `Please, confirm your choice — <b>boosted refund</b> (<code>${boostedRefundAmount}</code> <b>SUI</b>).`,
         {
           reply_markup: confirmWithCloseKeyboard,
           parse_mode: 'HTML',

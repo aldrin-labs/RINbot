@@ -31,15 +31,10 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery(CallbackQueryData.ExportPrivateKey, async (ctx) => {
-    await ctx.conversation.exit();
-    await ctx.answerCallbackQuery();
-    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
-  });
-
   useSurfdogCallbackQueries(bot);
   useSlippageCallbackQueries(bot);
   useRefundsCallbackQueries(bot);
+  useWalletCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -95,5 +90,18 @@ function useRefundsCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.Refunds, async (ctx) => {
     await ctx.answerCallbackQuery();
     await showRefundsPage(ctx);
+  });
+}
+
+function useWalletCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.ExportPrivateKey, async (ctx) => {
+    await ctx.conversation.exit();
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
+  });
+
+  bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.ImportNewWallet);
   });
 }
