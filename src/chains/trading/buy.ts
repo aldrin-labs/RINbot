@@ -28,22 +28,27 @@ import {
   extractCoinTypeFromLink,
   getCoinWhitelist,
   getPriceOutputData,
+  getSuiVisionTransactionLink,
   isTransactionSuccessful,
   isValidCoinLink,
   userMustUseCoinWhitelist,
 } from '../utils';
+import {
+  getTransactionFromMethod,
+  signAndExecuteTransaction,
+} from '../conversations.utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
   const useSpecifiedCoin = await conversation.external(
-    () => ctx.session.tradeCoin.useSpecifiedCoin,
+    () => conversation.session.tradeCoin.useSpecifiedCoin,
   );
-  const coinType = ctx.session.tradeCoin.coinType;
+  const coinType = conversation.session.tradeCoin.coinType;
   let validatedCoinType: string | undefined;
 
   if (useSpecifiedCoin) {
     validatedCoinType = coinType;
-    ctx.session.tradeCoin.useSpecifiedCoin = false;
+    conversation.session.tradeCoin.useSpecifiedCoin = false;
   } else {
     await ctx.reply(
       'Which token do you want to buy? Please send a coin type or a link to suiscan.',
@@ -156,17 +161,18 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     return;
   }
 
-  ctx.session.tradeCoin = {
+  conversation.session.tradeCoin = {
     coinType: validatedCoinType,
     tradeAmountPercentage: '0',
     useSpecifiedCoin: false,
   };
+
   const resCoinType = validatedCoinType;
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
     const balance = await walletManager.getAvailableSuiBalance(
-      ctx.session.publicKey,
+      conversation.session.publicKey,
     );
     return balance;
   });
@@ -215,6 +221,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     validatedInputAmount = inputAmount;
     return true;
   });
+
   if (validatedInputAmount === undefined) {
     await ctx.reply(
       `Invalid coinType or inputAmount. Please try again or contact support.`,
@@ -223,8 +230,10 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     return;
   }
-  ctx.session.tradeCoin.tradeAmountPercentage = validatedInputAmount;
-  await instantBuy(conversation, ctx);
+
+  conversation.session.tradeCoin.tradeAmountPercentage = validatedInputAmount;
+
+  return await instantBuy(conversation, ctx);
 }
 
 export const instantBuy = async (
@@ -232,6 +241,7 @@ export const instantBuy = async (
   ctx: BotContext,
 ) => {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
+  const routerManager = await getRouteManager();
 
   const feePercentage = (
     await conversation.external(() => getUserFeePercentage(ctx))
@@ -239,7 +249,7 @@ export const instantBuy = async (
 
   const {
     tradeCoin: { coinType: resCoinType, tradeAmountPercentage },
-  } = ctx.session;
+  } = conversation.session;
 
   const feeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
@@ -247,66 +257,26 @@ export const instantBuy = async (
     tokenDecimals: SUI_DECIMALS,
   });
 
-  // TODO: Re-check args here
-  const tx = await conversation.external({
-    args: [resCoinType, tradeAmountPercentage],
-    task: async (resCoinType: string, validatedInputAmount: string) => {
-      try {
-        const routerManager = await getRouteManager();
-        const transaction = await routerManager.getBestRouteTransaction({
-          tokenFrom: LONG_SUI_COIN_TYPE,
-          tokenTo: resCoinType,
-          amount: validatedInputAmount,
-          signerAddress: ctx.session.publicKey,
-          slippagePercentage: ctx.session.settings.slippagePercentage,
-          fee: {
-            feeAmount,
-            feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
-          },
-        });
-
-        return transaction;
-      } catch (error) {
-        console.error(error);
-
-        if (error instanceof Error) {
-          console.error(
-            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-          );
-        } else {
-          console.error(
-            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-          );
-        }
-
-        return;
-      }
-    },
-    beforeStore: (value) => {
-      if (value) {
-        return value.serialize();
-      }
-    },
-    afterLoad: async (value) => {
-      if (value) {
-        return transactionFromSerializedTransaction(value);
-      }
-    },
-    afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
-      console.error(error);
-    },
-    beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
-      console.error(error);
+  const transaction = await getTransactionFromMethod({
+    conversation,
+    ctx,
+    method: routerManager.getBestRouteTransaction.bind(
+      routerManager,
+    ) as typeof routerManager.getBestRouteTransaction,
+    params: {
+      tokenFrom: LONG_SUI_COIN_TYPE,
+      tokenTo: resCoinType,
+      amount: tradeAmountPercentage,
+      signerAddress: conversation.session.publicKey,
+      slippagePercentage: conversation.session.settings.slippagePercentage,
+      fee: {
+        feeAmount,
+        feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
+      },
     },
   });
 
-  if (!tx) {
+  if (transaction === undefined) {
     await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
@@ -318,45 +288,18 @@ export const instantBuy = async (
     'Route for swap found, sending transaction... 🔄' + random_uuid,
   );
 
-  const resultOfSwap = await conversation.external(async () => {
-    try {
-      const res = await provider.signAndExecuteTransactionBlock({
-        transactionBlock: tx,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
-        options: {
-          showEffects: true,
-        },
-      });
-
-      const isTransactionResultSuccessful = isTransactionSuccessful(res);
-      const result = isTransactionResultSuccessful
-        ? TransactionResultStatus.Success
-        : TransactionResultStatus.Failure;
-
-      return { digest: res.digest, result };
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
-      } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
-      }
-
-      const result = TransactionResultStatus.Failure;
-      return { result: result, reason: 'failed_to_send_transaction' };
-    }
+  const resultOfSwap = await signAndExecuteTransaction({
+    conversation,
+    ctx,
+    transaction,
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful ✅\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`,
       { reply_markup: retryButton },
     );
+
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     if (userMustUseCoinWhitelist(ctx)) {
@@ -370,21 +313,24 @@ export const instantBuy = async (
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap failed ❌\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
+      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`,
       { reply_markup: retryButton },
     );
+
     const continueContext = await conversation.waitFor('callback_query:data');
     const continueCallbackQueryData = continueContext.callbackQuery.data;
+
     if (continueCallbackQueryData === 'change-slippage-retry') {
       await showSlippageConfiguration(ctx);
       const result = await conversation.waitFor('callback_query:data');
       const newSlippage = parseInt(result.callbackQuery.data.split('-')[1]);
       if (!isNaN(newSlippage)) {
         //If not a number means that the user choose home option
-        ctx.session.settings.slippagePercentage = newSlippage;
+        conversation.session.settings.slippagePercentage = newSlippage;
         instantBuy(conversation, ctx);
       }
     }
+
     return;
   }
 
