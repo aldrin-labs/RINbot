@@ -470,7 +470,7 @@ export async function assets(ctx: BotContext): Promise<void> {
     const suiBalance = await balance(ctx);
     const suiAvlBalance = await availableBalance(ctx);
 
-    const newMessage = `🪙<a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+    const newMessage = `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
 
     await ctx.reply(newMessage, {
       reply_markup: positions_menu,
@@ -601,7 +601,7 @@ export async function home(ctx: BotContext) {
           ? token.type.split('::').pop()
           : token.symbol;
 
-      assetsString += `🪙<a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
+      assetsString += `🪙 <a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
     }
     positionOverview = `\n\n<b>Your positions:</b> \n\n${assetsString}`;
   } catch (e) {
