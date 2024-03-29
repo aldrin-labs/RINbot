@@ -17,4 +17,3 @@ slippagePercentages.forEach((percentage: number, index: number) => {
 slippageConfigurationKeyboard.text('Home', 'go-home');
 
 export default slippageConfigurationKeyboard;
-
