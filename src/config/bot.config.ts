@@ -18,6 +18,7 @@ export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES =
   process.env.EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES || '';
 export const PRICE_API_URL = process.env.PRICE_API_URL || '';
 export const ALDRIN_AUTHORITY = process.env.ALDRIN_AUTHORITY || '';
+export const KV_PRICE_API_DB_URL = process.env.KV_PRICE_API_DB_URL || ''
 export const imgs = [
   'https://i.ibb.co/J5JK48D/aldrin1.jpg',
   'https://i.ibb.co/dbQS5K1/aldrin2.jpg',
