@@ -6,8 +6,11 @@ import { ConversationId } from '../chains/conversations.config';
 
 const feesMenu = new Menu<BotContext>('fees')
   .text('Buy RINCEL', async (ctx) => {
-    ctx.session.tradeCoin.coinType = RINCEL_COIN_TYPE;
-    ctx.session.tradeCoin.useSpecifiedCoin = true;
+    ctx.session.tradeCoin = {
+      coinType: RINCEL_COIN_TYPE,
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: true,
+    };
 
     await ctx.conversation.enter(ConversationId.Buy);
   })
