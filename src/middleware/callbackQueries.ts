@@ -38,9 +38,9 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
+      await ctx.answerCallbackQuery();
       await ctx.conversation.exit();
       await ctx.conversation.enter(conversationId);
-      await ctx.answerCallbackQuery();
     });
   });
 
