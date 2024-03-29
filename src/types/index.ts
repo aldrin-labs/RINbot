@@ -78,9 +78,9 @@ export interface SessionData {
   };
   tradesCount: number;
   createdAt: number;
-  tradeAmount: string;
   tradeCoin: {
     coinType: string;
+    tradeAmountPercentage: string;
     useSpecifiedCoin: boolean;
   };
   refund: {
@@ -95,6 +95,7 @@ export interface SessionData {
       privateKey: string;
     } | null;
   };
+  trades: { [coinType: string]: { lastTradeTimestamp: number } };
 }
 
 export type BotContext = Context &

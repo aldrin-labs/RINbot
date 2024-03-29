@@ -4,12 +4,13 @@ import {
   isSuiCoinType,
 } from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
-import { File, PhotoSize } from 'grammy/types';
-import { CoinForPool } from './types';
-import { BOT_TOKEN } from '../config/bot.config';
-import { getPriceApi } from './priceapi.utils';
-import { BotContext } from '../types';
 import { InlineKeyboard } from 'grammy';
+import { File, PhotoSize } from 'grammy/types';
+import { BOT_TOKEN } from '../config/bot.config';
+import { BotContext } from '../types';
+import { getPriceApi } from './priceapi.utils';
+import { COIN_WHITELIST_URL } from './sui.config';
+import { CoinForPool, CoinWhitelistItem } from './types';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -274,4 +275,76 @@ export async function reactOnUnexpectedBehaviour(
   await ctx.reply(`You have canceled the ${cancelSubject}.`, {
     reply_markup: retryButton,
   });
+}
+
+export function userIsWelcomeBonusClaimer(ctx: BotContext) {
+  return ctx.session.welcomeBonus.isUserClaimedBonus;
+}
+
+export function userIsBoostedRefundClaimer(ctx: BotContext) {
+  return ctx.session.refund.claimedBoostedRefund;
+}
+
+export function userMustUseCoinWhitelist(ctx: BotContext) {
+  return userIsWelcomeBonusClaimer(ctx) || userIsBoostedRefundClaimer(ctx);
+}
+
+export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
+  try {
+    const whitelist = await fetch(COIN_WHITELIST_URL);
+    const whitelistJson = await whitelist.json();
+
+    if (!isCoinWhitelistItemArray(whitelistJson)) {
+      console.warn(
+        '[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:',
+        whitelistJson,
+      );
+
+      return null;
+    }
+
+    return whitelistJson;
+  } catch (error) {
+    console.error('[getCoinWhitelist] Error occured:', error);
+
+    return null;
+  }
+}
+
+export function isCoinWhitelistItemArray(
+  data: unknown,
+): data is CoinWhitelistItem[] {
+  return (
+    Array.isArray(data) &&
+    data.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof item.symbol === 'string' &&
+        typeof item.type === 'string',
+    )
+  );
+}
+
+export function formatMilliseconds(milliseconds: number): string {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  let result = '';
+
+  if (hours > 0) {
+    result += `${hours} hour`;
+    if (hours > 1) result += 's';
+    result += ` ${minutes % 60} minute`;
+    if (minutes % 60 > 1) result += 's';
+  } else if (minutes > 0) {
+    result += `${minutes} minute`;
+    if (minutes > 1) result += 's';
+  } else {
+    result += `${seconds} second`;
+    if (seconds > 1) result += 's';
+  }
+
+  return result;
 }
