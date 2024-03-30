@@ -278,9 +278,9 @@ async function startBot(): Promise<void> {
     await ctx.conversation.exit();
   });
 
-  bot.command('importnewwallet', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.ImportNewWallet);
-  });
+  // bot.command('importnewwallet', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  // });
 
   // Set commands suggestion
   await bot.api.setMyCommands([
@@ -307,7 +307,7 @@ async function startBot(): Promise<void> {
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
-    { command: 'importnewwallet', description: 'Import new wallet' },
+    // { command: 'importnewwallet', description: 'Import new wallet' },
   ]);
 
   useCallbackQueries(bot);
