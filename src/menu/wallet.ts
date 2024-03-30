@@ -24,9 +24,9 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   .text('Export Private Key', async (ctx) => {
     await ctx.conversation.enter(ConversationId.ExportPrivateKey);
   })
-  .text('Import New Wallet', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.ImportNewWallet);
-  })
+  // .text('Import New Wallet', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  // })
   .row();
 
 export default wallet_menu;
