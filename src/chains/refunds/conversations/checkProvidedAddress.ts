@@ -290,7 +290,7 @@ export async function checkProvidedAddress(
     // If boosted claim cap exists, but with not corresponding `newAddress` — notify user and exit conversation.
     await ctx.reply(
       'We have found an inappropriate boosted claim cap. It could be created by a bad actor and must be ' +
-        '<i><b>burned</b></i> to safely bring your money.\n\n' +
+        '<i><b>burned</b></i> to safely bring your refund.\n\n' +
         `This operation requires your authority, so please, visit our <a href="${ALDRIN_REFUND_WEBSITE}">` +
         'refund website</a> to safely connect your affected wallet, check validity of your future RINbot ' +
         'wallet address (showed below) and burn inappropriate boosted claim cap (available on the website).\n' +
