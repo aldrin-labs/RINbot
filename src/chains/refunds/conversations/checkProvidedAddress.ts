@@ -7,7 +7,7 @@ import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
 import importWalletKeyboard from '../../../inline-keyboards/import-wallet';
-import importWalletWithContinueKeyboard from '../../../inline-keyboards/mixed/import-wallet-with-continue';
+import continueWithCancelKeyboard from '../../../inline-keyboards/mixed/continue-with-cancel';
 import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
@@ -146,12 +146,12 @@ export async function checkProvidedAddress(
   const baseRefundAmount = normalRefund.sui;
   const boostedRefundAmount = boostedRefund.sui;
 
-  const cancelButtons = closeConversation.inline_keyboard[0];
-  const importWalletWithContinueAndCancelKeyboard =
-    importWalletWithContinueKeyboard
-      .clone()
-      .row()
-      .add(...cancelButtons);
+  // const cancelButtons = closeConversation.inline_keyboard[0];
+  // const importWalletWithContinueAndCancelKeyboard =
+  //   importWalletWithContinueKeyboard
+  //     .clone()
+  //     .row()
+  //     .add(...cancelButtons);
 
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
@@ -168,7 +168,7 @@ export async function checkProvidedAddress(
       'We will prepare boosted refund claim, but you will have to manually use github example to sign and ' +
       'execute required for refund transaction.',
     {
-      reply_markup: importWalletWithContinueAndCancelKeyboard,
+      reply_markup: continueWithCancelKeyboard,
       parse_mode: 'HTML',
     },
   );
@@ -178,11 +178,11 @@ export async function checkProvidedAddress(
 
   if (choiseCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
-  } else if (choiseCallbackQueryData === CallbackQueryData.ImportWallet) {
+  } /* else if (choiseCallbackQueryData === CallbackQueryData.ImportWallet) {
     await choiseContext.answerCallbackQuery();
 
     return await importNewWallet(conversation, ctx);
-  } else if (choiseCallbackQueryData === CallbackQueryData.Continue) {
+  } */ else if (choiseCallbackQueryData === CallbackQueryData.Continue) {
     await choiseContext.answerCallbackQuery();
   } else {
     await reactOnUnexpectedBehaviour(

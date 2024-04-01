@@ -31,14 +31,14 @@ export async function showRefundsPage(ctx: BotContext) {
     case RefundPhase.Addition:
       phaseString =
         'Phase 1: Address Addition\n' +
-        'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
-        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.';
+        'We are currently compiling a list of affected accounts to facilitate the refund process. ' /* +
+        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.' */;
       break;
     case RefundPhase.Funding:
       phaseString =
         'Phase 1: Address Addition\n' +
-        'We are currently compiling a list of affected accounts to facilitate the refund process. ' +
-        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.';
+        'We are currently compiling a list of affected accounts to facilitate the refund process. ' /* +
+        'To determine your eligibility, please come back on March 31, 2024, at 12:00:00 PM GMT.' */;
       break;
     case RefundPhase.Claim:
       phaseString =
