@@ -336,8 +336,14 @@ export async function checkProvidedAddress(
   if (boostedClaimCapObjectId !== null) {
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account.\n\nNow you can easily continue claiming the ' +
-        `<b>boosted refund</b> on our <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a> using your ` +
-        `RINbot wallet address: <code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
+        '<b>boosted refund</b> following the next steps:\n' +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
+        '<b>boosted refund</b> on the RINbot account!',
       {
         reply_markup: goHome,
         parse_mode: 'HTML',
@@ -355,12 +361,15 @@ export async function checkProvidedAddress(
     await ctx.reply(
       'We have found an inappropriate boosted claim cap. It could be created by a bad actor and must be ' +
         '<i><b>burned</b></i> to safely bring your refund.\n\n' +
-        `This operation requires your authority, so please, visit our <a href="${ALDRIN_REFUND_WEBSITE}">` +
-        'refund website</a> to safely connect your affected wallet, check validity of your future RINbot ' +
-        'wallet address (showed below) and burn inappropriate boosted claim cap (available on the website).\n' +
-        'After burning you should just repeat the same actions here to prepare your <b>boosted refund</b>.\n\n' +
-        `Your RINbot wallet address that should be passed on the <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>: ` +
-        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
+        `This operation requires your authority, so please, follow the next steps:\n` +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        '<b>5.</b> Press <b><i>Reset Capabilities</i></b> button and sign the transaction.\n' +
+        '<b>6.</b> Inappropriate boosted claim cap is burned now, so you can just press the <i><b>Retry</b></i> ' +
+        'button to prepare the <b>boosted refund</b>.',
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
@@ -433,11 +442,14 @@ export async function checkProvidedAddress(
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>! ` +
         'You have been switched to your new RINbot wallet.\n\n' +
-        'Now you can easily complete claiming the <b>boosted refund</b> on our ' +
-        `<a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>.\n\n` +
-        `Your current RINbot wallet address that should be passed on the website: ` +
-        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n\n` +
-        'After successful completion all the funds will be transferred to your current RINbot wallet.',
+        'Now you can easily continue claiming the <b>boosted refund</b> following the next steps:\n' +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
+        '<b>boosted refund</b> on the RINbot account!',
       {
         reply_markup: goHome,
         parse_mode: 'HTML',
