@@ -192,7 +192,7 @@ export async function checkProvidedAddress(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        `To proceed with the <b>base refund</b>, just use our <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>.`,
+        `To proceed with the <b>base refund</b>, just use our <a href="${ALDRIN_REFUND_WEBSITE}">Aldrin Refund Website</a>.`,
         {
           reply_markup: retryButton,
           parse_mode: 'HTML',
@@ -337,7 +337,7 @@ export async function checkProvidedAddress(
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account.\n\nNow you can easily continue claiming the ' +
         '<b>boosted refund</b> following the next steps:\n' +
-        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
         '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
@@ -362,7 +362,7 @@ export async function checkProvidedAddress(
       'We have found an inappropriate boosted claim cap. It could be created by a bad actor and must be ' +
         '<i><b>burned</b></i> to safely bring your refund.\n\n' +
         `This operation requires your authority, so please, follow the next steps:\n` +
-        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
         '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
@@ -443,7 +443,7 @@ export async function checkProvidedAddress(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>! ` +
         'You have been switched to your new RINbot wallet.\n\n' +
         'Now you can easily continue claiming the <b>boosted refund</b> following the next steps:\n' +
-        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>refund website</b></a>.\n` +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
         '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
