@@ -7,7 +7,8 @@ import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
 import importWalletKeyboard from '../../../inline-keyboards/import-wallet';
-import continueWithCancelKeyboard from '../../../inline-keyboards/mixed/continue-with-cancel';
+import confirmWithCloseKeyboard from '../../../inline-keyboards/mixed/confirm-with-close';
+import refundOptionsKeyboard from '../../../inline-keyboards/refund-options';
 import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
@@ -48,6 +49,10 @@ export async function checkProvidedAddress(
   const closeButtons = closeConversation.inline_keyboard[0];
   const importWalletWithCancelKeyboard = importWalletKeyboard
     .clone()
+    .add(...closeButtons);
+  const optionsWithCloseKeyboard = refundOptionsKeyboard
+    .clone()
+    .row()
     .add(...closeButtons);
 
   // Ask user for address he wants to check
@@ -155,36 +160,91 @@ export async function checkProvidedAddress(
   await ctx.api.editMessageText(
     checkingMessage.chat.id,
     checkingMessage.message_id,
-    `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for your account.\n\n` +
-      `✎ After pressing <b><i>Continue</i></b> button you will proceed with <b>Boosted Refund</b> — ` +
-      `<i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}</code> <b>SUI</b>.\n` +
-      `While all features of the RINbot remain accessible, you'll be able to withdraw only profits. ` +
-      `The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
+    `✅ We have identified <code>${baseRefundAmount}</code> <b>SUI</b> available for refunding to your account.`,
     {
-      reply_markup: continueWithCancelKeyboard,
       parse_mode: 'HTML',
     },
   );
 
-  const choiseContext = await conversation.wait();
-  const choiseCallbackQueryData = choiseContext.callbackQuery?.data;
+  await ctx.reply(
+    '📝 Here are <b>two options</b> for the refund:\n\n' +
+      `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
+      '</code> <b>SUI</b>.\n\n' +
+      `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
+      '</code> <b>SUI</b>.\nWhile all features ' +
+      'of the RINbot remain accessible, ' +
+      `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code>` +
+      ' <b>SUI</b> will be non-withdrawable.',
+    {
+      reply_markup: optionsWithCloseKeyboard,
+      parse_mode: 'HTML',
+    },
+  );
 
-  if (choiseCallbackQueryData === CallbackQueryData.Cancel) {
-    await conversation.skip();
-  } /* else if (choiseCallbackQueryData === CallbackQueryData.ImportWallet) {
-    await choiseContext.answerCallbackQuery();
+  let userConfirmedChoise = false;
+  do {
+    const choiseContext = await conversation.wait();
+    const choiseCallbackQueryData = choiseContext.callbackQuery?.data;
 
-    return await importNewWallet(conversation, ctx);
-  } */ else if (choiseCallbackQueryData === CallbackQueryData.Continue) {
-    await choiseContext.answerCallbackQuery();
-  } else {
-    await reactOnUnexpectedBehaviour(
-      choiseContext,
-      retryButton,
-      'provided address check',
-    );
-    return;
-  }
+    if (choiseCallbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    } else if (choiseCallbackQueryData === CallbackQueryData.BaseRefund) {
+      await choiseContext.answerCallbackQuery();
+
+      await ctx.reply(
+        `To proceed with the <b>base refund</b>, just visit <a href="${ALDRIN_REFUND_WEBSITE}">Aldrin Refund Website</a>.`,
+        {
+          reply_markup: retryButton,
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+        },
+      );
+
+      return;
+    } else if (choiseCallbackQueryData === CallbackQueryData.BoostedRefund) {
+      await choiseContext.answerCallbackQuery();
+
+      await ctx.reply(
+        `Please, confirm your choice — <b>boosted refund</b> (<code>${boostedRefundAmount}</code> <b>SUI</b>).`,
+        {
+          reply_markup: confirmWithCloseKeyboard,
+          parse_mode: 'HTML',
+        },
+      );
+
+      const confirmContext = await conversation.wait();
+      const confirmCallbackQueryData = confirmContext.callbackQuery?.data;
+
+      if (confirmCallbackQueryData === CallbackQueryData.Cancel) {
+        await confirmContext.answerCallbackQuery();
+
+        await ctx.reply('Please, select your preferred option.', {
+          reply_markup: optionsWithCloseKeyboard,
+        });
+
+        continue;
+      } else if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
+        await confirmContext.answerCallbackQuery();
+        userConfirmedChoise = true;
+
+        break;
+      } else {
+        await reactOnUnexpectedBehaviour(
+          confirmContext,
+          retryButton,
+          'current wallet check',
+        );
+        return;
+      }
+    } else {
+      await reactOnUnexpectedBehaviour(
+        choiseContext,
+        retryButton,
+        'current wallet check',
+      );
+      return;
+    }
+  } while (!userConfirmedChoise);
 
   const userHasStoredBoostedRefundAccount = await conversation.external(
     async () => {
@@ -276,9 +336,19 @@ export async function checkProvidedAddress(
   if (boostedClaimCapObjectId !== null) {
     await ctx.reply(
       '<b>Boosted refund</b> is already prepared for this account.\n\nNow you can easily continue claiming the ' +
-        `<b>boosted refund</b> on our <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a> using your ` +
-        `RINbot wallet address: <code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
-      { reply_markup: goHome, parse_mode: 'HTML' },
+        '<b>boosted refund</b> following the next steps:\n' +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
+        '<b>boosted refund</b> on the RINbot account!',
+      {
+        reply_markup: goHome,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      },
     );
 
     return;
@@ -291,15 +361,19 @@ export async function checkProvidedAddress(
     await ctx.reply(
       'We have found an inappropriate boosted claim cap. It could be created by a bad actor and must be ' +
         '<i><b>burned</b></i> to safely bring your refund.\n\n' +
-        `This operation requires your authority, so please, visit our <a href="${ALDRIN_REFUND_WEBSITE}">` +
-        'refund website</a> to safely connect your affected wallet, check validity of your future RINbot ' +
-        'wallet address (showed below) and burn inappropriate boosted claim cap (available on the website).\n' +
-        'After burning you should just repeat the same actions here to prepare your <b>boosted refund</b>.\n\n' +
-        `Your RINbot wallet address that should be passed on the <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>: ` +
-        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
+        `This operation requires your authority, so please, follow the next steps:\n` +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        '<b>5.</b> Press <b><i>Reset Capabilities</i></b> button and sign the transaction.\n' +
+        '<b>6.</b> Inappropriate boosted claim cap is burned now, so you can just press the <i><b>Retry</b></i> ' +
+        'button to prepare the <b>boosted refund</b>.',
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
       },
     );
 
@@ -368,14 +442,18 @@ export async function checkProvidedAddress(
     await ctx.reply(
       `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>! ` +
         'You have been switched to your new RINbot wallet.\n\n' +
-        'Now you can easily complete claiming the <b>boosted refund</b> on our ' +
-        `<a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>.\n\n` +
-        `Your current RINbot wallet address that should be passed on the website: ` +
-        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.\n` +
-        'After successful completion all the funds will be transferred to your current RINbot wallet.',
+        'Now you can easily continue claiming the <b>boosted refund</b> following the next steps:\n' +
+        `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+        '<b>2.</b> Connect your affected wallet.\n' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
+        '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
+        `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
+        '<b>boosted refund</b> on the RINbot account!',
       {
         reply_markup: goHome,
         parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
       },
     );
 
@@ -392,6 +470,7 @@ export async function checkProvidedAddress(
       {
         reply_markup: retryButton,
         parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
       },
     );
 
