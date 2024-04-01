@@ -7,10 +7,14 @@ import axios from 'axios';
 import { InlineKeyboard } from 'grammy';
 import { File, PhotoSize } from 'grammy/types';
 import { BOT_TOKEN } from '../config/bot.config';
-import { BotContext } from '../types';
+import { BotContext, MyConversation } from '../types';
 import { getPriceApi } from './priceapi.utils';
-import { COIN_WHITELIST_URL } from './sui.config';
+import {
+  COIN_WHITELIST_URL,
+  SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS,
+} from './sui.config';
 import { CoinForPool, CoinWhitelistItem } from './types';
+import closeConversation from '../inline-keyboards/closeConversation';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -324,4 +328,72 @@ export function isCoinWhitelistItemArray(
         typeof item.type === 'string',
     )
   );
+}
+
+export function formatMilliseconds(milliseconds: number): string {
+  const seconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  let result = '';
+
+  if (hours > 0) {
+    result += `${hours} hour`;
+    if (hours > 1) result += 's';
+    result += ` ${minutes % 60} minute`;
+    if (minutes % 60 > 1) result += 's';
+  } else if (minutes > 0) {
+    result += `${minutes} minute`;
+    if (minutes > 1) result += 's';
+  } else {
+    result += `${seconds} second`;
+    if (seconds > 1) result += 's';
+  }
+
+  return result;
+}
+
+export async function coinCannotBeSoldDueToDelay({
+  ctx,
+  conversation,
+  coin,
+}: {
+  ctx: BotContext;
+  conversation: MyConversation;
+  coin: CoinAssetData;
+}) {
+  if (userMustUseCoinWhitelist(ctx)) {
+    const selectedCoinTradesInfo = conversation.session.trades[coin.type];
+
+    if (selectedCoinTradesInfo !== undefined) {
+      const { lastTradeTimestamp } = selectedCoinTradesInfo;
+
+      const notAllowedToSellCoin =
+        lastTradeTimestamp + SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS >
+        Date.now();
+
+      if (notAllowedToSellCoin) {
+        const remainingTimeToAllowSell =
+          lastTradeTimestamp +
+          SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS -
+          Date.now();
+
+        const formattedRemainingTime = formatMilliseconds(
+          remainingTimeToAllowSell,
+        );
+
+        await ctx.reply(
+          `You won't be able to sell <b>${coin.symbol || coin.type}</b> you've just ` +
+            `purchased for the next <i><b>${formattedRemainingTime}</b></i>. This is a temporary restriction put ` +
+            'in place to maintain fairness and prevent any misuse of our boosted refund feature.\n\nYou can try ' +
+            "to sell any other coin you'd like.",
+          { reply_markup: closeConversation, parse_mode: 'HTML' },
+        );
+
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

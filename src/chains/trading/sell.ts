@@ -1,88 +1,67 @@
 import {
   CoinAssetData,
-  isValidTokenAddress,
+  CoinManagerSingleton,
   LONG_SUI_COIN_TYPE,
-  SHORT_SUI_COIN_TYPE,
-  isValidTokenAmount,
-  transactionFromSerializedTransaction,
-  WalletManagerSingleton,
+  isSuiCoinType,
+  isValidTokenAddress,
 } from '@avernikoz/rinbot-sui-sdk';
+import BigNumber from 'bignumber.js';
 import closeConversation from '../../inline-keyboards/closeConversation';
+import confirmWithCloseKeyboard from '../../inline-keyboards/mixed/confirm-with-close';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import { MyConversation, BotContext } from '../../types';
+import { BotContext, MyConversation } from '../../types';
+import { CallbackQueryData } from '../../types/callback-queries-data';
 import { ConversationId } from '../conversations.config';
-import { getPriceApi } from '../priceapi.utils';
 import {
-  getWalletManager,
+  getTransactionFromMethod,
+  signAndExecuteTransaction,
+} from '../conversations.utils';
+import {
   getCoinManager,
   getRouteManager,
+  getWalletManager,
   random_uuid,
-  TransactionResultStatus,
-  provider,
 } from '../sui.functions';
 import {
-  isValidCoinLink,
+  coinCannotBeSoldDueToDelay,
   extractCoinTypeFromLink,
-  swapTokenTypesAreEqual,
   findCoinInAssets,
-  isCoinAssetData,
-  isTransactionSuccessful,
   getPriceOutputData,
+  getSuiVisionTransactionLink,
+  isValidCoinLink,
+  reactOnUnexpectedBehaviour,
 } from '../utils';
 
-export async function sell(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  const availableBalance = await conversation.external(async () => {
-    const walletManager = await getWalletManager();
-    // TODO: Maybe we should add try/catch here as well
-    const balance = await walletManager.getAvailableSuiBalance(
-      ctx.session.publicKey,
-    );
-
-    return balance;
-  });
-  const isAmountSuiAmountIsValid = +availableBalance > 0;
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
-
-  if (!isAmountSuiAmountIsValid) {
-    await ctx.reply(
-      "You don't have enough SUI for transaction gas. Please, top up your SUI balance to continue.",
-      { reply_markup: retryButton },
-    );
-
-    return;
-  }
-
+async function askForCoinToSell({
+  ctx,
+  conversation,
+  coinManager,
+  allCoinsAssets,
+}: {
+  ctx: BotContext;
+  conversation: MyConversation;
+  coinManager: CoinManagerSingleton;
+  allCoinsAssets: CoinAssetData[];
+}) {
   await ctx.reply(
     'Which token do you want to sell? Please send a coin type or a link to suiscan.',
     { reply_markup: closeConversation },
   );
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
+    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
     { parse_mode: 'HTML' },
   );
 
-  const coinManager = await getCoinManager();
-  const allCoinsAssets = await conversation.external(async () => {
-    const walletManager = await getWalletManager();
-    // TODO: Maybe we should add try/catch here as well
-    const coinAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
+  let resultCoin: CoinAssetData | undefined;
 
-    return coinAssets;
-  });
-
-  let validatedCoin: CoinAssetData | null = null;
   await conversation.waitUntil(async (ctx) => {
     if (ctx.callbackQuery?.data === 'close-conversation') {
       return false;
     }
 
-    const possibleCoin = (ctx.msg?.text || '').trim();
+    const possibleCoin = ctx.msg?.text ?? '';
+
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
 
@@ -96,6 +75,7 @@ export async function sell(
     }
 
     let coinType: string;
+
     if (coinTypeIsValid) {
       coinType = possibleCoin;
     } else {
@@ -126,9 +106,7 @@ export async function sell(
       return false;
     }
 
-    const tokenToSellIsSui: boolean =
-      swapTokenTypesAreEqual(fetchedCoin.type, LONG_SUI_COIN_TYPE) ||
-      swapTokenTypesAreEqual(fetchedCoin.type, SHORT_SUI_COIN_TYPE);
+    const tokenToSellIsSui: boolean = isSuiCoinType(fetchedCoin.type);
 
     if (tokenToSellIsSui) {
       await ctx.reply(
@@ -150,130 +128,228 @@ export async function sell(
       return false;
     }
 
-    validatedCoin = foundCoin;
+    if (
+      await coinCannotBeSoldDueToDelay({ coin: foundCoin, conversation, ctx })
+    ) {
+      return false;
+    }
+
+    resultCoin = foundCoin;
+    conversation.session.tradeCoin.coinType = foundCoin.type;
+
     return true;
   });
 
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
-  // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
-  if (!isCoinAssetData(validatedCoin)) {
+  return resultCoin;
+}
+
+async function askForPercentageToSell(
+  ctx: BotContext,
+  conversation: MyConversation,
+  validCoinToSell: CoinAssetData,
+  priceOutput: string,
+) {
+  await ctx.reply(
+    `${priceOutput}Enter the percentage of <b>${validCoinToSell.symbol || validCoinToSell.type}</b> amount ` +
+      `you wish to sell (<code>0</code> - <code>100</code>%):`,
+    { reply_markup: closeConversation, parse_mode: 'HTML' },
+  );
+
+  let result: string = '0';
+  await conversation.waitUntil(async (ctx) => {
+    if (ctx.callbackQuery?.data === 'close-conversation') {
+      return false;
+    }
+
+    const percentage = parseFloat(ctx.msg?.text ?? '');
+
+    if (isNaN(percentage)) {
+      await ctx.reply(
+        'Percentage must be a number. Please, enter a valid value.',
+        { reply_markup: closeConversation },
+      );
+
+      return false;
+    }
+
+    if (percentage <= 0) {
+      await ctx.reply(
+        `Percentage must be greater than <code>0</code>. Please, enter a valid value.`,
+        { reply_markup: closeConversation, parse_mode: 'HTML' },
+      );
+
+      return false;
+    }
+
+    if (percentage > 100) {
+      await ctx.reply(
+        `Maximum percentage is <code>100</code>. Please, enter a valid value.`,
+        { reply_markup: closeConversation, parse_mode: 'HTML' },
+      );
+
+      return false;
+    }
+
+    result = percentage.toString();
+
+    return true;
+  });
+
+  conversation.session.tradeCoin.tradeAmountPercentage = result;
+}
+
+export async function sell(
+  conversation: MyConversation,
+  ctx: BotContext,
+): Promise<void> {
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
+
+  const availableBalance = await conversation.external(async () => {
+    const walletManager = await getWalletManager();
+    // TODO: Maybe we should add try/catch here as well
+    const balance = await walletManager.getAvailableSuiBalance(
+      conversation.session.publicKey,
+    );
+
+    return balance;
+  });
+
+  const suiAmountIsValid = +availableBalance > 0;
+
+  if (!suiAmountIsValid) {
     await ctx.reply(
-      'Token is not found in your wallet assets. Please, specify another token to sell.',
+      "You don't have enough SUI for transaction gas. Please, top up your SUI balance to continue.",
       { reply_markup: retryButton },
     );
 
     return;
   }
 
-  const validCoinToSell = validatedCoin as CoinAssetData;
+  const coinManager = await getCoinManager();
 
-  const priceOutput = await conversation.external(() => getPriceOutputData(validCoinToSell))
+  const allCoinsAssets = await conversation.external(async () => {
+    const walletManager = await getWalletManager();
+    // TODO: Maybe we should add try/catch here as well
+    const coinAssets = await walletManager.getAllCoinAssets(
+      conversation.session.publicKey,
+    );
 
-  await ctx.reply(
-    `${priceOutput}Reply with the amount you wish to sell (<code>0</code> - <code>${validCoinToSell.balance}</code> ${validCoinToSell.symbol || validCoinToSell.type}).\n\nExample: <code>0.1</code>`,
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
-
-  let validatedInputAmount: string;
-  await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
-      return false;
-    }
-
-    const inputAmount = ctx.msg?.text;
-
-    // ts check
-    if (inputAmount === undefined) {
-      return false;
-    }
-
-    const decimals = validCoinToSell.decimals;
-    // ts check
-    if (decimals === null) {
-      await ctx.reply(
-        `Token decimals not found for ${validCoinToSell.type}. Please, use another token for sell or contact support.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    // TODO: Re-check this
-    const { isValid: amountIsValid, reason } = isValidTokenAmount({
-      amount: inputAmount,
-      maxAvailableAmount: validCoinToSell.balance,
-      decimals,
-    });
-
-    if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    validatedInputAmount = inputAmount;
-    return true;
+    return coinAssets;
   });
+
+  let validCoinToSell: CoinAssetData | undefined;
+
+  if (!conversation.session.tradeCoin.coinType) {
+    validCoinToSell = await askForCoinToSell({
+      allCoinsAssets,
+      coinManager,
+      conversation,
+      ctx,
+    });
+  } else {
+    const coinType = ctx.session.tradeCoin.coinType;
+    const validatedCoin = await coinManager.getCoinByType2(coinType);
+
+    if (validatedCoin === null) {
+      await ctx.reply(
+        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+        { reply_markup: closeConversation },
+      );
+    }
+
+    validCoinToSell = findCoinInAssets(allCoinsAssets, coinType);
+  }
+
+  if (validCoinToSell === undefined) {
+    await ctx.reply(
+      'Token is not found in your wallet assets. Please, specify another token to sell.',
+      { reply_markup: closeConversation },
+    );
+
+    return;
+  }
+
+  if (
+    await coinCannotBeSoldDueToDelay({
+      coin: validCoinToSell,
+      conversation,
+      ctx,
+    })
+  ) {
+    return;
+  }
+
+  const priceOutput = await conversation.external({
+    args: [validCoinToSell],
+    task: (coin: CoinAssetData) => getPriceOutputData(coin),
+  });
+
+  if (conversation.session.tradeCoin.tradeAmountPercentage === '0') {
+    await askForPercentageToSell(
+      ctx,
+      conversation,
+      validCoinToSell,
+      priceOutput,
+    );
+  }
+
+  if (
+    parseFloat(conversation.session.tradeCoin.tradeAmountPercentage) === 100
+  ) {
+    await ctx.reply(
+      `You are about to sell <i><b>the entire amount</b></i> of your ` +
+        `<b>${validCoinToSell.symbol || validCoinToSell.type}</b> balance.`,
+      { reply_markup: confirmWithCloseKeyboard, parse_mode: 'HTML' },
+    );
+
+    const confirmContext = await conversation.wait();
+    const confirmCallbackQueryData = confirmContext.callbackQuery?.data;
+
+    if (confirmCallbackQueryData === CallbackQueryData.Cancel) {
+      await confirmContext.answerCallbackQuery();
+
+      await askForPercentageToSell(
+        ctx,
+        conversation,
+        validCoinToSell,
+        priceOutput,
+      );
+    } else if (confirmCallbackQueryData === CallbackQueryData.Confirm) {
+      await confirmContext.answerCallbackQuery();
+    } else {
+      await reactOnUnexpectedBehaviour(confirmContext, retryButton, 'sell');
+      return;
+    }
+  }
+
+  const absolutePercentage = new BigNumber(
+    conversation.session.tradeCoin.tradeAmountPercentage,
+  ).dividedBy(100);
+
+  const amountToSell = new BigNumber(validCoinToSell.balance)
+    .multipliedBy(absolutePercentage)
+    .toString();
 
   await ctx.reply('Finding the best route to save your money… ☺️');
 
-  const tx = await conversation.external({
-    task: async () => {
-      try {
-        const routerManager = await getRouteManager();
-        const transaction = await routerManager.getBestRouteTransaction({
-          tokenFrom: validCoinToSell.type,
-          tokenTo: LONG_SUI_COIN_TYPE,
-          amount: validatedInputAmount,
-          signerAddress: ctx.session.publicKey,
-          slippagePercentage: ctx.session.settings.slippagePercentage || 10,
-        });
-
-        return transaction;
-      } catch (error) {
-        console.error(error);
-
-        if (error instanceof Error) {
-          console.error(
-            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error.message}`,
-          );
-        } else {
-          console.error(
-            `[routerManager.getBestRouteTransaction] failed to create transaction: ${error}`,
-          );
-        }
-
-        return;
-      }
-    },
-    beforeStore: (value) => {
-      if (value) {
-        return value.serialize();
-      }
-    },
-    afterLoad: async (value) => {
-      if (value) {
-        return transactionFromSerializedTransaction(value);
-      }
-    },
-    afterLoadError: async (error) => {
-      console.debug(
-        `Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
-      console.error(error);
-    },
-    beforeStoreError: async (error) => {
-      console.debug(
-        `Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`,
-      );
-      console.error(error);
+  const routerManager = await getRouteManager();
+  const transaction = await getTransactionFromMethod({
+    conversation,
+    ctx,
+    method: routerManager.getBestRouteTransaction.bind(
+      routerManager,
+    ) as typeof routerManager.getBestRouteTransaction,
+    params: {
+      tokenFrom: validCoinToSell.type,
+      tokenTo: LONG_SUI_COIN_TYPE,
+      amount: amountToSell,
+      signerAddress: conversation.session.publicKey,
+      slippagePercentage:
+        conversation.session.settings.slippagePercentage || 10,
     },
   });
 
-  if (!tx) {
+  if (transaction === undefined) {
     await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
@@ -281,51 +357,24 @@ export async function sell(
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
+  await ctx.reply(
+    'Route for swap found, sending transaction... 🔄' + random_uuid,
+  );
 
-  const resultOfSwap: {
-    digest?: string;
-    result: TransactionResultStatus;
-    reason?: string;
-  } = await conversation.external(async () => {
-    try {
-      const res = await provider.signAndExecuteTransactionBlock({
-        transactionBlock: tx,
-        signer: WalletManagerSingleton.getKeyPairFromPrivateKey(
-          ctx.session.privateKey,
-        ),
-        options: {
-          showEffects: true,
-        },
-      });
-
-      const isTransactionResultSuccessful = isTransactionSuccessful(res);
-      const result = isTransactionResultSuccessful
-        ? TransactionResultStatus.Success
-        : TransactionResultStatus.Failure;
-
-      return { digest: res.digest, result };
-
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error.message}`,
-        );
-      } else {
-        console.error(
-          `[provider.signAndExecuteTransactionBlock] failed to send transaction: ${error}`,
-        );
-      }
-
-      const result = TransactionResultStatus.Failure;
-      return { result: result, reason: 'failed_to_send_transaction' };
-    }
+  const resultOfSwap = await signAndExecuteTransaction({
+    conversation,
+    ctx,
+    transaction,
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap successful ✅\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
-      { reply_markup: retryButton },
+      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`,
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      },
     );
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
@@ -335,12 +384,34 @@ export async function sell(
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
     await ctx.reply(
-      `Swap failed ❌\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfSwap.digest}`,
-      { reply_markup: retryButton },
+      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`,
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      },
     );
+
+    // TODO: It doesn't work for now. Come back later and fix.
+    /*
+    const continueContext = await conversation.waitFor('callback_query:data');
+    const continueCallbackQueryData = continueContext.callbackQuery.data;
+    if (continueCallbackQueryData === 'change-slippage-retry') {
+      await showSlippageConfiguration(ctx);
+      const result = await conversation.waitFor('callback_query:data');
+      const newSlippage = parseInt(result.callbackQuery.data.split('-')[1]);
+      if (!isNaN(newSlippage)) {
+        //If not a number means that the user choose home option
+        conversation.session.settings.slippagePercentage = newSlippage;
+        instantSell(conversation, ctx, tradeAmountPercentage, resCoinType);
+      }
+    }
+    */
 
     return;
   }
 
-  await ctx.reply('Transaction sending failed. ❌', { reply_markup: retryButton });
+  await ctx.reply('Transaction sending failed. ❌', {
+    reply_markup: retryButton,
+  });
 }

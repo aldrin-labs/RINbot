@@ -1,3 +1,4 @@
+import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
 import { autoRetry } from '@grammyjs/auto-retry';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
@@ -26,11 +27,12 @@ import {
   home,
   withdraw,
 } from './chains/sui.functions';
-import { buy } from './chains/trading/buy';
+import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
+import { balances } from './commands/balances';
 import {
   BOT_TOKEN,
   ENVIRONMENT,
@@ -42,7 +44,10 @@ import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
+import { addSuiAssetField } from './migrations/addSuiAssetField';
+import { addTradeAmountPercentageField } from './migrations/addTradeAmountPercentage';
 import { addTradeCoin } from './migrations/addTradeCoin';
+import { addTradesField } from './migrations/addTradesField';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
@@ -102,6 +107,13 @@ async function startBot(): Promise<void> {
           step: 'main',
           privateKey,
           publicKey,
+          suiAsset: {
+            type: LONG_SUI_COIN_TYPE,
+            symbol: 'SUI',
+            balance: '0',
+            decimals: 9,
+            noDecimals: false,
+          },
           settings: { slippagePercentage: DEFAULT_SLIPPAGE },
           assets: [],
           welcomeBonus: {
@@ -114,6 +126,7 @@ async function startBot(): Promise<void> {
           createdAt: Date.now(),
           tradeCoin: {
             coinType: '',
+            tradeAmountPercentage: '0',
             useSpecifiedCoin: false,
           },
           refund: {
@@ -122,6 +135,7 @@ async function startBot(): Promise<void> {
             boostedRefundAmount: null,
             boostedRefundAccount,
           },
+          trades: {},
         };
       },
       storage: enhanceStorage({
@@ -133,6 +147,9 @@ async function startBot(): Promise<void> {
           4: addBoostedRefund,
           5: addRefundFields,
           6: createBoostedRefundAccount(ctx),
+          7: addTradesField,
+          8: addSuiAssetField,
+          9: addTradeAmountPercentageField,
         },
       }),
     });
@@ -145,6 +162,9 @@ async function startBot(): Promise<void> {
   composer.use(conversations());
 
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
+  composer.use(
+    createConversation(instantBuy, { id: ConversationId.InstantBuy }),
+  );
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
   composer.use(
     createConversation(exportPrivateKey, {
@@ -203,15 +223,31 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('buy', async (ctx) => {
+    ctx.session.tradeCoin = {
+      coinType: '',
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: false,
+    };
+
     await ctx.conversation.enter(ConversationId.Buy);
   });
 
   bot.command('sell', async (ctx) => {
+    ctx.session.tradeCoin = {
+      coinType: '',
+      tradeAmountPercentage: '0',
+      useSpecifiedCoin: false,
+    };
+
     await ctx.conversation.enter(ConversationId.Sell);
   });
 
   bot.command('withdrawal', async (ctx) => {
     await ctx.conversation.enter(ConversationId.Withdraw);
+  });
+
+  bot.command('balances', async (ctx) => {
+    await balances(ctx);
   });
 
   bot.command('createaftermathpool', async (ctx) => {
@@ -242,14 +278,15 @@ async function startBot(): Promise<void> {
     await ctx.conversation.exit();
   });
 
-  bot.command('importnewwallet', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.ImportNewWallet);
-  });
+  // bot.command('importnewwallet', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  // });
 
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
     { command: 'version', description: 'Show the bot version' },
+    { command: 'balances', description: 'Show your wallet balances' },
     { command: 'buy', description: 'Show buy menu' },
     { command: 'sell', description: 'Show sell menu' },
     { command: 'withdrawal', description: 'Show withdrawal menu' },
@@ -270,7 +307,7 @@ async function startBot(): Promise<void> {
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
-    { command: 'importnewwallet', description: 'Import new wallet' },
+    // { command: 'importnewwallet', description: 'Import new wallet' },
   ]);
 
   useCallbackQueries(bot);
@@ -297,7 +334,9 @@ async function startBot(): Promise<void> {
 
   // bot.errorBoundary(errorBoundaryHandler)
 
-  ENVIRONMENT === 'local' && bot.start();
+  if (ENVIRONMENT === 'local') {
+    await bot.start();
+  }
 }
 
 startBot();

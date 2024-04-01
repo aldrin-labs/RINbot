@@ -12,3 +12,5 @@ export const COIN_WHITELIST_URL =
   'https://rinbot-dev.vercel.app/api/coin-whitelist';
 
 export const RINBOT_CHAT_URL = 'https://t.me/rinbot_chat';
+
+export const SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS = 4 * 60 * 60 * 1000; // 4 hours
