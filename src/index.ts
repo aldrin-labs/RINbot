@@ -200,9 +200,9 @@ async function startBot(): Promise<void> {
       id: ConversationId.WelcomeBonus,
     }),
   );
-  composer.use(
-    createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
-  );
+  // composer.use(
+  //   createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
+  // );
   composer.use(
     createConversation(checkCurrentWallet, {
       id: ConversationId.CheckCurrentWalletForRefund,
