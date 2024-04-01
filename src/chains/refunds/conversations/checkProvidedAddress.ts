@@ -294,7 +294,7 @@ export async function checkProvidedAddress(
         `This operation requires your authority, so please, visit our <a href="${ALDRIN_REFUND_WEBSITE}">` +
         'refund website</a> to safely connect your affected wallet, check validity of your future RINbot ' +
         'wallet address (showed below) and burn inappropriate boosted claim cap (available on the website).\n' +
-        'After burning you should just repeat the same actions to prepare your <b>boosted refund</b>.\n\n' +
+        'After burning you should just repeat the same actions here to prepare your <b>boosted refund</b>.\n\n' +
         `Your RINbot wallet address that should be passed on the <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>: ` +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
       {
@@ -370,7 +370,7 @@ export async function checkProvidedAddress(
         'You have been switched to your new RINbot wallet.\n\n' +
         'Now you can easily complete claiming the <b>boosted refund</b> on our ' +
         `<a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>.\n\n` +
-        `Your current RINbot wallet address that should be passed into field on the website: ` +
+        `Your current RINbot wallet address that should be passed on the website: ` +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.\n` +
         'After successful completion all the funds will be transferred to your current RINbot wallet.',
       {
