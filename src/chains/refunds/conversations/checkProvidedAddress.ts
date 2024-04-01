@@ -22,12 +22,11 @@ import {
   getSuiVisionTransactionLink,
   reactOnUnexpectedBehaviour,
 } from '../../utils';
-import { importNewWallet } from '../../wallet/conversations/import';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
 import { getRefundManager } from '../getRefundManager';
 import { userHasBackupedAccount, userHasBoostedRefundAccount } from '../utils';
 import {
-  BOOSTED_REFUND_EXAMPLE_FOR_USER_URL,
+  ALDRIN_REFUND_WEBSITE,
   boostedRefundExportPrivateKeyWarnMessage,
 } from './config';
 import { getBoostedClaimCap } from './utils';
@@ -157,16 +156,10 @@ export async function checkProvidedAddress(
     checkingMessage.chat.id,
     checkingMessage.message_id,
     `✅ We have found <code>${baseRefundAmount}</code> <b>SUI</b> to refund for your account.\n\n` +
-      '✎ There are 2 ways, please choose one of them:\n\n' +
-      '<b>1.</b> Import the checked wallet, use <b><i>Check Current Wallet</i></b> button on ' +
-      "the <b><i>Refund</i></b> page you've seen before and then choose between 2 options:\n" +
-      `    a) <b>Base refund</b> (100%) — <code>${baseRefundAmount}</code> <b>SUI</b>\n` +
-      `    b) <b>Boosted refund</b> (150%) — <code>${boostedRefundAmount}</code> <b>SUI</b>, ` +
-      `but you can withdraw only profit that you've earned. <code>${boostedRefundAmount}</code> <b>SUI</b> are ` +
-      `non-withdrawable.\n\n` +
-      '<b>2.</b> Continue to work without importing. Only <b>Boosted Refund</b> is enabled this way. ' +
-      'We will prepare boosted refund claim, but you will have to manually use github example to sign and ' +
-      'execute required for refund transaction.',
+      `✎ After pressing <b><i>Continue</i></b> button you will proceed with <b>Boosted Refund</b> — ` +
+      `<i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}</code> <b>SUI</b>.\n` +
+      `While all features of the RINbot remain accessible, you'll be able to withdraw only profits. ` +
+      `The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
     {
       reply_markup: continueWithCancelKeyboard,
       parse_mode: 'HTML',
@@ -282,11 +275,9 @@ export async function checkProvidedAddress(
 
   if (boostedClaimCapObjectId !== null) {
     await ctx.reply(
-      '<b>Boosted refund</b> is already prepared for this account. Here is the <i><b>boosted claim cap</b></i> ' +
-        `you should use in the <a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n<code>` +
-        `${boostedClaimCapObjectId}</code>\n\n` +
-        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account` +
-        `\n\nFeel free to ask our support for help!`,
+      '<b>Boosted refund</b> is already prepared for this account.\n\nNow you can easily continue claiming the ' +
+        `<b>boosted refund</b> on our <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a> using your ` +
+        `RINbot wallet address: <code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
       { reply_markup: goHome, parse_mode: 'HTML' },
     );
 
@@ -297,10 +288,20 @@ export async function checkProvidedAddress(
     boostedClaimCapNotAssociatedWithNewAddressObjectId !== null
   ) {
     // If boosted claim cap exists, but with not corresponding `newAddress` — notify user and exit conversation.
-    await ctx.reply('Consider importing the wallet.', {
-      reply_markup: importWalletWithCancelKeyboard,
-      parse_mode: 'HTML',
-    });
+    await ctx.reply(
+      'We have found an inappropriate boosted claim cap. It could be created by a bad actor and must be ' +
+        '<i><b>burned</b></i> to safely bring your money.\n\n' +
+        `This operation requires your authority, so please, visit our <a href="${ALDRIN_REFUND_WEBSITE}">` +
+        'refund website</a> to safely connect your affected wallet, check validity of your future RINbot ' +
+        'wallet address (showed below) and burn inappropriate boosted claim cap (available on the website).\n' +
+        'After burning you should just repeat the same actions to prepare your <b>boosted refund</b>.\n\n' +
+        `Your RINbot wallet address that should be passed on the <a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>: ` +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.`,
+      {
+        reply_markup: retryButton,
+        parse_mode: 'HTML',
+      },
+    );
 
     return;
   }
@@ -364,20 +365,14 @@ export async function checkProvidedAddress(
     conversation.session.refund.claimedBoostedRefund = true;
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
-    // Updating boosted claim cap
-    boostedClaimCap = await getBoostedClaimCap({
-      conversation,
-      refundManager,
-      ownerAddress: affectedPublicKey,
-    });
-
     await ctx.reply(
-      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>!\n\n` +
-        `Here is the <i><b>boosted claim cap</b></i> you should use in ` +
-        `<a href="${BOOSTED_REFUND_EXAMPLE_FOR_USER_URL}">github example</a>:\n` +
-        `<code>${boostedClaimCap?.boostedClaimCapObjectId}</code>\n\n` +
-        `Once you'll sign and execute the transaction from the example above, you'll get your boosted refund to this account.\n` +
-        `Feel free to ask our support for help!`,
+      `<b>Boosted refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully prepared</a>! ` +
+        'You have been switched to your new RINbot wallet.\n\n' +
+        'Now you can easily complete claiming the <b>boosted refund</b> on our ' +
+        `<a href="${ALDRIN_REFUND_WEBSITE}">refund website</a>.\n\n` +
+        `Your current RINbot wallet address that should be passed into field on the website: ` +
+        `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>.\n` +
+        'After successful completion all the funds will be transferred to your current RINbot wallet.',
       {
         reply_markup: goHome,
         parse_mode: 'HTML',
@@ -395,7 +390,7 @@ export async function checkProvidedAddress(
       `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to prepare the <b>boosted refund</b>. ` +
         `Please, try again or contact support.`,
       {
-        reply_markup: importWalletWithRetryKeyboard,
+        reply_markup: retryButton,
         parse_mode: 'HTML',
       },
     );
@@ -406,7 +401,7 @@ export async function checkProvidedAddress(
   await ctx.reply(
     'Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.',
     {
-      reply_markup: importWalletWithRetryKeyboard,
+      reply_markup: retryButton,
       parse_mode: 'HTML',
     },
   );
