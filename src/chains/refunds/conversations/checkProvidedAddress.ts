@@ -192,7 +192,7 @@ export async function checkProvidedAddress(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        `To proceed with the <b>base refund</b>, just use our <a href="${ALDRIN_REFUND_WEBSITE}">Aldrin Refund Website</a>.`,
+        `To proceed with the <b>base refund</b>, just visit <a href="${ALDRIN_REFUND_WEBSITE}">Aldrin Refund Website</a>.`,
         {
           reply_markup: retryButton,
           parse_mode: 'HTML',
