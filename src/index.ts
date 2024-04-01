@@ -203,11 +203,11 @@ async function startBot(): Promise<void> {
   // composer.use(
   //   createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
   // );
-  composer.use(
-    createConversation(checkCurrentWallet, {
-      id: ConversationId.CheckCurrentWalletForRefund,
-    }),
-  );
+  // composer.use(
+  //   createConversation(checkCurrentWallet, {
+  //     id: ConversationId.CheckCurrentWalletForRefund,
+  //   }),
+  // );
   composer.use(
     createConversation(checkProvidedAddress, {
       id: ConversationId.CheckProvidedAddressForRefund,

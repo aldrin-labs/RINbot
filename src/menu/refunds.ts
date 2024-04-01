@@ -4,11 +4,11 @@ import { home } from '../chains/sui.functions';
 import { BotContext } from '../types';
 
 const refundsMenu = new Menu<BotContext>('refunds')
-  .text('Check Current Wallet', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CheckCurrentWalletForRefund);
-  })
-  .row()
-  .text('Check Provided Address', async (ctx) => {
+  // .text('Check Current Wallet', async (ctx) => {
+  //   await ctx.conversation.enter(ConversationId.CheckCurrentWalletForRefund);
+  // })
+  // .row()
+  .text('Check Address', async (ctx) => {
     await ctx.conversation.enter(ConversationId.CheckProvidedAddressForRefund);
   })
   .row()
