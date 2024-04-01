@@ -339,7 +339,7 @@ export async function checkProvidedAddress(
         '<b>boosted refund</b> following the next steps:\n' +
         `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
-        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
         '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
         `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
@@ -364,7 +364,7 @@ export async function checkProvidedAddress(
         `This operation requires your authority, so please, follow the next steps:\n` +
         `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
-        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
         '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
         '<b>5.</b> Press <b><i>Reset Capabilities</i></b> button and sign the transaction.\n' +
@@ -445,7 +445,7 @@ export async function checkProvidedAddress(
         'Now you can easily continue claiming the <b>boosted refund</b> following the next steps:\n' +
         `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
         '<b>2.</b> Connect your affected wallet.\n' +
-        '<b>3.</b> On the right side of the page enter your RINbot wallet address: ' +
+        '<b>3.</b> On the left side of the page enter your RINbot wallet address: ' +
         `<code>${conversation.session.refund.boostedRefundAccount.publicKey}</code>\n` +
         '<b>4.</b> Press <b><i>Check validity</i></b> button.\n' +
         `<b>5.</b> Press <b><i>Claim ${boostedRefundAmount} SUI</i></b> button, sign the transaction and enjoy your ` +
