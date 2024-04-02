@@ -58,7 +58,7 @@ function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
 }
 
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.0.2';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -200,14 +200,14 @@ async function startBot(): Promise<void> {
       id: ConversationId.WelcomeBonus,
     }),
   );
-  composer.use(
-    createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
-  );
-  composer.use(
-    createConversation(checkCurrentWallet, {
-      id: ConversationId.CheckCurrentWalletForRefund,
-    }),
-  );
+  // composer.use(
+  //   createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
+  // );
+  // composer.use(
+  //   createConversation(checkCurrentWallet, {
+  //     id: ConversationId.CheckCurrentWalletForRefund,
+  //   }),
+  // );
   composer.use(
     createConversation(checkProvidedAddress, {
       id: ConversationId.CheckProvidedAddressForRefund,

@@ -15,3 +15,5 @@ export const BOOSTED_REFUND_EXAMPLE_FOR_USER_URL =
   'https://github.com/aldrin-labs/refund-contract/blob/develop/examples/8-claim-boosted-refund.ts';
 
 export const MINIMUM_SUI_BALANCE_FOR_REFUND = 0.5;
+
+export const ALDRIN_REFUND_WEBSITE = 'https://pikka-refund.aldrin.com';
