@@ -58,7 +58,7 @@ function errorBoundaryHandler(err: BotError) {
   console.error('[Error Boundary Handler]', err);
 }
 
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.0.1';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
