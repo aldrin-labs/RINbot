@@ -192,7 +192,11 @@ export async function checkProvidedAddress(
       await choiseContext.answerCallbackQuery();
 
       await ctx.reply(
-        `To proceed with the <b>base refund</b>, just visit <a href="${ALDRIN_REFUND_WEBSITE}">Aldrin Refund Website</a>.`,
+        `To proceed with the <b>base refund</b>, just follow the next steps:\n` +
+          `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+          '<b>2.</b> Connect your affected wallet.\n' +
+          `<b>3.</b> On the right side of the page press the <i><b>Claim ${baseRefundAmount} SUI</b></i> button, ` +
+          'sign the transaction and enjoy your <b>refund</b>.',
         {
           reply_markup: retryButton,
           parse_mode: 'HTML',
