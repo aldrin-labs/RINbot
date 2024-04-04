@@ -166,7 +166,6 @@ export async function checkProvidedAddress(
     },
   );
 
-  /*
   await ctx.reply(
     '📝 Here are <b>two options</b> for the refund:\n\n' +
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
@@ -191,23 +190,21 @@ export async function checkProvidedAddress(
       await conversation.skip();
     } else if (choiseCallbackQueryData === CallbackQueryData.BaseRefund) {
       await choiseContext.answerCallbackQuery();
-    */
 
-  await ctx.reply(
-    `To proceed, just follow the next steps:\n` +
-      `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
-      '<b>2.</b> Connect your affected wallet.\n' +
-      `<b>3.</b> Press the <i><b>Claim ${baseRefundAmount} SUI</b></i> button, ` +
-      'sign the transaction and enjoy your <b>refund</b>!',
-    {
-      reply_markup: retryButton,
-      parse_mode: 'HTML',
-      link_preview_options: { is_disabled: true },
-    },
-  );
+      await ctx.reply(
+        `To proceed with the <b>base refund</b>, just follow the next steps:\n` +
+          `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+          '<b>2.</b> Connect your affected wallet.\n' +
+          `<b>3.</b> On the right side of the page press the <i><b>Claim ${baseRefundAmount} SUI</b></i> button, ` +
+          'sign the transaction and enjoy your <b>refund</b>!',
+        {
+          reply_markup: retryButton,
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+        },
+      );
 
-  return;
-  /*
+      return;
     } else if (choiseCallbackQueryData === CallbackQueryData.BoostedRefund) {
       await choiseContext.answerCallbackQuery();
 
@@ -493,5 +490,4 @@ export async function checkProvidedAddress(
   );
 
   return;
-  */
 }
