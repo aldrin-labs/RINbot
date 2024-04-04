@@ -8,7 +8,6 @@ const withdraw_menu = new Menu<BotContext>('wallet-withdraw-menu').back(
     await ctx.conversation.exit();
     const last_msg = ctx.msg?.message_id as number;
     await ctx.deleteMessages([last_msg]);
-    ctx.session.step = 'main';
     ctx.menu.close();
     await home(ctx);
   },
