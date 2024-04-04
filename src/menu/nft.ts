@@ -68,11 +68,8 @@ export const nft_menu = new Menu<BotContext>('nft-menu')
     return;
   });
 
-export const nft_exit_menu = new Menu<BotContext>('nft-exit-menu').back(
-  'Home',
-  async (ctx) => {
-    await ctx.conversation.exit();
-    ctx.menu.close();
-    await home(ctx);
-  },
-);
+export const nft_exit_menu = new Menu<BotContext>('nft-exit-menu').back('Home', async (ctx) => {
+  await ctx.conversation.exit();
+  ctx.menu.close();
+  await home(ctx);
+});

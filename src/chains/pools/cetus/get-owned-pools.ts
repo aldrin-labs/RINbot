@@ -10,11 +10,7 @@ export async function ownedCetusPools(ctx: BotContext): Promise<void> {
 
   const coinManager = await getCoinManager();
   const cetus = await getCetus();
-  const ownedPoolInfos = await cetus.getOwnedPools(
-    provider,
-    ctx.session.publicKey,
-    coinManager,
-  );
+  const ownedPoolInfos = await cetus.getOwnedPools(provider, ctx.session.publicKey, coinManager);
 
   if (ownedPoolInfos.length === 0) {
     await ctx.reply('You have no pools yet.', { reply_markup: goHome });
@@ -24,9 +20,7 @@ export async function ownedCetusPools(ctx: BotContext): Promise<void> {
 
   let infoString = '<b>Owned Pools</b>:';
   ownedPoolInfos.forEach((poolInfo) => {
-    infoString +=
-      `\n\nName: <a href="${getCetusPoolUrl(poolInfo.poolAddress)}">` +
-      `<b>${poolInfo.name}</b></a>\n`;
+    infoString += `\n\nName: <a href="${getCetusPoolUrl(poolInfo.poolAddress)}">` + `<b>${poolInfo.name}</b></a>\n`;
     infoString += `Pool address: <code>${poolInfo.poolAddress}</code>\n`;
     infoString += `Fee rate: <code>${poolInfo.feeRate}%</code>\n`;
     infoString += 'Liquidity:\n';
@@ -45,21 +39,14 @@ export async function ownedCetusPools(ctx: BotContext): Promise<void> {
       `<code>${poolInfo.amountB}</code>${rawAmountBString}`;
   });
 
-  const someAmountIsRaw = ownedPoolInfos.some(
-    (poolInfo) => poolInfo.amountAIsRaw || poolInfo.amountBIsRaw,
-  );
+  const someAmountIsRaw = ownedPoolInfos.some((poolInfo) => poolInfo.amountAIsRaw || poolInfo.amountBIsRaw);
 
   if (someAmountIsRaw) {
     infoString += "\n\n<i>*raw</i> &#8213; amount doesn't respect decimals.";
   }
 
-  await ctx.api.editMessageText(
-    loadingMessage.chat.id,
-    loadingMessage.message_id,
-    infoString,
-    {
-      reply_markup: goHome,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, infoString, {
+    reply_markup: goHome,
+    parse_mode: 'HTML',
+  });
 }

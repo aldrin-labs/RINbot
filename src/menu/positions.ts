@@ -191,16 +191,11 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       const priceApiGetResponse = await getPriceApi('sui', currentToken.type);
 
       if (priceApiGetResponse === undefined) {
-        console.warn(
-          '[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.',
-        );
+        console.warn('[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.');
         return;
       }
 
-      currentToken = getExtendedWithGetPriceApiResponseDataCoin(
-        currentToken,
-        priceApiGetResponse.data.data,
-      );
+      currentToken = getExtendedWithGetPriceApiResponseDataCoin(currentToken, priceApiGetResponse.data.data);
 
       await updateMessage(ctx);
     } catch (error) {

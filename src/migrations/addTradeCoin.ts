@@ -1,14 +1,7 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 
 export function addTradeCoin(old: {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu';
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };

@@ -3,40 +3,20 @@ import { autoRetry } from '@grammyjs/auto-retry';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import {
-  Bot,
-  BotError,
-  Composer,
-  Enhance,
-  GrammyError,
-  HttpError,
-  enhanceStorage,
-  session,
-} from 'grammy';
+import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
-import {
-  createAftermathPool,
-  createCoin,
-  generateWallet,
-  home,
-  withdraw,
-} from './chains/sui.functions';
+import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
 import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { balances } from './commands/balances';
-import {
-  BOT_TOKEN,
-  ENVIRONMENT,
-  HISTORY_TABLE,
-  WELCOME_BONUS_AMOUNT,
-} from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
@@ -154,16 +134,12 @@ async function startBot(): Promise<void> {
     });
   });
 
-  bot.api.config.use(
-    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
-  );
+  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }));
 
   composer.use(conversations());
 
   composer.use(createConversation(buy, { id: ConversationId.Buy }));
-  composer.use(
-    createConversation(instantBuy, { id: ConversationId.InstantBuy }),
-  );
+  composer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
   composer.use(createConversation(sell, { id: ConversationId.Sell }));
   composer.use(
     createConversation(exportPrivateKey, {
@@ -186,9 +162,7 @@ async function startBot(): Promise<void> {
   //     id: ConversationId.CreateCetusPool,
   //   }),
   // );
-  composer.use(
-    createConversation(createCoin, { id: ConversationId.CreateCoin }),
-  );
+  composer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
   composer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,

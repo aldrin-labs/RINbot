@@ -19,8 +19,7 @@ export function validateCoinName(coinName: string): boolean {
  */
 export function validateCoinSymbol(coinSymbol: string): boolean {
   const regex = /^[a-zA-Z_]+$/;
-  const isCoinSymbolIsValid =
-    typeof coinSymbol === 'string' && regex.test(coinSymbol);
+  const isCoinSymbolIsValid = typeof coinSymbol === 'string' && regex.test(coinSymbol);
 
   return isCoinSymbolIsValid;
 }
@@ -42,17 +41,13 @@ export function validateCoinDescription(coinDescription: string): boolean {
  * @return {boolean} - Returns true if the total supply is a string containing only numbers and
  * does not exceed or equal maxTotalSupply, otherwise false.
  */
-export function validateTotalSupply(
-  totalSupply: string,
-  maxTotalSupply: BigNumber,
-): boolean {
+export function validateTotalSupply(totalSupply: string, maxTotalSupply: BigNumber): boolean {
   if (typeof totalSupply !== 'string' || !/^\d+$/.test(totalSupply)) {
     return false; // Return false if totalSupply is not a string containing only numbers
   }
 
   const totalSupplyBigNumber = new BigNumber(totalSupply);
-  const isTotalSupplyIsValid =
-    totalSupplyBigNumber.isLessThanOrEqualTo(maxTotalSupply);
+  const isTotalSupplyIsValid = totalSupplyBigNumber.isLessThanOrEqualTo(maxTotalSupply);
 
   console.debug('isTotalSupplyIsValid: ', isTotalSupplyIsValid);
 
@@ -99,9 +94,7 @@ export function calculateMaxTotalSupply(decimals: string): BigNumber {
  * @returns {string} The coin type extracted from the transaction result.
  * @throws {Error} Throws an error if the required object changes are not found in the transaction result.
  */
-export function getCoinTypeFromTransactionResult(
-  transactionResult: SuiTransactionBlockResponse,
-): string {
+export function getCoinTypeFromTransactionResult(transactionResult: SuiTransactionBlockResponse): string {
   const requiredObjectTypePart = 'coin::TreasuryCap';
   const objectChanges = transactionResult.objectChanges;
 
@@ -112,9 +105,7 @@ export function getCoinTypeFromTransactionResult(
     );
   }
 
-  const createdObjectChanges = objectChanges.filter(
-    (change) => change.type === 'created',
-  );
+  const createdObjectChanges = objectChanges.filter((change) => change.type === 'created');
 
   if (createdObjectChanges.length === 0) {
     throw new Error(
@@ -124,9 +115,7 @@ export function getCoinTypeFromTransactionResult(
   }
 
   const requiredObjectChange = createdObjectChanges.find(
-    (change) =>
-      change.type === 'created' &&
-      change.objectType.includes(requiredObjectTypePart),
+    (change) => change.type === 'created' && change.objectType.includes(requiredObjectTypePart),
   );
 
   if (requiredObjectChange === undefined) {
@@ -136,9 +125,7 @@ export function getCoinTypeFromTransactionResult(
     );
   }
 
-  const matches =
-    requiredObjectChange.type === 'created' &&
-    requiredObjectChange.objectType.match(/<([^>]*)>/);
+  const matches = requiredObjectChange.type === 'created' && requiredObjectChange.objectType.match(/<([^>]*)>/);
 
   if (matches && matches[1]) {
     const coinType = matches[1];

@@ -1,11 +1,6 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
-import {
-  AxiosPriceApiResponsePost,
-  AxiosPriceApiResponseGet,
-  CoinAssetDataExtended,
-  PriceApiPayload,
-} from '../types';
+import { AxiosPriceApiResponsePost, AxiosPriceApiResponseGet, CoinAssetDataExtended, PriceApiPayload } from '../types';
 import { PRICE_API_URL } from '../config/bot.config';
 // Import the Redis singleton
 import Redis from './redis-priceapi';
@@ -19,10 +14,7 @@ export function calculate(balance: string, price: number | undefined) {
   }).format(result);
 }
 
-export function totalBalanceCalculation(
-  balance: string,
-  price: number | undefined,
-) {
+export function totalBalanceCalculation(balance: string, price: number | undefined) {
   if (price === undefined) return 0;
   return +balance * price;
 }
@@ -40,36 +32,22 @@ export function formatTokenInfo(token: CoinAssetDataExtended): string {
   const priceChange1h =
     token.priceChange1h === 0
       ? token.priceChange1h.toFixed(2)
-      : (token.priceChange1h! > 0
-          ? '+' + token.priceChange1h?.toFixed(2)
-          : token.priceChange1h?.toFixed(2)) + '%';
+      : (token.priceChange1h! > 0 ? '+' + token.priceChange1h?.toFixed(2) : token.priceChange1h?.toFixed(2)) + '%';
   const priceChange24h =
     token.priceChange24h === 0
       ? ` ${token.priceChange24h.toFixed(2)}%`
-      : (token.priceChange24h! > 0
-          ? '+' + token.priceChange24h?.toFixed(2)
-          : token.priceChange24h?.toFixed(2)) + '%';
+      : (token.priceChange24h! > 0 ? '+' + token.priceChange24h?.toFixed(2) : token.priceChange24h?.toFixed(2)) + '%';
 
   return `\n\nToken Price: <b>${tokenPrice} USD</b>\nToken Balance: <b>${tokenBalance} ${tokenSymbol} / ${tokenValueInUSD} USD</b>${mcapInUSD ? '\nMcap: <b>' + mcapInUSD + ' USD</b>' : ''}${priceChange1h ? '\n1h: <b>' + priceChange1h + '</b>' : ''}${priceChange24h ? ' 24h: <b>' + priceChange24h + '</b>' : ''}`;
 }
 
-export const isCoinAssetDataExtended = (
-  asset: any,
-): asset is CoinAssetDataExtended => asset && 'price' in asset;
+export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => asset && 'price' in asset;
 
 export function hasDefinedPrice(data: unknown) {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'price' in data &&
-    typeof data.price === 'number'
-  );
+  return typeof data === 'object' && data !== null && 'price' in data && typeof data.price === 'number';
 }
 
-export async function postPriceApi(
-  allCoinsAssets: CoinAssetData[],
-  useTimeout: boolean = true,
-) {
+export async function postPriceApi(allCoinsAssets: CoinAssetData[], useTimeout: boolean = true) {
   try {
     let data: PriceApiPayload = { data: [] };
     allCoinsAssets.forEach((coin) => {
@@ -78,11 +56,9 @@ export async function postPriceApi(
 
     const startTime = Date.now();
 
-    const response = await axios.post<AxiosPriceApiResponsePost>(
-      `${PRICE_API_URL}/assets`,
-      data,
-      { timeout: useTimeout ? 300 : undefined },
-    );
+    const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data, {
+      timeout: useTimeout ? 300 : undefined,
+    });
 
     const endTime = Date.now();
     const requestTime = endTime - startTime;
@@ -97,15 +73,12 @@ export async function postPriceApi(
 export async function getPriceApi(chainId: string, tokenAddress: string) {
   try {
     const startTime = Date.now();
-    const response = await axios.get<AxiosPriceApiResponseGet>(
-      `${PRICE_API_URL}/api/assets`,
-      {
-        params: {
-          chainId,
-          tokenAddress,
-        },
+    const response = await axios.get<AxiosPriceApiResponseGet>(`${PRICE_API_URL}/api/assets`, {
+      params: {
+        chainId,
+        tokenAddress,
       },
-    );
+    });
     const endTime = Date.now();
     const requestTime = endTime - startTime;
     console.log(`Price API get response time: ${requestTime}ms`);
