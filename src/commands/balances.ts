@@ -6,11 +6,7 @@ import {
   isCoinAssetDataExtended,
   postPriceApi,
 } from '../chains/priceapi.utils';
-import {
-  availableBalance,
-  balance,
-  refreshAssets,
-} from '../chains/sui.functions';
+import { availableBalance, balance, refreshAssets } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext, PriceApiPayload } from '../types';
 
@@ -53,9 +49,7 @@ export const balances = async (ctx: BotContext) => {
     const response = await postPriceApi([...allCoinsAssets, suiAsset], false);
     const coinsPriceApi = response?.data.data;
 
-    const priceMap = new Map(
-      coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]),
-    );
+    const priceMap = new Map(coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]));
 
     let balance = 0;
     [...allCoinsAssets, suiAsset].forEach((coin) => {
@@ -89,23 +83,17 @@ export const balances = async (ctx: BotContext) => {
 
   try {
     const balanceSUIdStr =
-      balance_usd !== null
-        ? `<b>${userBalance} SUI / ${balance_usd} USD</b>`
-        : `<b>${userBalance} SUI</b>`;
+      balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`;
 
     const avlBalanceSUIdStr =
-      avl_balance_usd !== null
-        ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>`
-        : `<b>${avl_balance} SUI</b>`;
+      avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`;
 
     const message = `Your wallet address: <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
 
-    await ctx.api.editMessageText(
-      loadingMessage.chat.id,
-      loadingMessage.message_id,
-      message,
-      { reply_markup: goHome, parse_mode: 'HTML' },
-    );
+    await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, message, {
+      reply_markup: goHome,
+      parse_mode: 'HTML',
+    });
   } catch (e) {
     console.error(e);
   }

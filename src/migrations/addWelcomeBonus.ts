@@ -2,14 +2,7 @@ import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { WELCOME_BONUS_AMOUNT } from '../config/bot.config';
 
 export function addWelcomeBonus(old: {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };

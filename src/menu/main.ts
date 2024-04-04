@@ -51,11 +51,7 @@ const menu = new Menu<BotContext>('main')
     await showRefundsPage(ctx);
   })
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
-    const {
-      isUserEligibleToGetBonus,
-      isUserAgreeWithBonus,
-      isUserClaimedBonus,
-    } = ctx.session.welcomeBonus;
+    const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus;
 
     if (
       isUserEligibleToGetBonus &&

@@ -40,6 +40,6 @@
   "scripts": {
     "dev": "DEBUG=bot* dotenv -- tsx watch src/index.ts",
     "build": "ncc build src/index.ts -o public -m",
-    "prettier": "prettier --write 'src/**/*.ts'"
+    "prettier": "prettier --write src/**/*.ts"
   }
 }

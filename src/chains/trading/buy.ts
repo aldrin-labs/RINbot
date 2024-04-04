@@ -11,18 +11,10 @@ import closeConversation from '../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../types';
 import { ConversationId } from '../conversations.config';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransaction,
-} from '../conversations.utils';
+import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
 import { getUserFeePercentage } from '../fees/utils';
 import { RINBOT_CHAT_URL } from '../sui.config';
-import {
-  getCoinManager,
-  getRouteManager,
-  getWalletManager,
-  random_uuid,
-} from '../sui.functions';
+import { getCoinManager, getRouteManager, getWalletManager, random_uuid } from '../sui.functions';
 import {
   extractCoinTypeFromLink,
   getCoinWhitelist,
@@ -34,9 +26,7 @@ import {
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
-  const useSpecifiedCoin = await conversation.external(
-    () => conversation.session.tradeCoin.useSpecifiedCoin,
-  );
+  const useSpecifiedCoin = await conversation.external(() => conversation.session.tradeCoin.useSpecifiedCoin);
   const coinType = conversation.session.tradeCoin.coinType;
   let validatedCoinType: string | undefined;
 
@@ -44,10 +34,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     validatedCoinType = coinType;
     conversation.session.tradeCoin.useSpecifiedCoin = false;
   } else {
-    await ctx.reply(
-      'Which token do you want to buy? Please send a coin type or a link to suiscan.',
-      { reply_markup: closeConversation },
-    );
+    await ctx.reply('Which token do you want to buy? Please send a coin type or a link to suiscan.', {
+      reply_markup: closeConversation,
+    });
 
     await ctx.reply(
       'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
@@ -71,9 +60,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         return false;
       }
 
-      const coinType: string | null = coinTypeIsValid
-        ? possibleCoin
-        : extractCoinTypeFromLink(possibleCoin);
+      const coinType: string | null = coinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin);
 
       // ts check
       if (coinType === null) {
@@ -98,31 +85,25 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
       const tokenToBuyIsSui: boolean = isSuiCoinType(fetchedCoin.type);
 
       if (tokenToBuyIsSui) {
-        await ctx.reply(
-          `You cannot buy SUI for SUI. Please, specify another token to buy.`,
-          { reply_markup: closeConversation },
-        );
+        await ctx.reply(`You cannot buy SUI for SUI. Please, specify another token to buy.`, {
+          reply_markup: closeConversation,
+        });
 
         return false;
       }
 
       if (userMustUseCoinWhitelist(ctx)) {
-        const coinWhitelist = await conversation.external(() =>
-          getCoinWhitelist(),
-        );
+        const coinWhitelist = await conversation.external(() => getCoinWhitelist());
 
         if (coinWhitelist === null) {
-          await ctx.reply(
-            'Failed to fetch coin whitelist. Please, try again later or contact support.',
-            { reply_markup: closeConversation },
-          );
+          await ctx.reply('Failed to fetch coin whitelist. Please, try again later or contact support.', {
+            reply_markup: closeConversation,
+          });
 
           return false;
         }
 
-        const requiredCoinInWhitelist = coinWhitelist.find(
-          (coin) => coin.type === fetchedCoin.type,
-        );
+        const requiredCoinInWhitelist = coinWhitelist.find((coin) => coin.type === fetchedCoin.type);
 
         if (requiredCoinInWhitelist === undefined) {
           await ctx.reply(
@@ -147,10 +128,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   }
 
   if (validatedCoinType === undefined) {
-    await ctx.reply(
-      'Cannot process entered coin. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Cannot process entered coin. Please, try again or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -165,15 +145,11 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
-    const balance = await walletManager.getAvailableSuiBalance(
-      conversation.session.publicKey,
-    );
+    const balance = await walletManager.getAvailableSuiBalance(conversation.session.publicKey);
     return balance;
   });
 
-  const priceOutput = await conversation.external(() =>
-    getPriceOutputData(resCoinType),
-  );
+  const priceOutput = await conversation.external(() => getPriceOutputData(resCoinType));
 
   await ctx.reply(
     `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
@@ -200,10 +176,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     });
 
     if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, { reply_markup: closeConversation });
 
       return false;
     }
@@ -213,10 +186,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   });
 
   if (validatedInputAmount === undefined) {
-    await ctx.reply(
-      `Invalid coinType or inputAmount. Please try again or contact support.`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Invalid coinType or inputAmount. Please try again or contact support.`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -226,20 +198,13 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   return await instantBuy(conversation, ctx);
 }
 
-export const instantBuy = async (
-  conversation: MyConversation,
-  ctx: BotContext,
-) => {
-  await ctx.reply(
-    'Finding the best route to save your money… ☺️' + random_uuid,
-  );
+export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
+  await ctx.reply('Finding the best route to save your money… ☺️' + random_uuid);
 
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
   const routerManager = await getRouteManager();
 
-  const feePercentage = (
-    await conversation.external(() => getUserFeePercentage(ctx))
-  ).toString();
+  const feePercentage = (await conversation.external(() => getUserFeePercentage(ctx))).toString();
 
   const {
     tradeCoin: { coinType: resCoinType, tradeAmountPercentage },
@@ -254,9 +219,7 @@ export const instantBuy = async (
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
-    method: routerManager.getBestRouteTransaction.bind(
-      routerManager,
-    ) as typeof routerManager.getBestRouteTransaction,
+    method: routerManager.getBestRouteTransaction.bind(routerManager) as typeof routerManager.getBestRouteTransaction,
     params: {
       tokenFrom: LONG_SUI_COIN_TYPE,
       tokenTo: resCoinType,
@@ -278,9 +241,7 @@ export const instantBuy = async (
     return;
   }
 
-  await ctx.reply(
-    'Route for swap found, sending transaction... 🔄' + random_uuid,
-  );
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
 
   const resultOfSwap = await signAndExecuteTransaction({
     conversation,
@@ -289,14 +250,11 @@ export const instantBuy = async (
   });
 
   if (resultOfSwap.result === 'success' && resultOfSwap.digest) {
-    await ctx.reply(
-      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`,
-      {
-        reply_markup: retryButton,
-        parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
-      },
-    );
+    await ctx.reply(`Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    });
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
@@ -310,14 +268,11 @@ export const instantBuy = async (
   }
 
   if (resultOfSwap.result === 'failure' && resultOfSwap.digest) {
-    await ctx.reply(
-      `Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`,
-      {
-        reply_markup: retryButton,
-        parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
-      },
-    );
+    await ctx.reply(`Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    });
 
     // TODO: It doesn't work for now. Come back later and fix.
     /*

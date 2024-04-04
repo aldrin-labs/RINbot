@@ -10,12 +10,9 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   .back('Home')
   .row()
   .text('Deposit', async (ctx) => {
-    await ctx.reply(
-      `Your public key is: <code>${ctx.session.publicKey}</code>`,
-      {
-        parse_mode: 'HTML',
-      },
-    );
+    await ctx.reply(`Your public key is: <code>${ctx.session.publicKey}</code>`, {
+      parse_mode: 'HTML',
+    });
   })
   .text('Withdraw X amount', async (ctx) => {
     await ctx.conversation.enter(ConversationId.Withdraw);

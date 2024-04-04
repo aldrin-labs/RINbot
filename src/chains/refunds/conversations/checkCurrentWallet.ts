@@ -13,25 +13,18 @@ import { getRefundManager } from '../getRefundManager';
 import { MINIMUM_SUI_BALANCE_FOR_REFUND } from './config';
 import { claimBaseRefund, claimBoostedRefund } from './utils';
 
-export async function checkCurrentWallet(
-  conversation: MyConversation,
-  ctx: BotContext,
-) {
+export async function checkCurrentWallet(conversation: MyConversation, ctx: BotContext) {
   const refundManager = getRefundManager();
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.CheckCurrentWalletForRefund];
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.CheckCurrentWalletForRefund];
   const closeButtons = closeConversation.inline_keyboard[0];
   const optionsWithCloseKeyboard = refundOptionsKeyboard
     .clone()
     .row()
     .add(...closeButtons);
 
-  const checkingMessage = await ctx.reply(
-    '<b>Checking your current account address. This may take some time...</b>',
-    {
-      parse_mode: 'HTML',
-    },
-  );
+  const checkingMessage = await ctx.reply('<b>Checking your current account address. This may take some time...</b>', {
+    parse_mode: 'HTML',
+  });
 
   const suiBalance = await conversation.external(async () => {
     return await balance(ctx);
@@ -151,11 +144,7 @@ export async function checkCurrentWallet(
         userConfirmedChoise = true;
         return await claimBaseRefund({ ctx, conversation, retryButton });
       } else {
-        await reactOnUnexpectedBehaviour(
-          confirmContext,
-          retryButton,
-          'current wallet check',
-        );
+        await reactOnUnexpectedBehaviour(confirmContext, retryButton, 'current wallet check');
         return;
       }
     } else if (choiseCallbackQueryData === CallbackQueryData.BoostedRefund) {
@@ -190,19 +179,11 @@ export async function checkCurrentWallet(
           boostedRefundAmount,
         });
       } else {
-        await reactOnUnexpectedBehaviour(
-          ctx,
-          retryButton,
-          'current wallet check',
-        );
+        await reactOnUnexpectedBehaviour(ctx, retryButton, 'current wallet check');
         return;
       }
     } else {
-      await reactOnUnexpectedBehaviour(
-        choiseContext,
-        retryButton,
-        'current wallet check',
-      );
+      await reactOnUnexpectedBehaviour(choiseContext, retryButton, 'current wallet check');
       return;
     }
   } while (!userConfirmedChoise);

@@ -1,7 +1,4 @@
-import {
-  SUI_DECIMALS,
-  SurfdogLaunchpadSingleton,
-} from '@avernikoz/rinbot-sui-sdk';
+import { SUI_DECIMALS, SurfdogLaunchpadSingleton } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import confirm from '../../../../inline-keyboards/confirm';
 import { retryAndGoHomeButtonsData } from '../../../../inline-keyboards/retryConversationButtonsFactory';
@@ -17,19 +14,12 @@ import { sleep } from '../../../utils';
 import { getSurfdogLaunchpad } from '../getSurfdogLaunchpad';
 import { convertBigIntToString } from '../utils/convertBigIntToString';
 import { waitForTicketResult } from '../utils/waitForTicketResult';
-import {
-  MAX_TICKETS_TO_BUY,
-  SurfdogConversationId,
-} from './conversations.config';
+import { MAX_TICKETS_TO_BUY, SurfdogConversationId } from './conversations.config';
 import { createUserState } from './conversations.utils';
 
-export async function buySurfdogTickets(
-  conversation: MyConversation,
-  ctx: BotContext,
-) {
+export async function buySurfdogTickets(conversation: MyConversation, ctx: BotContext) {
   const surfdog = getSurfdogLaunchpad();
-  const retryButton =
-    retryAndGoHomeButtonsData[SurfdogConversationId.BuySurfdogTickets];
+  const retryButton = retryAndGoHomeButtonsData[SurfdogConversationId.BuySurfdogTickets];
 
   const ticketPriceMessage = await ctx.reply('Checking ticket price...');
 
@@ -40,9 +30,7 @@ export async function buySurfdogTickets(
     // stringify `bigint`s
     return convertBigIntToString(gameState);
   });
-  const ticketPriceInSui = new BigNumber(globalState.ticketPrice.toString())
-    .dividedBy(10 ** SUI_DECIMALS)
-    .toString();
+  const ticketPriceInSui = new BigNumber(globalState.ticketPrice.toString()).dividedBy(10 ** SUI_DECIMALS).toString();
 
   await ctx.api.editMessageText(
     ticketPriceMessage.chat.id,
@@ -53,10 +41,7 @@ export async function buySurfdogTickets(
     },
   );
 
-  const lookingMessage = await ctx.reply(
-    'Looking at your <b>SUI</b> balance...',
-    { parse_mode: 'HTML' },
-  );
+  const lookingMessage = await ctx.reply('Looking at your <b>SUI</b> balance...', { parse_mode: 'HTML' });
 
   const suiBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -65,13 +50,8 @@ export async function buySurfdogTickets(
 
     return balance;
   });
-  const maxTicketsCount = Math.min(
-    surfdog.getMaxTicketsCount(suiBalance, ticketPriceInSui),
-    MAX_TICKETS_TO_BUY,
-  );
-  const ticketPriceWithGasBudget = new BigNumber(
-    SurfdogLaunchpadSingleton.GAS_BUDGET_FOR_BUYING_TICKET,
-  )
+  const maxTicketsCount = Math.min(surfdog.getMaxTicketsCount(suiBalance, ticketPriceInSui), MAX_TICKETS_TO_BUY);
+  const ticketPriceWithGasBudget = new BigNumber(SurfdogLaunchpadSingleton.GAS_BUDGET_FOR_BUYING_TICKET)
     .dividedBy(10 ** SUI_DECIMALS)
     .plus(ticketPriceInSui)
     .toString();
@@ -114,8 +94,7 @@ export async function buySurfdogTickets(
       await conversation.skip({ drop: true });
     }
 
-    const amountIsValid =
-      amountInt >= +ticketPriceInSui && amountInt <= maxTicketsCount;
+    const amountIsValid = amountInt >= +ticketPriceInSui && amountInt <= maxTicketsCount;
 
     if (!amountIsValid) {
       await ctx.reply(
@@ -137,10 +116,9 @@ export async function buySurfdogTickets(
   }
 
   if (ticketsCount === undefined) {
-    await ctx.reply(
-      'Cannot process tickets amount. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Cannot process tickets amount. Please, try again or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -171,22 +149,15 @@ export async function buySurfdogTickets(
 
   await ctx.reply('Checking your account is ready to buy tickets...');
 
-  let userState = await conversation.external(() =>
-    surfdog.getUserState(ctx.session.publicKey),
-  );
+  let userState = await conversation.external(() => surfdog.getUserState(ctx.session.publicKey));
 
   if (userState === null) {
     await createUserState({ ctx, conversation, surfdog, retryButton });
 
-    userState = await conversation.external(() =>
-      surfdog.getUserState(ctx.session.publicKey),
-    );
+    userState = await conversation.external(() => surfdog.getUserState(ctx.session.publicKey));
 
     if (userState === null) {
-      await ctx.reply(
-        'Cannot create user state. Please, try again or contact support.',
-        { reply_markup: retryButton },
-      );
+      await ctx.reply('Cannot create user state. Please, try again or contact support.', { reply_markup: retryButton });
 
       return;
     }
@@ -208,10 +179,9 @@ export async function buySurfdogTickets(
     });
 
     if (buyTicketTransaction === undefined) {
-      await ctx.reply(
-        'Failed to create transaction for ticket buying. Trying again...',
-        { reply_markup: closeSurfdogConversation },
-      );
+      await ctx.reply('Failed to create transaction for ticket buying. Trying again...', {
+        reply_markup: closeSurfdogConversation,
+      });
 
       continue;
     }
@@ -224,11 +194,7 @@ export async function buySurfdogTickets(
       transaction: buyTicketTransaction,
     });
 
-    if (
-      buyTicketResult.resultStatus === 'success' &&
-      buyTicketResult.transactionResult &&
-      buyTicketResult.digest
-    ) {
+    if (buyTicketResult.resultStatus === 'success' && buyTicketResult.transactionResult && buyTicketResult.digest) {
       const userHasWon = surfdog.checkSpinStatusByTx({
         tx: buyTicketResult.transactionResult,
       });
@@ -248,17 +214,11 @@ export async function buySurfdogTickets(
       continue;
     }
 
-    console.warn(
-      'Failed signAndExecuteTransaction for ticket buying:',
-      buyTicketResult,
-    );
+    console.warn('Failed signAndExecuteTransaction for ticket buying:', buyTicketResult);
 
-    await ctx.reply(
-      'Failed to buy ticket. Please, try again or contact support.',
-      {
-        reply_markup: retryButton,
-      },
-    );
+    await ctx.reply('Failed to buy ticket. Please, try again or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }

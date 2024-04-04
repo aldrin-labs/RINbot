@@ -1,14 +1,7 @@
 import { CoinAssetData, LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
 
 export function addSuiAssetField(old: {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu';
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
@@ -42,7 +35,7 @@ export function addSuiAssetField(old: {
       symbol: 'SUI',
       balance: '0',
       decimals: 9,
-      noDecimals: false
-    }
+      noDecimals: false,
+    },
   };
 }

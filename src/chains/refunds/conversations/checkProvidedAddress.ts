@@ -1,7 +1,4 @@
-import {
-  RefundManagerSingleton,
-  isValidSuiAddress,
-} from '@avernikoz/rinbot-sui-sdk';
+import { RefundManagerSingleton, isValidSuiAddress } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
@@ -14,31 +11,18 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransaction,
-} from '../../conversations.utils';
+import { getTransactionFromMethod, signAndExecuteTransaction } from '../../conversations.utils';
 import { TransactionResultStatus } from '../../sui.functions';
-import {
-  getSuiVisionTransactionLink,
-  reactOnUnexpectedBehaviour,
-} from '../../utils';
+import { getSuiVisionTransactionLink, reactOnUnexpectedBehaviour } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
 import { getRefundManager } from '../getRefundManager';
 import { userHasBackupedAccount, userHasBoostedRefundAccount } from '../utils';
-import {
-  ALDRIN_REFUND_WEBSITE,
-  boostedRefundExportPrivateKeyWarnMessage,
-} from './config';
+import { ALDRIN_REFUND_WEBSITE, boostedRefundExportPrivateKeyWarnMessage } from './config';
 import { getBoostedClaimCap } from './utils';
 
-export async function checkProvidedAddress(
-  conversation: MyConversation,
-  ctx: BotContext,
-) {
+export async function checkProvidedAddress(conversation: MyConversation, ctx: BotContext) {
   const refundManager = getRefundManager();
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
 
   const retryButtons = retryButton.inline_keyboard[0];
   const importWalletWithRetryKeyboard = importWalletKeyboard
@@ -47,26 +31,20 @@ export async function checkProvidedAddress(
     .add(...retryButtons);
 
   const closeButtons = closeConversation.inline_keyboard[0];
-  const importWalletWithCancelKeyboard = importWalletKeyboard
-    .clone()
-    .add(...closeButtons);
+  const importWalletWithCancelKeyboard = importWalletKeyboard.clone().add(...closeButtons);
   const optionsWithCloseKeyboard = refundOptionsKeyboard
     .clone()
     .row()
     .add(...closeButtons);
 
   // Ask user for address he wants to check
-  await ctx.reply(
-    'Please enter the <b>address</b> of your wallet that you wish to check.',
-    {
-      reply_markup: closeConversation,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.reply('Please enter the <b>address</b> of your wallet that you wish to check.', {
+    reply_markup: closeConversation,
+    parse_mode: 'HTML',
+  });
 
   const affectedPublicKeyContext = await conversation.wait();
-  const affectedPublicKeyCallbackQueryData =
-    affectedPublicKeyContext.callbackQuery?.data;
+  const affectedPublicKeyCallbackQueryData = affectedPublicKeyContext.callbackQuery?.data;
   const affectedPublicKey = affectedPublicKeyContext.msg?.text;
 
   if (affectedPublicKeyCallbackQueryData === CallbackQueryData.Cancel) {
@@ -75,37 +53,29 @@ export async function checkProvidedAddress(
     const publicKeyIsValid = isValidSuiAddress(affectedPublicKey);
 
     if (!publicKeyIsValid) {
-      await ctx.reply(
-        'Entered <b>address</b> is not valid. Please, enter a valid one.',
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
-      );
+      await ctx.reply('Entered <b>address</b> is not valid. Please, enter a valid one.', {
+        reply_markup: closeConversation,
+        parse_mode: 'HTML',
+      });
 
       await conversation.skip({ drop: true });
     }
   } else {
-    await reactOnUnexpectedBehaviour(
-      ctx,
-      retryButton,
-      'provided address check',
-    );
+    await reactOnUnexpectedBehaviour(ctx, retryButton, 'provided address check');
     return;
   }
 
   if (affectedPublicKey === undefined) {
-    await ctx.reply(
-      'Cannot process provided address. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Cannot process provided address. Please, try again or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
-  const checkingMessage = await ctx.reply(
-    '<b>Checking entered account address. This may take some time...</b>',
-    {
-      parse_mode: 'HTML',
-    },
-  );
+  const checkingMessage = await ctx.reply('<b>Checking entered account address. This may take some time...</b>', {
+    parse_mode: 'HTML',
+  });
 
   // Check provided address
   let normalRefund;
@@ -121,12 +91,9 @@ export async function checkProvidedAddress(
     normalRefund = claimAmounts.normalRefund;
     boostedRefund = claimAmounts.boostedRefund;
   } catch (error) {
-    await ctx.reply(
-      'An error occurred while retrieving the claim amount. Please try again.',
-      {
-        reply_markup: retryButton,
-      },
-    );
+    await ctx.reply('An error occurred while retrieving the claim amount. Please try again.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
