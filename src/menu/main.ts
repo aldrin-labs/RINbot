@@ -21,25 +21,21 @@ import withdraw_menu from './wallet_withdraw';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
-    ctx.session.step = 'buy';
     ctx.session.tradeCoin = {
       coinType: '',
       tradeAmountPercentage: '0',
-      useSpecifiedCoin: false
+      useSpecifiedCoin: false,
     };
     await ctx.conversation.enter('buy');
   })
   .text('Sell & Manage', async (ctx) => {
-    ctx.session.step = 'positions';
     await assets(ctx);
   })
   .row()
   .text('Manage NFTs', async (ctx) => {
-    ctx.session.step = 'nft-menu';
     await nftHome(ctx);
   })
   .text('Wallet', async (ctx) => {
-    ctx.session.step = 'wallet';
     ctx.menu.nav('wallet-menu');
   })
   .row()

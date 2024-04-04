@@ -57,14 +57,6 @@ export interface CoinAssetDataExtended extends CoinAssetData {
 }
 
 export interface SessionData {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };

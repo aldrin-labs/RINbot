@@ -17,7 +17,6 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { checkCurrentWallet } from './chains/refunds/conversations/checkCurrentWallet';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import {
@@ -30,7 +29,6 @@ import {
 import { buy, instantBuy } from './chains/trading/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
-import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { balances } from './commands/balances';
 import {
@@ -51,6 +49,7 @@ import { addTradesField } from './migrations/addTradesField';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
@@ -104,7 +103,6 @@ async function startBot(): Promise<void> {
           .catch((e) => console.error('ERROR storing boosted account', e));
 
         return {
-          step: 'main',
           privateKey,
           publicKey,
           suiAsset: {
@@ -150,6 +148,7 @@ async function startBot(): Promise<void> {
           7: addTradesField,
           8: addSuiAssetField,
           9: addTradeAmountPercentageField,
+          10: removeStep,
         },
       }),
     });
@@ -322,7 +321,6 @@ async function startBot(): Promise<void> {
     const ctx = err.ctx;
     console.error(`Error while handling update ${ctx.update.update_id}:`);
     const e = err.error;
-    ctx.session.step = 'main';
     if (e instanceof GrammyError) {
       console.error('Error in request:', e.description);
     } else if (e instanceof HttpError) {
