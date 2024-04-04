@@ -2,7 +2,7 @@ import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { type Conversation, type ConversationFlavor } from '@grammyjs/conversations';
 import { Context, SessionFlavor } from 'grammy';
 
-//For PNL
+// For PNL
 export interface Trade {
   buyingPrice: number | null;
   sellingPrice: number | null;

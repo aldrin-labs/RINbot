@@ -38,10 +38,16 @@ export function formatTokenInfo(token: CoinAssetDataExtended): string {
       ? ` ${token.priceChange24h.toFixed(2)}%`
       : (token.priceChange24h! > 0 ? '+' + token.priceChange24h?.toFixed(2) : token.priceChange24h?.toFixed(2)) + '%';
 
-  return `\n\nToken Price: <b>${tokenPrice} USD</b>\nToken Balance: <b>${tokenBalance} ${tokenSymbol} / ${tokenValueInUSD} USD</b>${mcapInUSD ? '\nMcap: <b>' + mcapInUSD + ' USD</b>' : ''}${priceChange1h ? '\n1h: <b>' + priceChange1h + '</b>' : ''}${priceChange24h ? ' 24h: <b>' + priceChange24h + '</b>' : ''}`;
+  return (
+    `\n\nToken Price: <b>${tokenPrice} USD</b>\nToken Balance: <b>${tokenBalance} ${tokenSymbol} ` +
+    `/ ${tokenValueInUSD} USD</b>${mcapInUSD ? '\nMcap: <b>' + mcapInUSD + ' USD</b>' : ''}` +
+    `${priceChange1h ? '\n1h: <b>' + priceChange1h + '</b>' : ''}` +
+    `${priceChange24h ? ' 24h: <b>' + priceChange24h + '</b>' : ''}`
+  );
 }
 
-export const isCoinAssetDataExtended = (asset: any): asset is CoinAssetDataExtended => asset && 'price' in asset;
+export const isCoinAssetDataExtended = (asset: unknown): asset is CoinAssetDataExtended =>
+  typeof asset === 'object' && asset !== null && asset && 'price' in asset;
 
 export function hasDefinedPrice(data: unknown) {
   return typeof data === 'object' && data !== null && 'price' in data && typeof data.price === 'number';
@@ -49,7 +55,7 @@ export function hasDefinedPrice(data: unknown) {
 
 export async function postPriceApi(allCoinsAssets: CoinAssetData[], useTimeout: boolean = true) {
   try {
-    let data: PriceApiPayload = { data: [] };
+    const data: PriceApiPayload = { data: [] };
     allCoinsAssets.forEach((coin) => {
       data.data.push({ chainId: 'sui', tokenAddress: coin.type });
     });

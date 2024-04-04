@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { RefundManagerSingleton, isValidSuiAddress } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import { ALDRIN_AUTHORITY } from '../../../config/bot.config';

@@ -313,9 +313,4 @@ async function startBot(): Promise<void> {
 
 startBot();
 
-//prod mode (Vercel)
-// export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-//   await production(req, res, bot);
-// };
-
 export { bot };

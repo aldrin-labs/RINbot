@@ -13,12 +13,13 @@ import { BotContext, MyConversation } from '../../types';
 import { ConversationId } from '../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
 import { getUserFeePercentage } from '../fees/utils';
-import { RINBOT_CHAT_URL } from '../sui.config';
-import { getCoinManager, getRouteManager, getWalletManager, random_uuid } from '../sui.functions';
+import { RINBOT_CHAT_URL, RINCEL_COIN_TYPE } from '../sui.config';
+import { getCoinManager, getRouteManager, getWalletManager, randomUuid } from '../sui.functions';
 import {
   extractCoinTypeFromLink,
   getCoinWhitelist,
   getPriceOutputData,
+  getSuiScanCoinLink,
   getSuiVisionTransactionLink,
   isValidCoinLink,
   userMustUseCoinWhitelist,
@@ -39,7 +40,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     });
 
     await ctx.reply(
-      'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+      'Example of coin type format:\n' +
+        `<code>${RINCEL_COIN_TYPE}</code>\n\n` +
+        `Example of suiscan link:\n${getSuiScanCoinLink(RINCEL_COIN_TYPE)}`,
       { parse_mode: 'HTML' },
     );
 
@@ -55,7 +58,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
       if (!coinTypeIsValid && !suiScanLinkIsValid) {
         const replyText =
-          'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.';
+          'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
+          'You can enter a token address or a Suiscan link.';
         await ctx.reply(replyText, { reply_markup: closeConversation });
         return false;
       }
@@ -75,7 +79,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
       if (fetchedCoin === null) {
         await ctx.reply(
-          `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+          `Coin type not found. Make sure type "${coinType}" is correct.\n\n` +
+            'You can enter a coin type or a Suiscan link.',
           { reply_markup: closeConversation },
         );
 
@@ -152,7 +157,8 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const priceOutput = await conversation.external(() => getPriceOutputData(resCoinType));
 
   await ctx.reply(
-    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - <code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `${priceOutput}Reply with the amount you wish to spend (<code>0</code> - ` +
+      `<code>${availableBalance}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -199,7 +205,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 }
 
 export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
-  await ctx.reply('Finding the best route to save your money… ☺️' + random_uuid);
+  await ctx.reply('Finding the best route to save your money… ☺️' + randomUuid);
 
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
   const routerManager = await getRouteManager();
@@ -241,7 +247,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + randomUuid);
 
   const resultOfSwap = await signAndExecuteTransaction({
     conversation,

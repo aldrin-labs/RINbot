@@ -1,4 +1,4 @@
-import { Context, MiddlewareFn } from 'grammy';
+import { MiddlewareFn } from 'grammy';
 import { TIMEOUT_GRAMMY_MIDDLEWARE, TIMEOUT_MESSAGE } from '../config/timeout.config';
 import { BotContext } from '../types';
 

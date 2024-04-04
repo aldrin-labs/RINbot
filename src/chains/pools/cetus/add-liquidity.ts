@@ -79,7 +79,8 @@ export async function addCetusLiquidity(conversation: MyConversation, ctx: BotCo
   });
 
   // TODO: Add type guard
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (foundPool === null) {
     await ctx.reply('Pool address is not valid. Please, try again or contact support.', { reply_markup: retryButton });

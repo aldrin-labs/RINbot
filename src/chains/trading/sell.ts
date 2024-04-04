@@ -13,12 +13,14 @@ import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
 import { ConversationId } from '../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
-import { getCoinManager, getRouteManager, getWalletManager, random_uuid } from '../sui.functions';
+import { RINCEL_COIN_TYPE } from '../sui.config';
+import { getCoinManager, getRouteManager, getWalletManager, randomUuid } from '../sui.functions';
 import {
   coinCannotBeSoldDueToDelay,
   extractCoinTypeFromLink,
   findCoinInAssets,
   getPriceOutputData,
+  getSuiScanCoinLink,
   getSuiVisionTransactionLink,
   isValidCoinLink,
   reactOnUnexpectedBehaviour,
@@ -40,7 +42,9 @@ async function askForCoinToSell({
   });
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+    'Example of coin type format:\n' +
+      `<code>${RINCEL_COIN_TYPE}</code>\n\n` +
+      `Example of suiscan link:\n${getSuiScanCoinLink(RINCEL_COIN_TYPE)}`,
     { parse_mode: 'HTML' },
   );
 
@@ -58,7 +62,8 @@ async function askForCoinToSell({
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a token address or a Suiscan link.';
+        'Token address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
+        'You can enter a token address or a Suiscan link.';
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -312,7 +317,7 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + random_uuid);
+  await ctx.reply('Route for swap found, sending transaction... 🔄' + randomUuid);
 
   const resultOfSwap = await signAndExecuteTransaction({
     conversation,
