@@ -16,7 +16,7 @@ export const balances = async (ctx: BotContext) => {
   });
 
   const userBalance = await balance(ctx);
-  const avl_balance = await availableBalance(ctx);
+  const avlBalance = await availableBalance(ctx);
   let price;
   let positionOverview: string = '';
   let totalBalanceStr: string = '';
@@ -30,8 +30,8 @@ export const balances = async (ctx: BotContext) => {
 
     price = undefined;
   }
-  const balance_usd = calculate(userBalance, price);
-  const avl_balance_usd = calculate(avl_balance, price);
+  const balanceUsd = calculate(userBalance, price);
+  const avlBalanceUsd = calculate(avlBalance, price);
 
   try {
     const data: PriceApiPayload = { data: [] };
@@ -73,7 +73,9 @@ export const balances = async (ctx: BotContext) => {
         priceApiDataStr = '';
       }
 
-      assetsString += `🪙 <a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${token.symbol}</a>${priceApiDataStr}\n\n`;
+      assetsString +=
+        `🪙 <a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">` +
+        `${token.symbol}</a>${priceApiDataStr}\n\n`;
     }
 
     positionOverview = `<b>Your positions:</b> \n\n${assetsString}`;
@@ -83,12 +85,15 @@ export const balances = async (ctx: BotContext) => {
 
   try {
     const balanceSUIdStr =
-      balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`;
+      balanceUsd !== null ? `<b>${userBalance} SUI / ${balanceUsd} USD</b>` : `<b>${userBalance} SUI</b>`;
 
     const avlBalanceSUIdStr =
-      avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`;
+      avlBalanceUsd !== null ? `<b>${avlBalance} SUI / ${avlBalanceUsd} USD</b>` : `<b>${avlBalance} SUI</b>`;
 
-    const message = `Your wallet address: <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+    const message =
+      `Your wallet address: <code>${ctx.session.publicKey}</code>\n\n` +
+      `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
+      `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
 
     await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, message, {
       reply_markup: goHome,

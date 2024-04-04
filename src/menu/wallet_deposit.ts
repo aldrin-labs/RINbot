@@ -1,6 +1,6 @@
 import { BotContext } from '../types';
 import { Menu } from '@grammyjs/menu';
 
-const deposit_menu = new Menu<BotContext>('wallet-deposit-menu').back('Close');
+const depositMenu = new Menu<BotContext>('wallet-deposit-menu').back('Close');
 
-export default deposit_menu;
+export default depositMenu;

@@ -104,7 +104,8 @@ export async function checkCurrentWallet(conversation: MyConversation, ctx: BotC
       `💸 2. <b>Boosted Refund</b>: Enjoy <i><b>150%</b></i> of your lost funds — <code>${boostedRefundAmount}` +
       '</code> <b>SUI</b>.\nWhile all features ' +
       'of the RINbot remain accessible, ' +
-      `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code> <b>SUI</b> will be non-withdrawable.`,
+      `you'll be able to withdraw only profits. The initial refund amount of <code>${boostedRefundAmount}</code>` +
+      ` <b>SUI</b> will be non-withdrawable.`,
     {
       reply_markup: optionsWithCloseKeyboard,
       parse_mode: 'HTML',

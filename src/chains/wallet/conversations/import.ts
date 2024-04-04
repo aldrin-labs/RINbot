@@ -15,8 +15,8 @@ export async function importNewWallet(conversation: MyConversation, ctx: BotCont
   const warnMessage =
     '✅ Before proceeding with importing a new wallet, please be aware that you will need to <i><b>export the private ' +
     'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +
-    'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the private key</b></i> ' +
-    'may result in <i><b>loss of access to your current funds</b></i>.';
+    'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the ' +
+    'private key</b></i> may result in <i><b>loss of access to your current funds</b></i>.';
 
   const warnWithCheckAndPrintSucceeded = await warnWithCheckAndPrivateKeyPrinting({
     conversation,

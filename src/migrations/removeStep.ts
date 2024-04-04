@@ -34,6 +34,7 @@ export function removeStep(old: {
   };
   trades: { [coinType: string]: { lastTradeTimestamp: number } };
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { step, ...remainingData } = old;
 
   return remainingData;

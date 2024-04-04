@@ -29,8 +29,8 @@ import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversation
 import skip from '../inline-keyboards/skip';
 import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
-import { nft_menu } from '../menu/nft';
-import positions_menu from '../menu/positions';
+import { nftMenu } from '../menu/nft';
+import positionsMenu from '../menu/positions';
 import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
@@ -42,12 +42,13 @@ import {
   validateCoinSymbol,
   validateTotalSupply,
 } from './createCoin.utils';
-import { SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from './sui.config';
+import { RINCEL_COIN_TYPE, SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, SUI_PROVIDER_URL } from './sui.config';
 import { SuiTransactionBlockResponse } from './types';
 import {
   extractCoinTypeFromLink,
   findCoinInAssets,
   getAftermathPoolLink,
+  getSuiScanCoinLink,
   getSuiVisionCoinLink,
   getSuitableCoinImageData,
   getTelegramFileUrl,
@@ -74,7 +75,7 @@ export enum TransactionResultStatus {
   Failure = 'failure',
 }
 
-export const random_uuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
+export const randomUuid = process.env.DEBUG_INSTANCE_ID ? uuidv4() : '';
 
 export const provider = getSuiProvider({ url: SUI_PROVIDER_URL });
 
@@ -82,13 +83,13 @@ export const getTurbos = async () => {
   const { redisClient } = await getRedisClient();
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-  // console.time(`TurbosSingleton.getInstance.${random_uuid}`)
+  // console.time(`TurbosSingleton.getInstance.${randomUuid}`)
   const turbos = await TurbosSingleton.getInstance({
     suiProviderUrl: SUI_PROVIDER_URL,
     cacheOptions: { ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
     lazyLoading: false,
   });
-  // console.timeEnd(`TurbosSingleton.getInstance.${random_uuid}`)
+  // console.timeEnd(`TurbosSingleton.getInstance.${randomUuid}`)
 
   return turbos;
 };
@@ -97,12 +98,12 @@ export const getFlowx = async () => {
   const { redisClient } = await getRedisClient();
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-  // console.time(`FlowxSingleton.getInstance.${random_uuid}`)
+  // console.time(`FlowxSingleton.getInstance.${randomUuid}`)
   const flowx = await FlowxSingleton.getInstance({
     cacheOptions: { ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
     lazyLoading: false,
   });
-  // console.timeEnd(`FlowxSingleton.getInstance.${random_uuid}`)
+  // console.timeEnd(`FlowxSingleton.getInstance.${randomUuid}`)
 
   return flowx;
 };
@@ -111,14 +112,14 @@ export const getCetus = async () => {
   const { redisClient } = await getRedisClient();
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-  // console.time(`CetusSingleton.getInstance.${random_uuid}`)
+  // console.time(`CetusSingleton.getInstance.${randomUuid}`)
   const cetus = await CetusSingleton.getInstance({
     suiProviderUrl: SUI_PROVIDER_URL,
     sdkOptions: clmmMainnet,
     cacheOptions: { ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
     lazyLoading: false,
   });
-  // console.timeEnd(`CetusSingleton.getInstance.${random_uuid}`)
+  // console.timeEnd(`CetusSingleton.getInstance.${randomUuid}`)
 
   return cetus;
 };
@@ -127,43 +128,43 @@ export const getAftermath = async () => {
   const { redisClient } = await getRedisClient();
   const storage = RedisStorageSingleton.getInstance(redisClient);
 
-  // console.time(`AftermathSingleton.getInstance.${random_uuid}`)
+  // console.time(`AftermathSingleton.getInstance.${randomUuid}`)
   const aftermath = await AftermathSingleton.getInstance({
     cacheOptions: { ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS, storage },
     lazyLoading: false,
   });
-  // console.timeEnd(`AftermathSingleton.getInstance.${random_uuid}`)
+  // console.timeEnd(`AftermathSingleton.getInstance.${randomUuid}`)
 
   return aftermath;
 };
 
 export const getCoinManager = async () => {
-  console.time(`CoinManagerSingleton.getInstance ${random_uuid}`);
+  console.time(`CoinManagerSingleton.getInstance ${randomUuid}`);
   const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
 
   const coinManager = CoinManagerSingleton.getInstance(providers, SUI_PROVIDER_URL);
-  console.timeEnd(`CoinManagerSingleton.getInstance ${random_uuid}`);
+  console.timeEnd(`CoinManagerSingleton.getInstance ${randomUuid}`);
 
   return coinManager;
 };
 
 export const getWalletManager = async () => {
-  // console.time(`WalletManagerSingleton.getInstance.${random_uuid}`)
+  // console.time(`WalletManagerSingleton.getInstance.${randomUuid}`)
   const coinManager = await getCoinManager();
 
   const walletManager = WalletManagerSingleton.getInstance(provider, coinManager);
-  // console.timeEnd(`WalletManagerSingleton.getInstance.${random_uuid}`)
+  // console.timeEnd(`WalletManagerSingleton.getInstance.${randomUuid}`)
 
   return walletManager;
 };
 
 export const getRouteManager = async () => {
-  // console.time(`RouteManager.getInstance.${random_uuid}`)
+  // console.time(`RouteManager.getInstance.${randomUuid}`)
   const coinManager = await getCoinManager();
   const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
-  // console.timeEnd(`RouteManager.getInstance.${random_uuid}`)
+  // console.timeEnd(`RouteManager.getInstance.${randomUuid}`)
   return routerManager;
 };
 
@@ -270,7 +271,8 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
   }
 
   await ctx.reply(
-    `Reply with the amount you wish to withdraw (<code>0</code> - <code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to withdraw (<code>0</code> - ` +
+      `<code>${availableAmount}</code> SUI).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -405,7 +407,28 @@ export async function assets(ctx: BotContext): Promise<void> {
     if (hasDefinedPrice(currentToken)) {
       priceApiDataStr =
         calculate(currentToken.balance, currentToken.price) !== null
-          ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\nToken Balance: <b>${currentToken.balance + ' ' + currentToken.symbol + ' / ' + calculate(currentToken.balance, currentToken.price) + ' USD'}</b>${currentToken.mcap === 0 ? '' : '\nMcap: <b>' + calculate('1', currentToken.mcap) + ' USD</b>'}${currentToken.priceChange1h === 0 ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>` : '\n1h: <b>' + (currentToken.priceChange1h! > 0 ? '+' + currentToken.priceChange1h?.toFixed(2) : currentToken.priceChange1h?.toFixed(2)) + '%</b>'} ${currentToken.priceChange24h === 0 ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>` : ' 24h: <b>' + (currentToken.priceChange24h! > 0 ? '+' + currentToken.priceChange24h?.toFixed(2) : currentToken.priceChange24h?.toFixed(2)) + '%</b>'}`
+          ? `\n\nToken Price: <b>${currentToken.price?.toFixed(10)} USD</b>\n` +
+            `Token Balance: <b>${currentToken.balance} ${currentToken.symbol} / ` +
+            `${calculate(currentToken.balance, currentToken.price)} USD</b>` +
+            `${currentToken.mcap === 0 ? '' : '\nMcap: <b>' + calculate('1', currentToken.mcap) + ' USD</b>'}` +
+            `${
+              currentToken.priceChange1h === 0
+                ? `\n1h: <b>${currentToken.priceChange1h.toFixed(2)}</b>`
+                : '\n1h: <b>' +
+                  (currentToken.priceChange1h! > 0
+                    ? '+' + currentToken.priceChange1h?.toFixed(2)
+                    : currentToken.priceChange1h?.toFixed(2)) +
+                  '%</b>'
+            } ` +
+            `${
+              currentToken.priceChange24h === 0
+                ? ` 24h: <b>${currentToken.priceChange24h.toFixed(2)}%</b>`
+                : ' 24h: <b>' +
+                  (currentToken.priceChange24h! > 0
+                    ? '+' + currentToken.priceChange24h?.toFixed(2)
+                    : currentToken.priceChange24h?.toFixed(2)) +
+                  '%</b>'
+            }`
           : ``;
     } else {
       priceApiDataStr = `\n\nToken Balance: <b>${currentToken.balance} ${currentToken.symbol || currentToken.type}</b>`;
@@ -414,9 +437,13 @@ export async function assets(ctx: BotContext): Promise<void> {
     const suiBalance = await balance(ctx);
     const suiAvlBalance = await availableBalance(ctx);
 
-    const newMessage = `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+    const newMessage =
+      `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">` +
+      `${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\n` +
+      `Your available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\n` +
+      `Share: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
     await ctx.reply(newMessage, {
-      reply_markup: positions_menu,
+      reply_markup: positionsMenu,
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
     });
@@ -455,9 +482,9 @@ export async function refreshAssets(ctx: BotContext) {
   if (suiAsset) {
     ctx.session.suiAsset = suiAsset;
   }
-  let data: PriceApiPayload = { data: [] };
+  const data: PriceApiPayload = { data: [] };
   allCoinsAssets.forEach((coin) => {
-    //move to price api
+    // move to price api
     data.data.push({ chainId: 'sui', tokenAddress: coin.type });
   });
   try {
@@ -536,7 +563,7 @@ export async function refreshAssets(ctx: BotContext) {
 
 export async function home(ctx: BotContext) {
   const userBalance = await balance(ctx);
-  const avl_balance = await availableBalance(ctx);
+  const avlBalance = await availableBalance(ctx);
   let price;
   let positionOverview = '';
 
@@ -553,8 +580,8 @@ export async function home(ctx: BotContext) {
     price = undefined;
   }
 
-  const balance_usd = calculate(userBalance, price);
-  const avl_balance_usd = calculate(avl_balance, price);
+  const balanceUsd = calculate(userBalance, price);
+  const avlBalanceUsd = calculate(avlBalance, price);
 
   let totalBalanceStr: string;
 
@@ -578,7 +605,9 @@ export async function home(ctx: BotContext) {
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {
       if (index > 4) {
-        assetsString += `<i>Please note: Only 5 positions are shown here. To view all your positions, please go to the <b>Sell and Manage</b> menu.</i>\n\n`;
+        assetsString +=
+          `<i>Please note: Only 5 positions are shown here. To view all your positions, ` +
+          `please go to the <b>Sell and Manage</b> menu.</i>\n\n`;
         break;
       }
       const token = allCoinsAssets[index];
@@ -591,7 +620,7 @@ export async function home(ctx: BotContext) {
 
       const symbol = token.symbol === undefined ? token.type.split('::').pop() : token.symbol;
 
-      assetsString += `🪙 <a href="https://suiscan.xyz/mainnet/coin/${token.type}/txs">${symbol}</a>${priceApiDataStr}\n\n`;
+      assetsString += `🪙 <a href="${getSuiScanCoinLink(token.type)}">${symbol}</a>${priceApiDataStr}\n\n`;
     }
 
     if (assetsString !== '') {
@@ -603,12 +632,16 @@ export async function home(ctx: BotContext) {
   }
 
   const balanceSUIdStr =
-    balance_usd !== null ? `<b>${userBalance} SUI / ${balance_usd} USD</b>` : `<b>${userBalance} SUI</b>`;
+    balanceUsd !== null ? `<b>${userBalance} SUI / ${balanceUsd} USD</b>` : `<b>${userBalance} SUI</b>`;
   const avlBalanceSUIdStr =
-    avl_balance_usd !== null ? `<b>${avl_balance} SUI / ${avl_balance_usd} USD</b>` : `<b>${avl_balance} SUI</b>`;
+    avlBalanceUsd !== null ? `<b>${avlBalance} SUI / ${avlBalanceUsd} USD</b>` : `<b>${avlBalance} SUI</b>`;
 
-  const welcome_text = `<b>Welcome to RINbot on Sui Network!</b>\n\nYour wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n${positionOverview}Your SUI balance: ${balanceSUIdStr}\nYour available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.reply(welcome_text, {
+  const welcomeText =
+    `<b>Welcome to RINbot on Sui Network!</b>\n\n` +
+    `Your wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n` +
+    `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
+    `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
+  await ctx.reply(welcomeText, {
     reply_markup: menu,
     parse_mode: 'HTML',
     link_preview_options: { is_disabled: true },
@@ -618,7 +651,7 @@ export async function home(ctx: BotContext) {
 export async function nftHome(ctx: BotContext) {
   await ctx.reply('<b>Welcome to NFT menu!</b>\n\nPlease check the options below.', {
     parse_mode: 'HTML',
-    reply_markup: nft_menu,
+    reply_markup: nftMenu,
   });
 }
 
@@ -659,7 +692,9 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   });
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+    'Example of coin type format:\n' +
+      `<code>${RINCEL_COIN_TYPE}</code>\n\n` +
+      `Example of suiscan link:\n${getSuiScanCoinLink(RINCEL_COIN_TYPE)}`,
     { parse_mode: 'HTML' },
   );
 
@@ -685,7 +720,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.';
+        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
+        'You can enter a coin type or a Suiscan link.';
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -728,7 +764,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     return true;
   });
 
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinAssetData(firstValidatedCoin)) {
     await ctx.reply('Coin is not found in your wallet assets. Please, specify another coin to add in pool.', {
@@ -765,7 +802,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   console.debug('availableFirstCoinMaxAmount:', availableFirstCoinMaxAmount);
 
   await ctx.reply(
-    `Reply with the amount you wish to add in pool (<code>0</code> - <code>${availableFirstCoinMaxAmount}</code> ${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type}).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to add in pool (<code>0</code> - <code>${availableFirstCoinMaxAmount}</code> ` +
+      `${firstValidatedCoinToAdd.symbol || firstValidatedCoinToAdd.type}).\n\nExample: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -783,7 +821,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     const decimals = firstValidatedCoinToAdd.decimals;
     if (decimals === null) {
       await ctx.reply(
-        `Coin decimals not found for ${firstValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        `Coin decimals not found for ${firstValidatedCoinToAdd.type}. ` +
+          `Please, use another coin to add in pool or contact support.`,
         { reply_markup: closeConversation },
       );
 
@@ -822,7 +861,9 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   });
 
   await ctx.reply(
-    'Example of coin type format:\n<code>0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL</code>\n\nExample of suiscan link:\nhttps://suiscan.xyz/mainnet/coin/0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+    'Example of coin type format:\n' +
+      `<code>${RINCEL_COIN_TYPE}</code>\n\n` +
+      `Example of suiscan link:\n${getSuiScanCoinLink(RINCEL_COIN_TYPE)}`,
     { parse_mode: 'HTML' },
   );
 
@@ -842,7 +883,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
     if (!coinTypeIsValid && !suiScanLinkIsValid) {
       const replyText =
-        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\nYou can enter a coin type or a Suiscan link.';
+        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
+        'You can enter a coin type or a Suiscan link.';
 
       await ctx.reply(replyText, { reply_markup: closeConversation });
 
@@ -929,7 +971,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     return true;
   });
 
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (!isCoinAssetData(secondValidatedCoin)) {
     await ctx.reply('Coin is not found in your wallet assets. Please, specify another coin to add in pool.', {
@@ -961,7 +1004,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   }
   console.debug('availableSecondCoinMaxAmount:', availableSecondCoinMaxAmount);
 
-  let resultSecondCoinMinAmount: string, resultSecondCoinMaxAmount: string;
+  let resultSecondCoinMinAmount: string;
+  let resultSecondCoinMaxAmount: string;
   // We need to make sure that in case both tokens from user input have prices,
   // we can calculate min and max amount user can provide.
   if (secondCoinMinAmount !== undefined && secondCoinMaxAmount !== undefined) {
@@ -980,7 +1024,10 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   console.debug('resultSecondCoinMaxAmount:', resultSecondCoinMaxAmount);
 
   await ctx.reply(
-    `Reply with the amount you wish to add in pool (<code>${resultSecondCoinMinAmount}</code> - <code>${resultSecondCoinMaxAmount}</code> ${secondValidatedCoinToAdd.symbol || secondValidatedCoinToAdd.type}).\n\nExample: <code>0.1</code>`,
+    `Reply with the amount you wish to add in pool ` +
+      `(<code>${resultSecondCoinMinAmount}</code> - <code>${resultSecondCoinMaxAmount}</code> ` +
+      `${secondValidatedCoinToAdd.symbol || secondValidatedCoinToAdd.type}).\n\n` +
+      `Example: <code>0.1</code>`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -1000,7 +1047,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     // ts check
     if (decimals === null) {
       await ctx.reply(
-        `Coin decimals not found for ${secondValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        `Coin decimals not found for ${secondValidatedCoinToAdd.type}. ` +
+          `Please, use another coin to add in pool or contact support.`,
         { reply_markup: closeConversation },
       );
 
@@ -1062,7 +1110,9 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
   console.debug('poolName:', poolName);
 
   await ctx.reply(
-    'What would be a <b>trade fee</b> in percents (%)?\n<span class="tg-spoiler">Max: 10\nMin: 0.01</span>\n\nExample: <code>0.25</code>',
+    'What would be a <b>trade fee</b> in percents (%)?\n' +
+      '<span class="tg-spoiler">Max: 10\nMin: 0.01</span>\n\n' +
+      'Example: <code>0.25</code>',
     { reply_markup: closeConversation, parse_mode: 'HTML' },
   );
 
@@ -1132,7 +1182,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
     if (coinADecimals === null) {
       await ctx.reply(
-        `Coin decimals not found for ${firstValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        `Coin decimals not found for ${firstValidatedCoinToAdd.type}. ` +
+          `Please, use another coin to add in pool or contact support.`,
         { reply_markup: retryButton },
       );
 
@@ -1152,7 +1203,8 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
     if (coinBDecimals === null) {
       await ctx.reply(
-        `Coin decimals not found for ${secondValidatedCoinToAdd.type}. Please, use another coin to add in pool or contact support.`,
+        `Coin decimals not found for ${secondValidatedCoinToAdd.type}. ` +
+          `Please, use another coin to add in pool or contact support.`,
         { reply_markup: retryButton },
       );
 
@@ -1244,11 +1296,11 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });
@@ -1355,11 +1407,13 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
         if (error instanceof Error) {
           console.error(
-            `[AftermathSingleton.getCreatePoolTransaction] failed to create pool creation transaction: ${error.message}`,
+            '[AftermathSingleton.getCreatePoolTransaction] failed to create pool creation transaction:',
+            error.message,
           );
         } else {
           console.error(
-            `[AftermathSingleton.getCreatePoolTransaction] failed to create pool creation transaction: ${error}`,
+            '[AftermathSingleton.getCreatePoolTransaction] failed to create pool creation transaction:',
+            error,
           );
         }
 
@@ -1377,11 +1431,11 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });
@@ -1524,7 +1578,8 @@ export async function createCoin(conversation: MyConversation, ctx: BotContext):
   // console.debug('coinName:', coinName);
 
   await ctx.reply(
-    'What would be a <b>coin symbol</b>?\n\nExample: <code>MY_AWESOME_COIN</code>, or just <code>AWESOME</code>\n\n<span class="tg-spoiler">' +
+    'What would be a <b>coin symbol</b>?\n\n' +
+      'Example: <code>MY_AWESOME_COIN</code>, or just <code>AWESOME</code>\n\n<span class="tg-spoiler">' +
       '<b>Hint</b>: Coin symbol is used in coin type of your coin, for instance:\n\n0x4fab7b26dbbf' +
       '679a33970de7ec59520d76c23b69055ebbd83a3e546b6370e5d1::awesome::<u>AWESOME</u>\n\n' +
       '<u>AWESOME</u> here is the coin symbol.</span>',
@@ -1833,11 +1888,13 @@ export async function createCoin(conversation: MyConversation, ctx: BotContext):
 
         if (error instanceof Error) {
           console.error(
-            `[CoinManagerSingleton.getCreateCoinTransaction] failed to create pool creation transaction: ${error.message}`,
+            '[CoinManagerSingleton.getCreateCoinTransaction] failed to create pool creation transaction:',
+            error.message,
           );
         } else {
           console.error(
-            `[CoinManagerSingleton.getCreateCoinTransaction] failed to create pool creation transaction: ${error}`,
+            '[CoinManagerSingleton.getCreateCoinTransaction] failed to create pool creation transaction:',
+            error,
           );
         }
 
@@ -1855,11 +1912,11 @@ export async function createCoin(conversation: MyConversation, ctx: BotContext):
       }
     },
     afterLoadError: async (error) => {
-      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in afterLoadError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
     beforeStoreError: async (error) => {
-      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${random_uuid}`);
+      console.debug(`Error in beforeStoreError for ${ctx.from?.username} and instance ${randomUuid}`);
       console.error(error);
     },
   });

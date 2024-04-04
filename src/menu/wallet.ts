@@ -3,7 +3,7 @@ import { getExplorerLink } from '../chains/sui.functions';
 import { BotContext } from '../types';
 import { ConversationId } from '../chains/conversations.config';
 
-const wallet_menu = new Menu<BotContext>('wallet-menu')
+const walletMenu = new Menu<BotContext>('wallet-menu')
   .dynamic(async (ctx, range) => {
     range.url('View in explorer', getExplorerLink(ctx));
   })
@@ -26,4 +26,4 @@ const wallet_menu = new Menu<BotContext>('wallet-menu')
   // })
   .row();
 
-export default wallet_menu;
+export default walletMenu;

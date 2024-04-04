@@ -4,20 +4,20 @@ import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { assets, nftHome } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 import { BotContext } from '../types';
-import alerts_menu from './alerts';
-import buy_menu from './buy';
+import alertsMenu from './alerts';
+import buyMenu from './buy';
 import feesMenu from './fees';
-import help_menu from './help';
+import helpMenu from './help';
 import launchpadMenu from './launchpad/launchpad';
-import { nft_exit_menu, nft_menu } from './nft';
+import { nftExitMenu, nftMenu } from './nft';
 import poolsMenu from './pools';
-import positions_menu from './positions';
-import refer_menu from './refer';
+import positionsMenu from './positions';
+import referMenu from './refer';
 import refundsMenu from './refunds';
-import settings_menu from './settings';
-import wallet_menu from './wallet';
-import deposit_menu from './wallet_deposit';
-import withdraw_menu from './wallet_withdraw';
+import settingsMenu from './settings';
+import walletMenu from './wallet';
+import depositMenu from './wallet_deposit';
+import withdrawMenu from './wallet_withdraw';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -65,17 +65,17 @@ const menu = new Menu<BotContext>('main')
     }
   });
 
-menu.register(buy_menu);
-menu.register(nft_menu);
-menu.register(nft_exit_menu);
-menu.register(positions_menu);
-menu.register(help_menu);
-menu.register(refer_menu);
-menu.register(alerts_menu);
-menu.register(wallet_menu);
-menu.register(settings_menu);
-menu.register(deposit_menu, 'wallet-menu');
-menu.register(withdraw_menu, 'wallet-menu');
+menu.register(buyMenu);
+menu.register(nftMenu);
+menu.register(nftExitMenu);
+menu.register(positionsMenu);
+menu.register(helpMenu);
+menu.register(referMenu);
+menu.register(alertsMenu);
+menu.register(walletMenu);
+menu.register(settingsMenu);
+menu.register(depositMenu, 'wallet-menu');
+menu.register(withdrawMenu, 'wallet-menu');
 menu.register(poolsMenu);
 menu.register(launchpadMenu);
 menu.register(feesMenu);
