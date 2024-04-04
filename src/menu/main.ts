@@ -4,20 +4,14 @@ import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { assets, nftHome } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 import { BotContext } from '../types';
-import alertsMenu from './alerts';
-import buyMenu from './buy';
 import feesMenu from './fees';
-import helpMenu from './help';
 import launchpadMenu from './launchpad/launchpad';
 import { nftExitMenu, nftMenu } from './nft';
 import poolsMenu from './pools';
 import positionsMenu from './positions';
-import referMenu from './refer';
 import refundsMenu from './refunds';
 import settingsMenu from './settings';
 import walletMenu from './wallet';
-import depositMenu from './wallet_deposit';
-import withdrawMenu from './wallet_withdraw';
 
 const menu = new Menu<BotContext>('main')
   .text('Buy', async (ctx) => {
@@ -65,17 +59,11 @@ const menu = new Menu<BotContext>('main')
     }
   });
 
-menu.register(buyMenu);
 menu.register(nftMenu);
 menu.register(nftExitMenu);
 menu.register(positionsMenu);
-menu.register(helpMenu);
-menu.register(referMenu);
-menu.register(alertsMenu);
 menu.register(walletMenu);
 menu.register(settingsMenu);
-menu.register(depositMenu, 'wallet-menu');
-menu.register(withdrawMenu, 'wallet-menu');
 menu.register(poolsMenu);
 menu.register(launchpadMenu);
 menu.register(feesMenu);
