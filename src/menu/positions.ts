@@ -7,6 +7,7 @@ import {
   hasDefinedPrice,
 } from '../chains/priceapi.utils';
 import { availableBalance, balance, home } from '../chains/sui.functions';
+import { instantBuy } from '../chains/trading/buy/buy';
 import { BotContext, CoinAssetDataExtended } from '../types';
 
 let currentTokenIndex: number = 0;
@@ -80,7 +81,7 @@ const positionsMenu = new Menu<BotContext>('positions-menu')
         useSpecifiedCoin: true,
       };
 
-      await ctx.conversation.enter(ConversationId.InstantBuy);
+      await instantBuy(ctx);
     },
   )
   .text(
@@ -100,7 +101,7 @@ const positionsMenu = new Menu<BotContext>('positions-menu')
         useSpecifiedCoin: true,
       };
 
-      await ctx.conversation.enter(ConversationId.InstantBuy);
+      await instantBuy(ctx);
     },
   )
   .text('Buy X SUI', async (ctx) => {
