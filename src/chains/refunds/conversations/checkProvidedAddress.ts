@@ -134,7 +134,6 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     },
   );
 
-  /*
   await ctx.reply(
     '📝 Here are <b>two options</b> for the refund:\n\n' +
       `💵 1. <b>Base Refund</b>: Receive <i><b>100%</b></i> of your lost funds — <code>${baseRefundAmount}` +
@@ -159,23 +158,21 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
       await conversation.skip();
     } else if (choiseCallbackQueryData === CallbackQueryData.BaseRefund) {
       await choiseContext.answerCallbackQuery();
-    */
 
-  await ctx.reply(
-    `To proceed, just follow the next steps:\n` +
-      `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
-      '<b>2.</b> Connect your affected wallet.\n' +
-      `<b>3.</b> Press the <i><b>Claim ${baseRefundAmount} SUI</b></i> button, ` +
-      'sign the transaction and enjoy your <b>refund</b>!',
-    {
-      reply_markup: retryButton,
-      parse_mode: 'HTML',
-      link_preview_options: { is_disabled: true },
-    },
-  );
+      await ctx.reply(
+        `To proceed with the <b>base refund</b>, just follow the next steps:\n` +
+          `<b>1.</b> Go to the <a href="${ALDRIN_REFUND_WEBSITE}"><b>Aldrin Refund Website</b></a>.\n` +
+          '<b>2.</b> Connect your affected wallet.\n' +
+          `<b>3.</b> On the right side of the page press the <i><b>Claim ${baseRefundAmount} SUI</b></i> button, ` +
+          'sign the transaction and enjoy your <b>refund</b>!',
+        {
+          reply_markup: retryButton,
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+        },
+      );
 
-  return;
-  /*
+      return;
     } else if (choiseCallbackQueryData === CallbackQueryData.BoostedRefund) {
       await choiseContext.answerCallbackQuery();
 
@@ -204,37 +201,24 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
 
         break;
       } else {
-        await reactOnUnexpectedBehaviour(
-          confirmContext,
-          retryButton,
-          'current wallet check',
-        );
+        await reactOnUnexpectedBehaviour(confirmContext, retryButton, 'current wallet check');
         return;
       }
     } else {
-      await reactOnUnexpectedBehaviour(
-        choiseContext,
-        retryButton,
-        'current wallet check',
-      );
+      await reactOnUnexpectedBehaviour(choiseContext, retryButton, 'current wallet check');
       return;
     }
   } while (!userConfirmedChoise);
 
-  const userHasStoredBoostedRefundAccount = await conversation.external(
-    async () => {
-      try {
-        return await userHasBoostedRefundAccount(ctx);
-      } catch (error) {
-        console.error(
-          '[checkProvidedAddress] Error while userHasBoostedRefundAccount():',
-          error,
-        );
+  const userHasStoredBoostedRefundAccount = await conversation.external(async () => {
+    try {
+      return await userHasBoostedRefundAccount(ctx);
+    } catch (error) {
+      console.error('[checkProvidedAddress] Error while userHasBoostedRefundAccount():', error);
 
-        return false;
-      }
-    },
-  );
+      return false;
+    }
+  });
 
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
@@ -249,20 +233,15 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     return;
   }
 
-  const userHasBackupedAccountForRefund = await conversation.external(
-    async () => {
-      try {
-        return await userHasBackupedAccount(ctx);
-      } catch (error) {
-        console.error(
-          '[checkProvidedAddress] Error while userHasBackupedAccount():',
-          error,
-        );
+  const userHasBackupedAccountForRefund = await conversation.external(async () => {
+    try {
+      return await userHasBackupedAccount(ctx);
+    } catch (error) {
+      console.error('[checkProvidedAddress] Error while userHasBackupedAccount():', error);
 
-        return false;
-      }
-    },
-  );
+      return false;
+    }
+  });
 
   if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
@@ -287,7 +266,7 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     return;
   }
 
-  let boostedClaimCap = await getBoostedClaimCap({
+  const boostedClaimCap = await getBoostedClaimCap({
     conversation,
     refundManager,
     ownerAddress: affectedPublicKey,
@@ -302,11 +281,8 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     return;
   }
 
-  let {
-    boostedClaimCapObjectId,
-    boostedClaimCapNotAssociatedWithNewAddressObjectId,
-    isAnyBoostedClaimCapExists,
-  } = boostedClaimCap;
+  const { boostedClaimCapObjectId, boostedClaimCapNotAssociatedWithNewAddressObjectId, isAnyBoostedClaimCapExists } =
+    boostedClaimCap;
 
   if (boostedClaimCapObjectId !== null) {
     await ctx.reply(
@@ -356,14 +332,13 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
   }
 
   // Exporting current wallet private key
-  const warnWithCheckAndPrintSucceeded =
-    await warnWithCheckAndPrivateKeyPrinting({
-      conversation,
-      ctx,
-      operation: 'boosted refund',
-      retryButton,
-      warnMessage: boostedRefundExportPrivateKeyWarnMessage,
-    });
+  const warnWithCheckAndPrintSucceeded = await warnWithCheckAndPrivateKeyPrinting({
+    conversation,
+    ctx,
+    operation: 'boosted refund',
+    retryButton,
+    warnMessage: boostedRefundExportPrivateKeyWarnMessage,
+  });
 
   if (!warnWithCheckAndPrintSucceeded) {
     return;
@@ -402,15 +377,10 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     signerPrivateKey: ALDRIN_AUTHORITY,
   });
 
-  if (
-    result.result === TransactionResultStatus.Success &&
-    result.digest !== undefined
-  ) {
+  if (result.result === TransactionResultStatus.Success && result.digest !== undefined) {
     // Switch to the new wallet
-    conversation.session.publicKey =
-      conversation.session.refund.boostedRefundAccount.publicKey;
-    conversation.session.privateKey =
-      conversation.session.refund.boostedRefundAccount.privateKey;
+    conversation.session.publicKey = conversation.session.refund.boostedRefundAccount.publicKey;
+    conversation.session.privateKey = conversation.session.refund.boostedRefundAccount.privateKey;
     conversation.session.refund.claimedBoostedRefund = true;
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
@@ -435,10 +405,7 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     return;
   }
 
-  if (
-    result.result === TransactionResultStatus.Failure &&
-    result.digest !== undefined
-  ) {
+  if (result.result === TransactionResultStatus.Failure && result.digest !== undefined) {
     await ctx.reply(
       `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to prepare the <b>boosted refund</b>. ` +
         `Please, try again or contact support.`,
@@ -452,14 +419,10 @@ export async function checkProvidedAddress(conversation: MyConversation, ctx: Bo
     return;
   }
 
-  await ctx.reply(
-    'Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.',
-    {
-      reply_markup: retryButton,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.reply('Failed to prepare the <b>boosted refund</b>. Please, try again or contact support.', {
+    reply_markup: retryButton,
+    parse_mode: 'HTML',
+  });
 
   return;
-  */
 }

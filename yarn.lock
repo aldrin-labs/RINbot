@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/rinbot-sui-sdk@^2.7.4":
-  version "2.7.4"
-  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.7.4.tgz#b4292e6f7a83fcf3ad207527729e466c5fb5bdbf"
-  integrity sha512-Ub/iz3+JLeFq8W5/gxyZaTMBMdCX+UUKiQHzstjVGFyUGa3jXK1IuM6HGM1A0g4H9VcEhbmMDPXhs5e5HGAsPg==
+"@avernikoz/rinbot-sui-sdk@^2.7.5":
+  version "2.7.5"
+  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.7.5.tgz#976059efc55a57a2e65daa2376335ae589eace18"
+  integrity sha512-rY7WRMplPJOQ8BhQYhmC41LuwwLbtKrsGrNy+hRjcevQ6DzvfwjE8KMP4iUYsliGCgPPlPjYylf8dr3fPZWAxA==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
