@@ -1,6 +1,9 @@
 import { BotError } from 'grammy';
 import { EndConversationError } from '../errors/end-conversation.error';
 
+/**
+ * Error boundary which should be used to handle errors from all the registered conversations.
+ */
 export async function conversationErrorBoundaryHandler(error: BotError) {
   if (error.error instanceof EndConversationError) {
     return;
