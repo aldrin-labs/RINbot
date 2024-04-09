@@ -1,9 +1,4 @@
-import {
-  CoinAssetData,
-  isSuiCoinType,
-  isValidSuiAddress,
-  isValidTokenAmount,
-} from '@avernikoz/rinbot-sui-sdk';
+import { CoinAssetData, isSuiCoinType, isValidSuiAddress, isValidTokenAmount } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
@@ -11,43 +6,25 @@ import skip from '../../../inline-keyboards/skip';
 import yesOrNo from '../../../inline-keyboards/yesOrNo';
 import { BotContext, MyConversation } from '../../../types';
 import { ConversationId } from '../../conversations.config';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransactionAndReturnResult,
-} from '../../conversations.utils';
-import {
-  TransactionResultStatus,
-  getCetus,
-  getCoinManager,
-  getWalletManager,
-} from '../../sui.functions';
+import { getTransactionFromMethod, signAndExecuteTransactionAndReturnResult } from '../../conversations.utils';
+import { TransactionResultStatus, getCetus, getCoinManager, getWalletManager } from '../../sui.functions';
 import { CetusPool, SuiTransactionBlockResponse } from '../../types';
-import {
-  findCoinInAssets,
-  getCetusPoolUrl,
-  getSuiVisionTransactionLink,
-} from '../../utils';
+import { findCoinInAssets, getCetusPoolUrl, getSuiVisionTransactionLink } from '../../utils';
 
-export async function addCetusLiquidity(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
-  await ctx.reply(
-    'Enter a <b>pool address</b> to which you want to deposit liquidity.',
-    { reply_markup: closeConversation, parse_mode: 'HTML' },
-  );
+export async function addCetusLiquidity(conversation: MyConversation, ctx: BotContext): Promise<void> {
+  await ctx.reply('Enter a <b>pool address</b> to which you want to deposit liquidity.', {
+    reply_markup: closeConversation,
+    parse_mode: 'HTML',
+  });
 
-  const retryButton =
-    retryAndGoHomeButtonsData[ConversationId.AddCetusPoolLiquidity];
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.AddCetusPoolLiquidity];
   const skipButton = skip.inline_keyboard[0];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
 
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
-    const coinAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
+    const coinAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
     return coinAssets;
   });
@@ -74,12 +51,9 @@ export async function addCetusLiquidity(
     const pool = await cetus.getPool(poolAddress);
 
     if (pool === null) {
-      await ctx.reply(
-        'Cannot find pool with such address. Please, make sure it is correct and enter the valid one.',
-        {
-          reply_markup: closeConversation,
-        },
-      );
+      await ctx.reply('Cannot find pool with such address. Please, make sure it is correct and enter the valid one.', {
+        reply_markup: closeConversation,
+      });
 
       return false;
     }
@@ -89,10 +63,7 @@ export async function addCetusLiquidity(
     const coinAIsFoundInAssets = findCoinInAssets(allCoinsAssets, coinTypeA);
     const coinBIsFoundInAssets = findCoinInAssets(allCoinsAssets, coinTypeB);
 
-    if (
-      coinAIsFoundInAssets === undefined ||
-      coinBIsFoundInAssets === undefined
-    ) {
+    if (coinAIsFoundInAssets === undefined || coinBIsFoundInAssets === undefined) {
       await ctx.reply(
         "You cannot add liquidity to this pool because you don't have all the needed coins.\n\nPlease, " +
           'enter another pool address.',
@@ -108,13 +79,11 @@ export async function addCetusLiquidity(
   });
 
   // TODO: Add type guard
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking for this specific case.
+  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
+  // for this specific case.
   // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
   if (foundPool === null) {
-    await ctx.reply(
-      'Pool address is not valid. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Pool address is not valid. Please, try again or contact support.', { reply_markup: retryButton });
 
     return;
   }
@@ -192,10 +161,10 @@ export async function addCetusLiquidity(
   const coinDecimalsA = coinADecimals;
   const coinDecimalsB = coinBDecimals;
 
-  await ctx.reply(
-    'Enter a <b>price slippage</b> (in %).\n\n<b>Default</b>: <code>10</code>',
-    { reply_markup: closeWithSkipReplyMarkup, parse_mode: 'HTML' },
-  );
+  await ctx.reply('Enter a <b>price slippage</b> (in %).\n\n<b>Default</b>: <code>10</code>', {
+    reply_markup: closeWithSkipReplyMarkup,
+    parse_mode: 'HTML',
+  });
 
   const slippageContext = await conversation.waitUntil(async (ctx) => {
     if (ctx.callbackQuery?.data === 'close-conversation') {
@@ -220,8 +189,7 @@ export async function addCetusLiquidity(
     const slipageIsValid = slippage >= 0 && slippage <= 100;
     if (!slipageIsValid) {
       await ctx.reply(
-        'Slippage must be in range between <code>0</code> and <code>100</code>.\n\nPlease, ' +
-          'enter another value.',
+        'Slippage must be in range between <code>0</code> and <code>100</code>.\n\nPlease, ' + 'enter another value.',
         { reply_markup: closeConversation, parse_mode: 'HTML' },
       );
 
@@ -233,16 +201,11 @@ export async function addCetusLiquidity(
   const slippage =
     slippageContext.callbackQuery?.data === 'skip'
       ? 0.1
-      : new BigNumber(slippageContext.msg?.text ?? '10')
-          .dividedBy(100)
-          .toNumber();
+      : new BigNumber(slippageContext.msg?.text ?? '10').dividedBy(100).toNumber();
 
   // ts check
   if (isNaN(slippage)) {
-    await ctx.reply(
-      'Slippage is not valid. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Slippage is not valid. Please, try again or contact support.', { reply_markup: retryButton });
   }
 
   const coinASymbol = coinAInAssets.symbol ?? coinTypeA;
@@ -252,9 +215,7 @@ export async function addCetusLiquidity(
   const availableAmount = coinAIsSui
     ? await conversation.external(async () => {
         const walletManager = await getWalletManager();
-        return await walletManager.getAvailableSuiBalance(
-          ctx.session.publicKey,
-        );
+        return await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
       })
     : coinABalance;
 
@@ -284,10 +245,9 @@ export async function addCetusLiquidity(
 
     // ts check
     if (exactAmounts === null) {
-      await ctx.reply(
-        'Failed to process coin amounts to add liquidity. Please, try again or contact support.',
-        { reply_markup: retryButton },
-      );
+      await ctx.reply('Failed to process coin amounts to add liquidity. Please, try again or contact support.', {
+        reply_markup: retryButton,
+      });
 
       return;
     }
@@ -301,17 +261,16 @@ export async function addCetusLiquidity(
       { reply_markup: yesOrNo, parse_mode: 'HTML' },
     );
 
-    const userAnswerContext =
-      await conversation.waitForCallbackQuery(/^(yes|no)$/);
+    const userAnswerContext = await conversation.waitForCallbackQuery(/^(yes|no)$/);
     const callbackQueryData = userAnswerContext.callbackQuery.data;
 
     if (callbackQueryData === 'no') {
       await userAnswerContext.answerCallbackQuery();
 
-      await ctx.reply(
-        `Please, enter another amount of <b>${coinASymbol}</b>.`,
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
-      );
+      await ctx.reply(`Please, enter another amount of <b>${coinASymbol}</b>.`, {
+        reply_markup: closeConversation,
+        parse_mode: 'HTML',
+      });
 
       continue;
     }
@@ -324,10 +283,10 @@ export async function addCetusLiquidity(
   } while (!userConfirmedAmounts);
 
   if (exactAmountA === undefined) {
-    await ctx.reply(
-      `Failed to process amount of <b>${coinASymbol}</b>. Please, try again or contact support.`,
-      { reply_markup: retryButton, parse_mode: 'HTML' },
-    );
+    await ctx.reply(`Failed to process amount of <b>${coinASymbol}</b>. Please, try again or contact support.`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    });
 
     return;
   }
@@ -337,9 +296,7 @@ export async function addCetusLiquidity(
   const addLiquidityTransaction = await getTransactionFromMethod({
     conversation,
     ctx,
-    method: cetus.getAddLiquidityTransaction.bind(
-      cetus,
-    ) as typeof cetus.getAddLiquidityTransaction,
+    method: cetus.getAddLiquidityTransaction.bind(cetus) as typeof cetus.getAddLiquidityTransaction,
     params: {
       coinAmountA: exactAmountA,
       decimalsA: coinDecimalsA,
@@ -376,18 +333,14 @@ export async function addCetusLiquidity(
     resultOfAddLiquidity.transactionResult &&
     resultOfAddLiquidity.digest
   ) {
-    await ctx.reply(
-      `Failed to add liquidity.\n\n${getSuiVisionTransactionLink(resultOfAddLiquidity.digest)}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Failed to add liquidity.\n\n${getSuiVisionTransactionLink(resultOfAddLiquidity.digest)}`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
-  if (
-    resultOfAddLiquidity.resultStatus === 'failure' &&
-    resultOfAddLiquidity.reason
-  ) {
+  if (resultOfAddLiquidity.resultStatus === 'failure' && resultOfAddLiquidity.reason) {
     await ctx.reply('Failed to send transaction for liquidity adding.', {
       reply_markup: retryButton,
     });
@@ -452,12 +405,9 @@ export async function askForExactAmountToAddInPool({
     });
 
     if (!amountIsValid) {
-      await ctx.reply(
-        `Invalid amount. Reason: ${reason}\n\nPlease, try again.`,
-        {
-          reply_markup: closeConversation,
-        },
-      );
+      await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, {
+        reply_markup: closeConversation,
+      });
 
       await conversation.skip({ drop: true });
     }

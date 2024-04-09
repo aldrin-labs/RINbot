@@ -15,7 +15,6 @@ import { CallbackQueryData } from '../types/callback-queries-data';
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
     await ctx.conversation.exit();
-    ctx.session.step = 'main';
     await ctx.deleteMessage();
     await home(ctx);
     await ctx.answerCallbackQuery();

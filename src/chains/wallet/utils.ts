@@ -6,9 +6,7 @@ import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
 import { reactOnUnexpectedBehaviour } from '../utils';
 
-export async function userIsNotEligibleToExportPrivateKey(
-  ctx: BotContext,
-): Promise<boolean> {
+export async function userIsNotEligibleToExportPrivateKey(ctx: BotContext): Promise<boolean> {
   const {
     welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus },
     tradesCount,
@@ -72,17 +70,12 @@ export async function warnWithCheckAndPrivateKeyPrinting({
   });
 
   const confirmExportContext = await conversation.wait();
-  const confirmExportCallbackQueryData =
-    confirmExportContext.callbackQuery?.data;
+  const confirmExportCallbackQueryData = confirmExportContext.callbackQuery?.data;
 
   if (confirmExportCallbackQueryData === CallbackQueryData.Cancel) {
     await conversation.skip();
   } else if (confirmExportCallbackQueryData !== CallbackQueryData.Confirm) {
-    await reactOnUnexpectedBehaviour(
-      confirmExportContext,
-      retryButton,
-      operation,
-    );
+    await reactOnUnexpectedBehaviour(confirmExportContext, retryButton, operation);
     return false;
   }
   await confirmExportContext.answerCallbackQuery();

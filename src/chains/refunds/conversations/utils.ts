@@ -4,10 +4,7 @@ import { ALDRIN_AUTHORITY } from '../../../config/bot.config';
 import assetsWithHomeKeyboard from '../../../inline-keyboards/mixed/assets-with-home';
 import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { BotContext, MyConversation } from '../../../types';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransaction,
-} from '../../conversations.utils';
+import { getTransactionFromMethod, signAndExecuteTransaction } from '../../conversations.utils';
 import { TransactionResultStatus } from '../../sui.functions';
 import { getSuiVisionTransactionLink } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../../wallet/utils';
@@ -34,10 +31,10 @@ export async function claimBaseRefund({
   });
 
   if (transaction === undefined) {
-    await ctx.reply(
-      'Failed to create transaction for <b>base refund</b>. Please, try again or reach out to us.',
-      { reply_markup: retryButton, parse_mode: 'HTML' },
-    );
+    await ctx.reply('Failed to create transaction for <b>base refund</b>. Please, try again or reach out to us.', {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    });
 
     return;
   }
@@ -50,10 +47,7 @@ export async function claimBaseRefund({
     transaction,
   });
 
-  if (
-    result.result === TransactionResultStatus.Success &&
-    result.digest !== undefined
-  ) {
+  if (result.result === TransactionResultStatus.Success && result.digest !== undefined) {
     await ctx.reply(
       `<b>Base refund</b> is <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!`,
       {
@@ -65,17 +59,11 @@ export async function claimBaseRefund({
     return;
   }
 
-  if (
-    result.result === TransactionResultStatus.Failure &&
-    result.digest !== undefined
-  ) {
-    await ctx.reply(
-      `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim <b>base refund</b>.`,
-      {
-        reply_markup: retryButton,
-        parse_mode: 'HTML',
-      },
-    );
+  if (result.result === TransactionResultStatus.Failure && result.digest !== undefined) {
+    await ctx.reply(`<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim <b>base refund</b>.`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    });
 
     return;
   }
@@ -102,33 +90,27 @@ export async function claimBoostedRefund({
   const refundManager = getRefundManager();
 
   // Exporting current wallet private key
-  const warnWithCheckAndPrintSucceeded =
-    await warnWithCheckAndPrivateKeyPrinting({
-      conversation,
-      ctx,
-      operation: 'boosted refund',
-      retryButton,
-      warnMessage: boostedRefundExportPrivateKeyWarnMessage,
-    });
+  const warnWithCheckAndPrintSucceeded = await warnWithCheckAndPrivateKeyPrinting({
+    conversation,
+    ctx,
+    operation: 'boosted refund',
+    retryButton,
+    warnMessage: boostedRefundExportPrivateKeyWarnMessage,
+  });
 
   if (!warnWithCheckAndPrintSucceeded) {
     return;
   }
 
-  const userHasStoredBoostedRefundAccount = await conversation.external(
-    async () => {
-      try {
-        return await userHasBoostedRefundAccount(ctx);
-      } catch (error) {
-        console.error(
-          '[claimBoostedRefund] Error while userHasBoostedRefundAccount():',
-          error,
-        );
+  const userHasStoredBoostedRefundAccount = await conversation.external(async () => {
+    try {
+      return await userHasBoostedRefundAccount(ctx);
+    } catch (error) {
+      console.error('[claimBoostedRefund] Error while userHasBoostedRefundAccount():', error);
 
-        return false;
-      }
-    },
-  );
+      return false;
+    }
+  });
 
   if (!userHasStoredBoostedRefundAccount) {
     await ctx.reply(
@@ -143,20 +125,15 @@ export async function claimBoostedRefund({
     return;
   }
 
-  const userHasBackupedAccountForRefund = await conversation.external(
-    async () => {
-      try {
-        return await userHasBackupedAccount(ctx);
-      } catch (error) {
-        console.error(
-          '[claimBoostedRefund] Error while userHasBackupedAccount():',
-          error,
-        );
+  const userHasBackupedAccountForRefund = await conversation.external(async () => {
+    try {
+      return await userHasBackupedAccount(ctx);
+    } catch (error) {
+      console.error('[claimBoostedRefund] Error while userHasBackupedAccount():', error);
 
-        return false;
-      }
-    },
-  );
+      return false;
+    }
+  });
 
   if (!userHasBackupedAccountForRefund) {
     await ctx.reply(
@@ -195,11 +172,8 @@ export async function claimBoostedRefund({
     return;
   }
 
-  let {
-    boostedClaimCapObjectId,
-    isAnyBoostedClaimCapExists,
-    boostedClaimCapNotAssociatedWithNewAddressObjectId,
-  } = boostedClaimCap;
+  let { boostedClaimCapObjectId, isAnyBoostedClaimCapExists, boostedClaimCapNotAssociatedWithNewAddressObjectId } =
+    boostedClaimCap;
 
   // If there is no any boosted claim cap — just create it.
   if (!isAnyBoostedClaimCapExists) {
@@ -223,10 +197,9 @@ export async function claimBoostedRefund({
     boostedClaimCapNotAssociatedWithNewAddressObjectId !== null
   ) {
     // If boosted claim cap exists, but with not corresponding `newAddress` — burn it and create a new one.
-    await ctx.reply(
-      '<b>Inappropriate boosted claim cap found. Burning it to safely bring your money...</b>',
-      { parse_mode: 'HTML' },
-    );
+    await ctx.reply('<b>Inappropriate boosted claim cap found. Burning it to safely bring your money...</b>', {
+      parse_mode: 'HTML',
+    });
 
     const burnTransaction = await getTransactionFromMethod({
       conversation,
@@ -254,19 +227,13 @@ export async function claimBoostedRefund({
       transaction: burnTransaction,
     });
 
-    if (
-      burnResult.result === TransactionResultStatus.Success &&
-      burnResult.digest !== undefined
-    ) {
+    if (burnResult.result === TransactionResultStatus.Success && burnResult.digest !== undefined) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(burnResult.digest)}">Successfully burned</a> inappropriate boosted ` +
           'claim cap.',
         { reply_markup: retryButton, parse_mode: 'HTML' },
       );
-    } else if (
-      burnResult.result === TransactionResultStatus.Failure &&
-      burnResult.digest !== undefined
-    ) {
+    } else if (burnResult.result === TransactionResultStatus.Failure && burnResult.digest !== undefined) {
       await ctx.reply(
         `<a href="${getSuiVisionTransactionLink(burnResult.digest)}">Failed</a> to burn inappropriate boosted ` +
           'claim cap. Please, try again later or contact support.',
@@ -275,10 +242,9 @@ export async function claimBoostedRefund({
 
       return;
     } else {
-      await ctx.reply(
-        'Failed to burn inappropriate boosted claim cap. Please, try again later or contact support.',
-        { reply_markup: retryButton },
-      );
+      await ctx.reply('Failed to burn inappropriate boosted claim cap. Please, try again later or contact support.', {
+        reply_markup: retryButton,
+      });
 
       return;
     }
@@ -299,14 +265,11 @@ export async function claimBoostedRefund({
     });
   }
 
-  if (
-    boostedClaimCap === undefined ||
-    boostedClaimCap.boostedClaimCapObjectId === null
-  ) {
-    await ctx.reply(
-      `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
-      { reply_markup: retryButton, parse_mode: 'HTML' },
-    );
+  if (boostedClaimCap === undefined || boostedClaimCap.boostedClaimCapObjectId === null) {
+    await ctx.reply(`Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    });
 
     return;
   }
@@ -323,8 +286,7 @@ export async function claimBoostedRefund({
     ctx,
     method: RefundManagerSingleton.getClaimRefundBoostedTransaction,
     params: {
-      userRinbotRefundDestinationAddress:
-        conversation.session.refund.boostedRefundAccount.publicKey,
+      userRinbotRefundDestinationAddress: conversation.session.refund.boostedRefundAccount.publicKey,
       boostedClaimCap: boostedClaimCapObjectId,
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
     },
@@ -345,20 +307,16 @@ export async function claimBoostedRefund({
     transaction,
   });
 
-  if (
-    result.result === TransactionResultStatus.Success &&
-    result.digest !== undefined
-  ) {
+  if (result.result === TransactionResultStatus.Success && result.digest !== undefined) {
     // Switch to the new wallet
-    conversation.session.publicKey =
-      conversation.session.refund.boostedRefundAccount.publicKey;
-    conversation.session.privateKey =
-      conversation.session.refund.boostedRefundAccount.privateKey;
+    conversation.session.publicKey = conversation.session.refund.boostedRefundAccount.publicKey;
+    conversation.session.privateKey = conversation.session.refund.boostedRefundAccount.privateKey;
     conversation.session.refund.claimedBoostedRefund = true;
     conversation.session.refund.boostedRefundAmount = boostedRefundAmount;
 
     await ctx.reply(
-      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">successfully claimed</a>!\n\n` +
+      `<b>Boosted refund</b> has been <a href="${getSuiVisionTransactionLink(result.digest)}">` +
+        `successfully claimed</a>!\n\n` +
         `You have been switched to the account containing the boosted refund funds.\nEnjoy trading with us! 🎉🚀`,
       {
         reply_markup: assetsWithHomeKeyboard,
@@ -369,10 +327,7 @@ export async function claimBoostedRefund({
     return;
   }
 
-  if (
-    result.result === TransactionResultStatus.Failure &&
-    result.digest !== undefined
-  ) {
+  if (result.result === TransactionResultStatus.Failure && result.digest !== undefined) {
     await ctx.reply(
       `<a href="${getSuiVisionTransactionLink(result.digest)}">Failed</a> to claim the <b>boosted refund</b>.`,
       {
@@ -468,10 +423,10 @@ async function createBoostedClaimCap({
 
     return false;
   } else {
-    await ctx.reply(
-      `Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`,
-      { reply_markup: retryButton, parse_mode: 'HTML' },
-    );
+    await ctx.reply(`Failed to prepare the <b>boosted claim</b>. Please, try again or contact support.`, {
+      reply_markup: retryButton,
+      parse_mode: 'HTML',
+    });
 
     return false;
   }
@@ -498,10 +453,7 @@ export async function getBoostedClaimCap({
         newAddress: conversation.session.refund.boostedRefundAccount.publicKey,
       });
     } catch (error) {
-      console.error(
-        '[claimBoostedRefund] Error while getBoostedClaimCap():',
-        error,
-      );
+      console.error('[claimBoostedRefund] Error while getBoostedClaimCap():', error);
 
       return;
     }

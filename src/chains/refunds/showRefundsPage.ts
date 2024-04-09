@@ -18,10 +18,7 @@ export async function showRefundsPage(ctx: BotContext) {
       poolObjectId: RefundManagerSingleton.REFUND_POOL_OBJECT_ID,
     });
   } catch (error) {
-    console.error(
-      '[showRefundsPage] Error while fetching current refund phase:',
-      error,
-    );
+    console.error('[showRefundsPage] Error while fetching current refund phase:', error);
   }
 
   let phaseString = '';

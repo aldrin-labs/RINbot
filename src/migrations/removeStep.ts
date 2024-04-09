@@ -1,11 +1,12 @@
-import { CoinAssetData, LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
+import { CoinAssetDataExtended } from '../types';
 
-export function addSuiAssetField(old: {
-  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';
+export function removeStep(old: {
+  step: string;
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
-  assets: CoinAssetData[];
+  suiAsset: CoinAssetDataExtended;
+  assets: CoinAssetDataExtended[];
   welcomeBonus: {
     amount: number;
     isUserEligibleToGetBonus: boolean;
@@ -16,6 +17,7 @@ export function addSuiAssetField(old: {
   createdAt: number;
   tradeCoin: {
     coinType: string;
+    tradeAmountPercentage: string;
     useSpecifiedCoin: boolean;
   };
   refund: {
@@ -25,17 +27,15 @@ export function addSuiAssetField(old: {
       privateKey: string;
     } | null;
     boostedRefundAmount: string | null;
-    boostedRefundAccount: string | null;
+    boostedRefundAccount: {
+      publicKey: string;
+      privateKey: string;
+    } | null;
   };
+  trades: { [coinType: string]: { lastTradeTimestamp: number } };
 }) {
-  return {
-    ...old,
-    suiAsset: {
-      type: LONG_SUI_COIN_TYPE,
-      symbol: 'SUI',
-      balance: '0',
-      decimals: 9,
-      noDecimals: false,
-    },
-  };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { step, ...remainingData } = old;
+
+  return remainingData;
 }

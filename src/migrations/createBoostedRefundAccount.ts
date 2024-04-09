@@ -13,7 +13,8 @@ export function createBoostedRefundAccount(ctx: BotContext) {
       const boostedRefundAccount = generateWallet();
 
       console.warn(
-        `[createBoostedRefundAccount migration] Creating and storing boosted refund account for user ${ctx.from?.id}. ` +
+        `[createBoostedRefundAccount migration] Creating and storing boosted refund account ` +
+          `for user ${ctx.from?.id}. ` +
           `His public key: ${old.publicKey}. ` +
           `His new boostedRefundAccount.publicKey: ${boostedRefundAccount.publicKey}`,
       );

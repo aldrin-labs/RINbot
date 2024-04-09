@@ -1,11 +1,8 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import {
-  type Conversation,
-  type ConversationFlavor,
-} from '@grammyjs/conversations';
+import { type Conversation, type ConversationFlavor } from '@grammyjs/conversations';
 import { Context, SessionFlavor } from 'grammy';
 
-//For PNL
+// For PNL
 export interface Trade {
   buyingPrice: number | null;
   sellingPrice: number | null;
@@ -57,14 +54,6 @@ export interface CoinAssetDataExtended extends CoinAssetData {
 }
 
 export interface SessionData {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu'; // which step of the form we are on
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
@@ -98,8 +87,6 @@ export interface SessionData {
   trades: { [coinType: string]: { lastTradeTimestamp: number } };
 }
 
-export type BotContext = Context &
-  SessionFlavor<SessionData> &
-  ConversationFlavor;
+export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
 
 export type MyConversation = Conversation<BotContext>;

@@ -3,32 +3,19 @@ import addCetusLiquidityKeyboard from '../../../inline-keyboards/addCetusLiquidi
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { ConversationId } from '../../conversations.config';
-import {
-  getTransactionFromMethod,
-  signAndExecuteTransactionAndReturnResult,
-} from '../../conversations.utils';
-import {
-  TransactionResultStatus,
-  getCetus,
-  getCoinManager,
-  getWalletManager,
-} from '../../sui.functions';
+import { getTransactionFromMethod, signAndExecuteTransactionAndReturnResult } from '../../conversations.utils';
+import { TransactionResultStatus, getCetus, getCoinManager, getWalletManager } from '../../sui.functions';
 import { SuiTransactionBlockResponse } from '../../types';
 import { getCetusPoolUrl } from '../../utils';
 import { askForCoinInPool, askForPoolPrice, askForTickSpacing } from '../utils';
 
-export async function createCetusPool(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function createCetusPool(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const coinManager = await getCoinManager();
   const cetus = await getCetus();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
-    const coinAssets = await walletManager.getAllCoinAssets(
-      ctx.session.publicKey,
-    );
+    const coinAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
 
     return coinAssets;
   });
@@ -45,10 +32,9 @@ export async function createCetusPool(
 
   // ts check
   if (firstValidatedCoin === undefined) {
-    await ctx.reply(
-      'Specified coin cannot be found.\n\nPlease, try again and specify another one.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -65,10 +51,9 @@ export async function createCetusPool(
 
   // ts check
   if (secondValidatedCoin === undefined) {
-    await ctx.reply(
-      'Specified coin cannot be found.\n\nPlease, try again and specify another one.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -82,10 +67,9 @@ export async function createCetusPool(
 
   // ts check
   if (poolPrice === undefined) {
-    await ctx.reply(
-      'Specified pool price is not valid.\n\nPlease, try to enter another price or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Specified pool price is not valid.\n\nPlease, try to enter another price or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -94,10 +78,9 @@ export async function createCetusPool(
 
   // ts check
   if (tickSpacing === undefined) {
-    await ctx.reply(
-      'Specified tick spacing is not valid.\n\nPlease, try to enter another one or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Specified tick spacing is not valid.\n\nPlease, try to enter another one or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
@@ -105,11 +88,7 @@ export async function createCetusPool(
   await ctx.reply('Finding pool with the same params...');
 
   const existingPool = await conversation.external(() =>
-    cetus.getPoolByCoinTypesAndTickSpacing(
-      firstValidatedCoin.type,
-      secondValidatedCoin.type,
-      tickSpacing,
-    ),
+    cetus.getPoolByCoinTypesAndTickSpacing(firstValidatedCoin.type, secondValidatedCoin.type, tickSpacing),
   );
 
   if (existingPool !== undefined) {
@@ -128,9 +107,7 @@ export async function createCetusPool(
   const createPoolTransaction = await getTransactionFromMethod({
     conversation,
     ctx,
-    method: cetus.getCreatePoolTransaction.bind(
-      cetus,
-    ) as typeof cetus.getCreatePoolTransaction,
+    method: cetus.getCreatePoolTransaction.bind(cetus) as typeof cetus.getCreatePoolTransaction,
     params: {
       coinTypeA: firstValidatedCoin.type,
       coinTypeB: secondValidatedCoin.type,
@@ -165,18 +142,14 @@ export async function createCetusPool(
     resultOfCreatePool.transactionResult &&
     resultOfCreatePool.digest
   ) {
-    await ctx.reply(
-      `Pool creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreatePool.digest}`,
-      { reply_markup: retryButton },
-    );
+    await ctx.reply(`Pool creation failed.\n\nhttps://suiscan.xyz/mainnet/tx/${resultOfCreatePool.digest}`, {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
-  if (
-    resultOfCreatePool.resultStatus === 'failure' &&
-    resultOfCreatePool.reason
-  ) {
+  if (resultOfCreatePool.resultStatus === 'failure' && resultOfCreatePool.reason) {
     await ctx.reply('Failed to send transaction for pool creation.', {
       reply_markup: retryButton,
     });
