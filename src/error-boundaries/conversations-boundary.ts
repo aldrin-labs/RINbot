@@ -8,7 +8,7 @@ export async function conversationErrorBoundaryHandler(error: BotError) {
   if (error.error instanceof EndConversationError) {
     return;
   } else {
-    console.debug('[Conversation Error Boundary] Error occured, throwing further...');
+    console.debug('[Conversation Error Boundary] Unrecognized error occured, throwing further...');
     throw error;
   }
 }
