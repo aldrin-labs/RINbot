@@ -638,7 +638,7 @@ export async function home(ctx: BotContext) {
 
   const welcomeText =
     `<b>Welcome to RINbot on Sui Network!</b>\n\n` +
-    `Your wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n` +
+    `Your account address (click to copy): <code>${ctx.session.account}</code>\n\n` +
     `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
     `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
   await ctx.reply(welcomeText, {
