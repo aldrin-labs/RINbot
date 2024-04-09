@@ -54,6 +54,7 @@ export interface CoinAssetDataExtended extends CoinAssetData {
 }
 
 export interface SessionData {
+  account: string | null;
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };
