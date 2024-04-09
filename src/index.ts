@@ -4,6 +4,7 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { Bot, BotError, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
+import { initializeAccount } from './chains/account-abstraction/conversations/initialize-account';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
@@ -19,7 +20,9 @@ import { balances } from './commands/balances';
 import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
+import { checkAccountMiddleware } from './middleware/checkAccountMiddleware';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addAccountField } from './migrations/addAccountField';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
@@ -50,7 +53,6 @@ const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
-  composer.use(timeoutMiddleware);
 
   bot.lazy((ctx) => {
     return session({
@@ -83,6 +85,7 @@ async function startBot(): Promise<void> {
           .catch((e) => console.error('ERROR storing boosted account', e));
 
         return {
+          account: null,
           privateKey,
           publicKey,
           suiAsset: {
@@ -129,6 +132,7 @@ async function startBot(): Promise<void> {
           8: addSuiAssetField,
           9: addTradeAmountPercentageField,
           10: removeStep,
+          11: addAccountField,
         },
       }),
     });
@@ -186,6 +190,10 @@ async function startBot(): Promise<void> {
       id: ConversationId.CheckProvidedAddressForRefund,
     }),
   );
+  composer.use(createConversation(initializeAccount, { id: ConversationId.InitializeAccount }));
+
+  composer.use(timeoutMiddleware);
+  composer.use(checkAccountMiddleware);
 
   bot.errorBoundary(errorBoundaryHandler).use(composer);
   bot.use(menu);
