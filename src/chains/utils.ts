@@ -356,3 +356,7 @@ export async function coinCannotBeSoldDueToDelay({
 
   return false;
 }
+
+export function accountIsNotInitialized(ctx: BotContext) {
+  return ctx.session.account === null;
+}
