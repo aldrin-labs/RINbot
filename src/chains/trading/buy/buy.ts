@@ -40,6 +40,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   return await instantBuy(ctx, conversation);
 }
 
+/**
+ * Makes buy with params specified in `session.tradeCoin`.
+ *
+ * @param conversation must be defined when method is used in conversation, so the session will be fetched from
+ * `conversation.session`. Otherwise, method will get session from `ctx.session`.
+ */
 export const instantBuy = async (ctx: BotContext, conversation: MyConversation | undefined = undefined) => {
   await ctx.reply('Finding the best route to save your money… ☺️' + randomUuid);
   const session = conversation?.session ?? ctx.session;

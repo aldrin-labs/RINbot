@@ -10,6 +10,12 @@ import { TransactionResultStatus, provider, randomUuid } from './sui.functions';
 import { SuiTransactionBlockResponse } from './types';
 import { isTransactionSuccessful } from './utils';
 
+/**
+ * Wraps `getTransactionFromMethodWithoutConversation` method result in `conversation.external`, so grammY will cache
+ * the result.
+ *
+ * @returns `getTransactionFromMethodWithoutConversation` result.
+ */
 export async function getTransactionFromMethod<
   T extends (
     params: Parameters<T>[0],
@@ -54,6 +60,13 @@ export async function getTransactionFromMethod<
   return transaction;
 }
 
+/**
+ * Gets transaction block from `method` with given `params`.
+ * Doesn't use `conversation.external`, so can be used outside of a conversation. If you use it inside the
+ * conversation, be aware that the result won't be cached by grammY.
+ *
+ * @returns Transaction block returned from `method`. `undefined` in error case.
+ */
 export async function getTransactionFromMethodWithoutConversation<
   T extends (
     params: Parameters<T>[0],
@@ -141,6 +154,12 @@ export async function getTransactionForStructuredResult<T extends (params: Param
   return transaction;
 }
 
+/**
+ * Wraps `signAndExecuteTransactionWithoutConversation` method result in `conversation.external`, so grammY will cache
+ * the result.
+ *
+ * @returns `signAndExecuteTransactionWithoutConversation` result.
+ */
 export async function signAndExecuteTransaction({
   conversation,
   ctx,
@@ -167,6 +186,13 @@ export async function signAndExecuteTransaction({
   return resultOfExecution;
 }
 
+/**
+ * Signs and executes transaction block with given `signerPrivateKey` (`ctx.session.privateKey` by default).
+ * Doesn't use `conversation.external`, so can be used outside of a conversation. If you use it inside the
+ * conversation, be aware that the result won't be cached by grammY.
+ *
+ * @returns Transaction digest and result status. In case of error returns failed status and failure reason.
+ */
 export async function signAndExecuteTransactionWithoutConversation({
   ctx,
   transaction,
