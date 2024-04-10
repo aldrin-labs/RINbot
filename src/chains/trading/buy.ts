@@ -150,6 +150,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();
     // TODO: Maybe we should add try/catch here as well
+    // TODO: Get available SUI balance of account instead of public key
     const balance = await walletManager.getAvailableSuiBalance(conversation.session.publicKey);
     return balance;
   });
@@ -225,6 +226,7 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
   const transaction = await getTransactionFromMethod({
     conversation,
     ctx,
+    // TODO: Use adapted method for account usage & modify corresponding params
     method: routerManager.getBestRouteTransaction.bind(routerManager) as typeof routerManager.getBestRouteTransaction,
     params: {
       tokenFrom: LONG_SUI_COIN_TYPE,

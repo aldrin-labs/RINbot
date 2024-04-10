@@ -14,7 +14,6 @@ import {
   clmmMainnet,
   getLpCoinDecimals,
   getSuiProvider,
-  isValidSuiAddress,
   isValidTokenAddress,
   isValidTokenAmount,
   transactionFromSerializedTransaction,
@@ -169,6 +168,8 @@ export const getRouteManager = async () => {
 };
 
 export async function withdraw(conversation: MyConversation, ctx: BotContext): Promise<void> {
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
+
   const {
     welcomeBonus: { isUserAgreeWithBonus, isUserClaimedBonus, amount: welcomeBonusAmount },
     refund: { claimedBoostedRefund, boostedRefundAmount },
@@ -201,46 +202,11 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
     );
   }
 
-  await ctx.reply(`Please, type the address to which you would like to send your SUI.`, {
-    reply_markup: closeConversation,
-  });
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
-
-  const messageData = await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
-      return false;
-    }
-
-    const destinationSuiAddress = ctx.msg?.text;
-
-    if (destinationSuiAddress === undefined) {
-      return false;
-    }
-
-    const addressIsValid = isValidSuiAddress(destinationSuiAddress);
-
-    if (!addressIsValid) {
-      await ctx.reply(`Destination wallet address is not correct.\n\nPlease, try again.`, {
-        reply_markup: closeConversation,
-      });
-
-      return false;
-    }
-
-    return true;
-  });
-  const destinationSuiAddress = messageData.msg?.text;
-
-  // ts check
-  if (destinationSuiAddress === undefined) {
-    await ctx.reply(`Destination wallet address is not correct.\n\nCannot continue.`, {
-      reply_markup: closeConversation,
-    });
-    return;
-  }
+  // TODO: Get info about account and print to user the owner's public key, to which will funds be withdrawn
 
   let { availableAmount, totalGasFee } = await conversation.external(async () => {
     const walletManager = await getWalletManager();
+    // TODO: Get available withdraw SUI amount for account
     return await walletManager.getAvailableWithdrawSuiAmount(ctx.session.publicKey);
   });
 
@@ -314,9 +280,11 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
   await ctx.reply('Initiating withdrawal...');
   let tx;
 
+  // TODO: Use method from utils to create transaction
   try {
     const txBlock = await WalletManagerSingleton.getWithdrawSuiTransaction({
       amount: inputAmount,
+      // TODO: Replace `destinationSuiAddress` with account owner's address
       address: destinationSuiAddress,
     });
     txBlock.setGasBudget(Number(totalGasFee));
@@ -339,6 +307,7 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
 
   await ctx.reply('Sending withdraw transaction...');
 
+  // TODO: use method from utils to sign & execute transaction
   try {
     const res = await provider.signAndExecuteTransactionBlock({
       transactionBlock: tx,
@@ -376,12 +345,14 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
 
 export async function availableBalance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
+  // TODO: Fetch account's available SUI balance
   const availableBalance = await walletManager.getAvailableSuiBalance(ctx.session.publicKey);
   return availableBalance;
 }
 
 export async function balance(ctx: BotContext): Promise<string> {
   const walletManager = await getWalletManager();
+  // TODO: Fetch account's SUI balance
   const balance = await walletManager.getSuiBalance(ctx.session.publicKey);
   return balance;
 }
@@ -1259,9 +1230,12 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
   // Create LP coin
   await ctx.reply('Creating LP coin...');
+
+  // TODO: Use method from utils to create transaction
   const createLpCoinTransaction = await conversation.external({
     task: async () => {
       try {
+        // TODO: Use adapted for account method to create LP coin
         const createLpCoinTransaction = await AftermathSingleton.getCreateLpCoinTransaction({
           publicKey: ctx.session.publicKey,
           lpCoinDecimals,
@@ -1313,6 +1287,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     return;
   }
 
+  // TODO: use method from utils to sign & execute transaction
   const resultOfCreateLpCoin: {
     createLpCoinResult?: SuiTransactionBlockResponse;
     digest?: string;
@@ -1390,9 +1365,12 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
   // Create pool
   await ctx.reply('Creating the pool...');
+
+  // TODO: Use method from utils to create transaction
   const createPoolTransaction = await conversation.external({
     task: async () => {
       try {
+        // TODO: Use adapted for account method to create pool
         const createPoolTransaction = await AftermathSingleton.getCreatePoolTransaction({
           publicKey: ctx.session.publicKey,
           createLpCoinTransactionResult: createLpCoinResult,
@@ -1448,6 +1426,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     return;
   }
 
+  // TODO: use method from utils to sign & execute transaction
   const resultOfCreatePool: {
     createPoolResult?: SuiTransactionBlockResponse;
     digest?: string;
@@ -1868,9 +1847,12 @@ export async function createCoin(conversation: MyConversation, ctx: BotContext):
   // console.debug('fixedSupply:', fixedSupply);
 
   await ctx.reply('Creating the coin transaction...');
+
+  // TODO: Use method from utils to create transaction
   const createCoinTransaction = await conversation.external({
     task: async () => {
       try {
+        // TODO: Use adapted for account method to create coin
         const createCoinTx = await CoinManagerSingleton.getCreateCoinTransaction({
           name: coinName,
           symbol: coinSymbol,
@@ -1929,6 +1911,7 @@ export async function createCoin(conversation: MyConversation, ctx: BotContext):
     return;
   }
 
+  // TODO: use method from utils to sign & execute transaction
   const resultOfCreateCoin: {
     createCoinResult?: SuiTransactionBlockResponse;
     digest?: string;

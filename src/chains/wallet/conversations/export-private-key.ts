@@ -5,6 +5,7 @@ import { BotContext, MyConversation } from '../../../types';
 import { ConversationId } from '../../conversations.config';
 import { getPrivateKeyString, userIsNotEligibleToExportPrivateKey } from '../utils';
 
+// TODO: Remove this feature for accounts
 export async function exportPrivateKey(conversation: MyConversation, ctx: BotContext): Promise<void> {
   if (await userIsNotEligibleToExportPrivateKey(ctx)) {
     return;

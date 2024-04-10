@@ -7,6 +7,7 @@ import { DEFAULT_FEE_PERCENTAGE, RINCEL_TO_FEES_MAP } from './config';
 
 export async function getUserRincelBalance(ctx: BotContext) {
   const walletManager = await getWalletManager();
+  // TODO: Replace all `getAllCoinAssets` calls with account assets fetching
   const allAssets = await walletManager.getAllCoinAssets(ctx.session.publicKey);
   const foundRincel = findCoinInAssets(allAssets, RINCEL_COIN_TYPE);
   const rincelBalance = foundRincel?.balance ?? '0';

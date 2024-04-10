@@ -129,6 +129,7 @@ export async function getTransactionForStructuredResult<T extends (params: Param
   return transaction;
 }
 
+// TODO: Modify method to work with account
 export async function signAndExecuteTransaction({
   conversation,
   ctx,
