@@ -26,9 +26,10 @@ const menu = new Menu<BotContext>('main')
     await assets(ctx);
   })
   .row()
-  .text('Manage NFTs', async (ctx) => {
-    await nftHome(ctx);
-  })
+  .url('Sui Tracking Channel', "https://t.me/sui_new_tokens")
+  // .text('Manage NFTs', async (ctx) => {
+  //   await nftHome(ctx);
+  // })
   .text('Wallet', async (ctx) => {
     ctx.menu.nav('wallet-menu');
   })
