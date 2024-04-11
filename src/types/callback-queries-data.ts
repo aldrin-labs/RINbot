@@ -10,4 +10,7 @@ export enum CallbackQueryData {
   ImportWallet = 'import-wallet',
   Continue = 'continue',
   Refunds = 'refunds',
+  Skip = 'skip',
+  ShowOwnedTurbosPools = 'show-owned-turbos-pools',
+  CreateTurbosPool = 'create-turbos-pool',
 }
