@@ -1,0 +1,1 @@
+export const DEFAULT_POOL_PRICE_SLIPPAGE = '5';
