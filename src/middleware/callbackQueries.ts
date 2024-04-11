@@ -3,6 +3,7 @@ import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
+import { showOwnedTurbosPools } from '../chains/pools/turbos/show-owned-pools';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
@@ -33,6 +34,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useSlippageCallbackQueries(bot);
   useRefundsCallbackQueries(bot);
   useWalletCallbackQueries(bot);
+  usePoolsCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -101,5 +103,17 @@ function useWalletCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+}
+
+function usePoolsCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.ShowOwnedTurbosPools, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showOwnedTurbosPools(ctx);
+  });
+
+  bot.callbackQuery(CallbackQueryData.CreateTurbosPool, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter(ConversationId.CreateTurbosPool);
   });
 }
