@@ -8,6 +8,7 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { createTurbosPool } from './chains/pools/turbos/create';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
@@ -186,6 +187,7 @@ async function startBot(): Promise<void> {
       id: ConversationId.CheckProvidedAddressForRefund,
     }),
   );
+  protectedConversationsComposer.use(createConversation(createTurbosPool, { id: ConversationId.CreateTurbosPool }));
 
   bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
 
@@ -258,6 +260,10 @@ async function startBot(): Promise<void> {
   //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
   // });
 
+  bot.command('createturbospool', async (ctx) => {
+    await ctx.conversation.enter(ConversationId.CreateTurbosPool);
+  });
+
   // Set commands suggestion
   await bot.api.setMyCommands([
     { command: 'start', description: 'Start the bot' },
@@ -284,6 +290,7 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
     // { command: 'importnewwallet', description: 'Import new wallet' },
+    { command: 'createturbospool', description: 'Create Turbos liquidity pool' },
   ]);
 
   useCallbackQueries(bot);
