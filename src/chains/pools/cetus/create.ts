@@ -74,7 +74,12 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
     return;
   }
 
-  const tickSpacing = await askForTickSpacing({ conversation, ctx });
+  const tickSpacing = await askForTickSpacing({
+    conversation,
+    ctx,
+    feeRatesString: '\n2\t\t—\t\t0.01%\n10\t\t—\t\t0.05%\n60\t\t—\t\t0.25%\n200\t\t—\t\t1%',
+    retryButton,
+  });
 
   // ts check
   if (tickSpacing === undefined) {

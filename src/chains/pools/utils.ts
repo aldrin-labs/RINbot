@@ -1,11 +1,29 @@
-import { CoinAssetData, CoinManagerSingleton, isSuiCoinType, isValidTokenAddress } from '@avernikoz/rinbot-sui-sdk';
+import {
+  CoinAssetData,
+  CoinManagerSingleton,
+  SHORT_SUI_COIN_TYPE,
+  isSuiCoinType,
+  isValidTokenAddress,
+  isValidTokenAmount,
+} from '@avernikoz/rinbot-sui-sdk';
 import { InlineKeyboard } from 'grammy';
+import { EndConversationError } from '../../errors/end-conversation.error';
 import closeConversation from '../../inline-keyboards/closeConversation';
+import skip from '../../inline-keyboards/skip';
 import tickSpacingKeyboard from '../../inline-keyboards/tickSpacing';
 import { BotContext, MyConversation } from '../../types';
+import { CallbackQueryData } from '../../types/callback-queries-data';
 import { RINCEL_COIN_TYPE } from '../sui.config';
+import { getWalletManager } from '../sui.functions';
 import { CoinForPool } from '../types';
-import { extractCoinTypeFromLink, getSuiScanCoinLink, isCoinForPool, isValidCoinLink } from '../utils';
+import {
+  extractCoinTypeFromLink,
+  getSuiScanCoinLink,
+  isCoinForPool,
+  isValidCoinLink,
+  reactOnUnexpectedBehaviour,
+} from '../utils';
+import { DEFAULT_POOL_PRICE_SLIPPAGE } from './config';
 
 export async function askForCoinInPool({
   conversation,
@@ -109,7 +127,8 @@ export async function askForCoinInPool({
       symbol: fetchedCoin.symbol,
       balance: foundCoin.balance,
       decimals: fetchedCoin.decimals,
-      type: fetchedCoin.type,
+      // If coin is SUI, we use SHORT_SUI_COIN_TYPE. Turbos has a bug, when we use LONG_SUI_COIN_TYPE.
+      type: isSuiCoinType(fetchedCoin.type) ? SHORT_SUI_COIN_TYPE : fetchedCoin.type,
     };
     return true;
   });
@@ -185,46 +204,156 @@ export async function askForPoolPrice({
 export async function askForTickSpacing({
   conversation,
   ctx,
+  feeRatesString,
+  retryButton,
 }: {
   conversation: MyConversation;
   ctx: BotContext;
-}): Promise<string | undefined> {
+  feeRatesString: string;
+  retryButton: InlineKeyboard;
+}): Promise<string> {
   const closeConvButtons = closeConversation.inline_keyboard[0];
   const tickSpacingWithCloseConvKeyboard = tickSpacingKeyboard
     .clone()
     .row()
     .add(...closeConvButtons);
+  const isTickSpacingRegExp = /^(2|10|60|200)$/;
 
   await ctx.reply(
     'Choose a <b>tick spacing</b> for your pool.\n\n<span class="tg-spoiler"><b>Hint</b>: tick spacing will ' +
-      'affect price precision. Each tick spacing correspond different fee rate.\n\n<b>Tick Spacing &#8213; ' +
-      'Fee Rate</b>\n2\t\t&#8213;\t\t0.01%\n10\t\t&#8213;\t\t0.05%\n60\t\t&#8213;\t\t0.25%\n200\t\t' +
-      '&#8213;\t\t1%</span>',
+      'affect price precision. Each tick spacing correspond different fee rate.\n\n<b>Tick Spacing — ' +
+      `Fee Rate</b>${feeRatesString}</span>`,
     {
       reply_markup: tickSpacingWithCloseConvKeyboard,
       parse_mode: 'HTML',
     },
   );
 
-  const tickSpacingMessage = await conversation.waitUntil(async (ctx) => {
-    const callbackQueryData = ctx.callbackQuery?.data;
-    const isTickSpacingRegExp = /^(2|10|60|200)$/;
+  const tickSpacingContext = await conversation.wait();
+  const callbackQueryData = tickSpacingContext.callbackQuery?.data;
 
-    if (callbackQueryData === 'close-conversation') {
-      return false;
-    }
+  if (callbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+  } else if (callbackQueryData !== undefined && isTickSpacingRegExp.test(callbackQueryData)) {
+    await tickSpacingContext.answerCallbackQuery();
+  } else {
+    await reactOnUnexpectedBehaviour(tickSpacingContext, retryButton, 'pool creation');
+    throw new EndConversationError();
+  }
 
-    if (isTickSpacingRegExp.test(callbackQueryData ?? '')) {
-      await ctx.answerCallbackQuery();
-      return true;
-    }
+  return callbackQueryData;
+}
 
-    await ctx.reply('Please, click on the button.', {
-      reply_markup: closeConversation,
-    });
+export async function askForAmountToAddInPool({
+  coinData,
+  conversation,
+  ctx,
+  retryButton,
+}: {
+  coinData: CoinForPool;
+  conversation: MyConversation;
+  ctx: BotContext;
+  retryButton: InlineKeyboard;
+}): Promise<string> {
+  const coinSymbol = coinData.symbol ?? coinData.type;
+  const { balance, decimals, type } = coinData;
 
-    return false;
+  const coinAvailableAmount = isSuiCoinType(type)
+    ? await conversation.external(async () => {
+        const walletManager = await getWalletManager();
+        return await walletManager.getAvailableSuiBalance(conversation.session.publicKey);
+      })
+    : balance;
+
+  await ctx.reply(
+    `Enter the amount of <b>${coinSymbol}</b> you wish to add in pool (<code>0</code> - ` +
+      `<code>${coinAvailableAmount}</code> ${coinSymbol}).\n\nExample: <code>0.1</code>`,
+    { reply_markup: closeConversation, parse_mode: 'HTML' },
+  );
+
+  const amountContext = await conversation.wait();
+  const amountCallbackQueryData = amountContext.callbackQuery?.data;
+  const amount = amountContext.msg?.text;
+
+  if (amountCallbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+    throw new EndConversationError();
+  } else if (amountCallbackQueryData !== undefined || amount === undefined) {
+    await reactOnUnexpectedBehaviour(amountContext, retryButton, 'Turbos pool creation');
+    throw new EndConversationError();
+  }
+
+  const { isValid: amountIsValid, reason } = isValidTokenAmount({
+    amount,
+    maxAvailableAmount: coinAvailableAmount,
+    decimals: decimals,
   });
 
-  return tickSpacingMessage.callbackQuery?.data;
+  if (!amountIsValid) {
+    await ctx.reply(`Invalid amount. Reason: ${reason}\n\nPlease, try again.`, { reply_markup: closeConversation });
+
+    await conversation.skip({ drop: true });
+  }
+
+  return amount;
+}
+
+export async function askForSlippageForPool({
+  conversation,
+  ctx,
+  retryButton,
+}: {
+  conversation: MyConversation;
+  ctx: BotContext;
+  retryButton: InlineKeyboard;
+}): Promise<number> {
+  const skipButton = skip.inline_keyboard[0];
+  const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
+
+  await ctx.reply(
+    `Enter a <b>price slippage</b> (in %).\n\n<b>Default</b>: <code>${DEFAULT_POOL_PRICE_SLIPPAGE}</code>`,
+    {
+      reply_markup: closeWithSkipReplyMarkup,
+      parse_mode: 'HTML',
+    },
+  );
+
+  const slippageContext = await conversation.wait();
+  const callbackQueryData = slippageContext.callbackQuery?.data;
+  const slippageMessage = slippageContext.msg?.text;
+
+  if (callbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+    throw new EndConversationError();
+  } else if (callbackQueryData === CallbackQueryData.Skip) {
+    await slippageContext.answerCallbackQuery();
+    return +DEFAULT_POOL_PRICE_SLIPPAGE;
+  } else if (callbackQueryData !== undefined || slippageMessage === undefined) {
+    await reactOnUnexpectedBehaviour(slippageContext, retryButton, 'Turbos pool creation');
+    throw new EndConversationError();
+  }
+
+  const slippage = parseFloat(slippageMessage);
+
+  if (isNaN(slippage)) {
+    await ctx.reply('<b>Slippage</b> must be a number. Please, enter a valid value.', {
+      reply_markup: closeConversation,
+      parse_mode: 'HTML',
+    });
+
+    await conversation.skip({ drop: true });
+  }
+
+  const slipageIsValid = slippage >= 0 && slippage <= 100;
+
+  if (!slipageIsValid) {
+    await ctx.reply(
+      '<b>Slippage</b> must be in range between <code>0</code> and <code>100</code>.\n\nPlease, enter a valid value.',
+      { reply_markup: closeConversation, parse_mode: 'HTML' },
+    );
+
+    await conversation.skip({ drop: true });
+  }
+
+  return slippage;
 }
