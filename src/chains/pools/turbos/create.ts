@@ -13,7 +13,7 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
   // TODO: Find out why creation fails when base coin is not SUI
   await ctx.reply(
     '✏ <b>Recomendation</b>: use <b>SUI</b> as the second (base) coin in pool. ' +
-      'Otherwise pool creation might be failed.',
+      'Otherwise pool creation might be failed due to Turbos internal restrictions.',
     { parse_mode: 'HTML' },
   );
 
