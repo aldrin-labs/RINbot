@@ -1,12 +1,25 @@
 import { TurbosOwnedPool } from '@avernikoz/rinbot-sui-sdk';
 import goHome from '../../../inline-keyboards/goHome';
 import createTurbosPoolKeyboard from '../../../inline-keyboards/pools/turbos/create-pool';
+import loadDetailedPoolsInfoKeyboard from '../../../inline-keyboards/pools/turbos/load-detailed-pools-info';
 import { BotContext } from '../../../types';
 import { getCoinManager, getTurbos, provider } from '../../sui.functions';
 import { getSuiScanCoinLink } from '../../utils';
 import { getTurbosPoolUrl } from './utils';
 
 export async function showOwnedTurbosPools(ctx: BotContext) {
+  const homeButtons = goHome.inline_keyboard[0];
+  const createPoolButtons = createTurbosPoolKeyboard.inline_keyboard[0];
+  const createPoolWithHomeKeyboard = createTurbosPoolKeyboard
+    .clone()
+    .row()
+    .add(...homeButtons);
+  const loadDetailedPoolsInfoWithHomeAndCreatePoolKeyboard = loadDetailedPoolsInfoKeyboard
+    .clone()
+    .row()
+    .add(...homeButtons)
+    .add(...createPoolButtons);
+
   const loadingMessage = await ctx.reply('<b>Loading...</b>', { parse_mode: 'HTML' });
 
   const turbos = await getTurbos();
@@ -18,9 +31,6 @@ export async function showOwnedTurbosPools(ctx: BotContext) {
   });
 
   if (ownedPools.length === 0) {
-    const homeButtons = goHome.inline_keyboard[0];
-    const createPoolWithHomeKeyboard = createTurbosPoolKeyboard.clone().add(...homeButtons);
-
     await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, 'You have no Turbos pools yet.', {
       reply_markup: createPoolWithHomeKeyboard,
     });
@@ -30,10 +40,11 @@ export async function showOwnedTurbosPools(ctx: BotContext) {
 
   let infoString = '💰 <b>Owned Pools</b> 💰';
   ownedPools.forEach((poolInfo) => {
-    infoString += `\n\nName: <a href="${getTurbosPoolUrl(poolInfo.poolId)}">` + `<b>${poolInfo.poolName}</b></a>\n`;
-    infoString += `Fee rate: <code>${poolInfo.feePercentage}</code>%\n`;
-    infoString += `Tick spacing: <code>${poolInfo.tickSpacing}</code>\n`;
-    infoString += 'Liquidity:\n';
+    infoString +=
+      `\n\n<b>Name</b>: <a href="${getTurbosPoolUrl(poolInfo.poolId)}">` + `<b>${poolInfo.poolName}</b></a>\n`;
+    infoString += `<b>Fee rate</b>: <code>${poolInfo.feePercentage}</code>%\n`;
+    infoString += `<b>Tick spacing</b>: <code>${poolInfo.tickSpacing}</code>\n`;
+    infoString += '<b>Liquidity</b>:\n';
 
     const suiVisionCoinALink = getSuiScanCoinLink(poolInfo.coinTypeA);
     const suiVisionCoinBLink = getSuiScanCoinLink(poolInfo.coinTypeB);
@@ -56,7 +67,7 @@ export async function showOwnedTurbosPools(ctx: BotContext) {
   }
 
   await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, infoString, {
-    reply_markup: goHome,
+    reply_markup: loadDetailedPoolsInfoWithHomeAndCreatePoolKeyboard,
     parse_mode: 'HTML',
     link_preview_options: { is_disabled: true },
   });
