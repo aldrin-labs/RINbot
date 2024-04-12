@@ -16,13 +16,7 @@ import { CallbackQueryData } from '../../types/callback-queries-data';
 import { RINCEL_COIN_TYPE } from '../sui.config';
 import { getWalletManager } from '../sui.functions';
 import { CoinForPool } from '../types';
-import {
-  extractCoinTypeFromLink,
-  getSuiScanCoinLink,
-  isCoinForPool,
-  isValidCoinLink,
-  reactOnUnexpectedBehaviour,
-} from '../utils';
+import { extractCoinTypeFromLink, getSuiScanCoinLink, isValidCoinLink, reactOnUnexpectedBehaviour } from '../utils';
 import { DEFAULT_POOL_PRICE_SLIPPAGE } from './config';
 
 export async function askForCoinInPool({
@@ -41,7 +35,7 @@ export async function askForCoinInPool({
   retryButton: InlineKeyboard;
   stringifiedNumber: 'first' | 'second';
   firstCoinType?: string;
-}): Promise<CoinForPool | undefined> {
+}): Promise<CoinForPool> {
   await ctx.reply(
     `What would be <b>the ${stringifiedNumber} coin</b> in pool? Please send a coin type or a link to suiscan.`,
     { reply_markup: closeConversation, parse_mode: 'HTML' },
@@ -54,100 +48,94 @@ export async function askForCoinInPool({
     { parse_mode: 'HTML' },
   );
 
-  let validatedCoin: CoinForPool | null = null;
-  await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
-      return false;
-    }
+  const coinContext = await conversation.wait();
+  const callbackQueryData = coinContext.callbackQuery?.data;
+  const coinTypeOrUrl = coinContext.msg?.text;
 
-    const possibleCoin = (ctx.msg?.text || '').trim();
-    const coinTypeIsValid = isValidTokenAddress(possibleCoin);
-    const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
-
-    if (!coinTypeIsValid && !suiScanLinkIsValid) {
-      const replyText =
-        'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
-        'You can enter a coin type or a Suiscan link.';
-
-      await ctx.reply(replyText, { reply_markup: closeConversation });
-
-      return false;
-    }
-
-    const coinType: string | null = coinTypeIsValid ? possibleCoin : extractCoinTypeFromLink(possibleCoin);
-
-    // ts check
-    if (coinType === null) {
-      await ctx.reply(
-        'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.',
-        { reply_markup: closeConversation },
-      );
-      return false;
-    }
-
-    const fetchedCoin = await coinManager.getCoinByType2(coinType);
-
-    if (fetchedCoin === null) {
-      await ctx.reply(
-        `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
-        { reply_markup: closeConversation },
-      );
-
-      return false;
-    }
-
-    if (stringifiedNumber === 'second' && firstCoinType !== undefined) {
-      const firstCoinIsSui = isSuiCoinType(firstCoinType);
-      const secondCoinIsSui = isSuiCoinType(coinType);
-      const firstAndSecondCoinsAreEqual = (firstCoinIsSui && secondCoinIsSui) || firstCoinType === coinType;
-
-      if (firstAndSecondCoinsAreEqual) {
-        await ctx.reply(
-          'The second coin in pool must be not the first one. Please, specify another coin to add in pool.',
-          { reply_markup: closeConversation },
-        );
-
-        return false;
-      }
-    }
-
-    const foundCoin = allCoinsAssets.find(
-      (asset) => (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) || asset.type === coinType,
-    );
-
-    if (foundCoin === undefined) {
-      await ctx.reply('Coin is not found in your wallet assets. Please, specify another coin to add in pool.', {
-        reply_markup: closeConversation,
-      });
-
-      return false;
-    }
-
-    validatedCoin = {
-      symbol: fetchedCoin.symbol,
-      balance: foundCoin.balance,
-      decimals: fetchedCoin.decimals,
-      // If coin is SUI, we use SHORT_SUI_COIN_TYPE. Turbos has a bug, when we use LONG_SUI_COIN_TYPE.
-      type: isSuiCoinType(fetchedCoin.type) ? SHORT_SUI_COIN_TYPE : fetchedCoin.type,
-    };
-    return true;
-  });
-
-  // Note: The following check and type assertion exist due to limitations or issues in TypeScript type checking
-  // for this specific case.
-  // The if statement is not expected to execute, and the type assertion is used to satisfy TypeScript's type system.
-  if (!isCoinForPool(validatedCoin)) {
-    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
-      reply_markup: retryButton,
-    });
-
-    return;
+  if (callbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+    throw new EndConversationError();
+  } else if (callbackQueryData !== undefined || coinTypeOrUrl === undefined) {
+    await reactOnUnexpectedBehaviour(coinContext, retryButton, 'Turbos pool creation');
+    throw new EndConversationError();
   }
 
-  const validatedCoinToAdd = validatedCoin as CoinForPool;
-  console.debug('validatedCoinToAdd:', validatedCoinToAdd);
+  const trimmedCoinTypeOrUrl = coinTypeOrUrl.trim();
 
-  return validatedCoinToAdd;
+  const coinTypeIsValid = isValidTokenAddress(trimmedCoinTypeOrUrl);
+  const suiScanLinkIsValid = isValidCoinLink(trimmedCoinTypeOrUrl);
+
+  if (!coinTypeIsValid && !suiScanLinkIsValid) {
+    await ctx.reply(
+      'Coin address or suiscan link is not correct. Make sure inputed data is correct.\n\n' +
+        'You can enter a coin type or a Suiscan link.',
+      { reply_markup: closeConversation },
+    );
+
+    await conversation.skip({ drop: true });
+  }
+
+  const coinType: string | null = coinTypeIsValid
+    ? trimmedCoinTypeOrUrl
+    : extractCoinTypeFromLink(trimmedCoinTypeOrUrl);
+
+  if (coinType === null) {
+    await ctx.reply(
+      'Suiscan link is not valid. Make sure it is correct.\n\nYou can enter a coin type or a Suiscan link.',
+      { reply_markup: closeConversation },
+    );
+
+    await conversation.skip({ drop: true });
+    throw new EndConversationError();
+  }
+
+  const fetchedCoin = await coinManager.getCoinByType2(coinType);
+
+  if (fetchedCoin === null) {
+    await ctx.reply(
+      `Coin type not found. Make sure type "${coinType}" is correct.\n\nYou can enter a coin type or a Suiscan link.`,
+      { reply_markup: closeConversation },
+    );
+
+    await conversation.skip({ drop: true });
+    throw new EndConversationError();
+  }
+
+  if (stringifiedNumber === 'second' && firstCoinType !== undefined) {
+    const firstCoinIsSui = isSuiCoinType(firstCoinType);
+    const secondCoinIsSui = isSuiCoinType(coinType);
+    const firstAndSecondCoinsAreEqual = (firstCoinIsSui && secondCoinIsSui) || firstCoinType === coinType;
+
+    if (firstAndSecondCoinsAreEqual) {
+      await ctx.reply(
+        'The second coin in pool must be not the first one. Please, specify another coin to add in pool.',
+        { reply_markup: closeConversation },
+      );
+
+      await conversation.skip({ drop: true });
+    }
+  }
+
+  const foundCoin = allCoinsAssets.find(
+    (asset) => (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) || asset.type === coinType,
+  );
+
+  if (foundCoin === undefined) {
+    await ctx.reply('Coin is not found in your wallet assets. Please, specify another coin to add in pool.', {
+      reply_markup: closeConversation,
+    });
+
+    await conversation.skip({ drop: true });
+    throw new EndConversationError();
+  }
+
+  return {
+    symbol: fetchedCoin.symbol,
+    balance: foundCoin.balance,
+    decimals: fetchedCoin.decimals,
+    // If coin is SUI, we use SHORT_SUI_COIN_TYPE. Turbos has a bug, when we use LONG_SUI_COIN_TYPE.
+    type: isSuiCoinType(fetchedCoin.type) ? SHORT_SUI_COIN_TYPE : fetchedCoin.type,
+  };
 }
 
 export async function askForPoolPrice({

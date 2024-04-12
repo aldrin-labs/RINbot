@@ -41,14 +41,6 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
     stringifiedNumber: 'first',
   });
 
-  if (firstCoinData === undefined) {
-    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
-      reply_markup: retryButton,
-    });
-
-    return;
-  }
-
   const secondCoinData = await askForCoinInPool({
     conversation,
     ctx,
@@ -58,14 +50,6 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
     stringifiedNumber: 'second',
     firstCoinType: firstCoinData.type,
   });
-
-  if (secondCoinData === undefined) {
-    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
-      reply_markup: retryButton,
-    });
-
-    return;
-  }
 
   const feeRatesString = await conversation.external(() => getTurbosFeeRatesString());
   const tickSpacing = await askForTickSpacing({ conversation, ctx, feeRatesString, retryButton });
