@@ -13,4 +13,5 @@ export enum ConversationId {
   ImportNewWallet = 'importNewWallet',
   CheckCurrentWalletForRefund = 'checkCurrentWalletForRefund',
   CheckProvidedAddressForRefund = 'checkProvidedAddressForRefund',
+  CreateTurbosPool = 'createTurbosPool',
 }

@@ -30,15 +30,6 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
     stringifiedNumber: 'first',
   });
 
-  // ts check
-  if (firstValidatedCoin === undefined) {
-    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
-      reply_markup: retryButton,
-    });
-
-    return;
-  }
-
   const secondValidatedCoin = await askForCoinInPool({
     conversation,
     ctx,
@@ -48,15 +39,6 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
     stringifiedNumber: 'second',
     firstCoinType: firstValidatedCoin.type,
   });
-
-  // ts check
-  if (secondValidatedCoin === undefined) {
-    await ctx.reply('Specified coin cannot be found.\n\nPlease, try again and specify another one.', {
-      reply_markup: retryButton,
-    });
-
-    return;
-  }
 
   const poolPrice = await askForPoolPrice({
     conversation,
@@ -74,7 +56,12 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
     return;
   }
 
-  const tickSpacing = await askForTickSpacing({ conversation, ctx });
+  const tickSpacing = await askForTickSpacing({
+    conversation,
+    ctx,
+    feeRatesString: '\n2\t\t—\t\t0.01%\n10\t\t—\t\t0.05%\n60\t\t—\t\t0.25%\n200\t\t—\t\t1%',
+    retryButton,
+  });
 
   // ts check
   if (tickSpacing === undefined) {
