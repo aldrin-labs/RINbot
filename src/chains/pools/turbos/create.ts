@@ -1,15 +1,18 @@
 import { getPoolObjectIdFromTransactionResult } from '@avernikoz/rinbot-sui-sdk';
+import confirmWithCloseKeyboard from '../../../inline-keyboards/mixed/confirm-with-close';
 import showOwnedTurbosPoolsKeyboard from '../../../inline-keyboards/pools/turbos/show-owned-pools';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
+import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransactionAndReturnResult } from '../../conversations.utils';
 import { TransactionResultStatus, getCoinManager, getTurbos, getWalletManager } from '../../sui.functions';
-import { getSuiVisionTransactionLink } from '../../utils';
+import { getSuiScanCoinLink, getSuiVisionTransactionLink, reactOnUnexpectedBehaviour } from '../../utils';
 import { askForAmountToAddInPool, askForCoinInPool, askForSlippageForPool, askForTickSpacing } from '../utils';
 import { getTurbosFeeRatesString, getTurbosPoolUrl } from './utils';
 
 export async function createTurbosPool(conversation: MyConversation, ctx: BotContext) {
+  // Preparing step
   // TODO: Find out why creation fails when base coin is not SUI
   await ctx.reply(
     '✏ <b>Recomendation</b>: use <b>SUI</b> as the second (base) coin in pool. ' +
@@ -32,6 +35,7 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
 
   await ctx.api.deleteMessage(loadingMessage.chat.id, loadingMessage.message_id);
 
+  // Gathering pool data step
   const firstCoinData = await askForCoinInPool({
     conversation,
     ctx,
@@ -41,6 +45,8 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
     stringifiedNumber: 'first',
   });
 
+  const { type: coinTypeA, symbol: coinSymbolA = coinTypeA } = firstCoinData;
+
   const secondCoinData = await askForCoinInPool({
     conversation,
     ctx,
@@ -48,8 +54,10 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
     allCoinsAssets,
     retryButton,
     stringifiedNumber: 'second',
-    firstCoinType: firstCoinData.type,
+    firstCoinType: coinTypeA,
   });
+
+  const { type: coinTypeB, symbol: coinSymbolB = coinTypeB } = secondCoinData;
 
   const feeRatesString = await conversation.external(() => getTurbosFeeRatesString());
   const tickSpacing = await askForTickSpacing({ conversation, ctx, feeRatesString, retryButton });
@@ -59,8 +67,8 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
   const existingPool = await conversation.external(async () => {
     const turbos = await getTurbos();
     return await turbos.getPoolByParams({
-      coinTypeA: firstCoinData.type,
-      coinTypeB: secondCoinData.type,
+      coinTypeA,
+      coinTypeB,
       tickSpacing,
     });
   });
@@ -90,8 +98,35 @@ export async function createTurbosPool(conversation: MyConversation, ctx: BotCon
 
   const slippage = await askForSlippageForPool({ conversation, ctx, retryButton });
 
-  // TODO: Add all the params printing and asking for confirmation
+  // Confirmation step
+  await ctx.reply(
+    'You are about to <b>create Turbos liquidity pool</b> with the next params:\n\n' +
+      `First (quote) coin: <code>${coinAmountA}</code> ` +
+      `<a href="${getSuiScanCoinLink(coinTypeA)}">${coinSymbolA}</a>\n` +
+      `Second (base) coin: <code>${coinAmountB}</code> ` +
+      `<a href="${getSuiScanCoinLink(coinTypeB)}">${coinSymbolB}</a>\n` +
+      `Tick spacing: <code>${tickSpacing}</code>\n` +
+      `Price slippage: <code>${slippage}</code>%`,
+    {
+      reply_markup: confirmWithCloseKeyboard,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    },
+  );
 
+  const confirmContext = await conversation.wait();
+  const confirmCallbackQueryData = confirmContext.callbackQuery?.data;
+
+  if (confirmCallbackQueryData === CallbackQueryData.Cancel) {
+    await conversation.skip();
+  } else if (confirmCallbackQueryData !== CallbackQueryData.Confirm) {
+    await reactOnUnexpectedBehaviour(confirmContext, retryButton, 'Turbos pool creation');
+    return;
+  }
+
+  await confirmContext.answerCallbackQuery();
+
+  // Creation step
   await ctx.reply('<b>Constructing transaction for pool creation...</b>', { parse_mode: 'HTML' });
 
   const turbos = await getTurbos();
