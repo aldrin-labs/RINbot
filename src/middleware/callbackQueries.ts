@@ -3,6 +3,7 @@ import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
+import { showDetailedPoolsInfo } from '../chains/pools/turbos/show-detailed-pools-info';
 import { showOwnedTurbosPools } from '../chains/pools/turbos/show-owned-pools';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { slippagePercentages } from '../chains/slippage/percentages';
@@ -115,5 +116,10 @@ function usePoolsCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.CreateTurbosPool, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter(ConversationId.CreateTurbosPool);
+  });
+
+  bot.callbackQuery(CallbackQueryData.LoadDetailedPoolsInfo, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showDetailedPoolsInfo(ctx);
   });
 }

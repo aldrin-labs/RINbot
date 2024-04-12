@@ -13,4 +13,5 @@ export enum CallbackQueryData {
   Skip = 'skip',
   ShowOwnedTurbosPools = 'show-owned-turbos-pools',
   CreateTurbosPool = 'create-turbos-pool',
+  LoadDetailedPoolsInfo = 'load-detailed-pools-info',
 }
