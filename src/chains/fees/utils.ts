@@ -29,10 +29,7 @@ export function getRincelLevel(balance: string): number {
   let resultLevel: BigNumber = new BigNumber(Math.min(...rincelLevels));
 
   rincelLevelsBN.forEach((level: BigNumber) => {
-    if (
-      level.isLessThanOrEqualTo(balance) &&
-      level.isGreaterThan(resultLevel)
-    ) {
+    if (level.isLessThanOrEqualTo(balance) && level.isGreaterThan(resultLevel)) {
       resultLevel = level;
     }
   });

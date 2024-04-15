@@ -1,18 +1,11 @@
-import {
-  AftermathSingleton,
-  CoinAssetData,
-  isSuiCoinType,
-} from '@avernikoz/rinbot-sui-sdk';
+import { AftermathSingleton, CoinAssetData, isSuiCoinType } from '@avernikoz/rinbot-sui-sdk';
 import axios from 'axios';
 import { InlineKeyboard } from 'grammy';
 import { File, PhotoSize } from 'grammy/types';
 import { BOT_TOKEN } from '../config/bot.config';
 import { BotContext, MyConversation } from '../types';
 import { getPriceApi } from './priceapi.utils';
-import {
-  COIN_WHITELIST_URL,
-  SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS,
-} from './sui.config';
+import { COIN_WHITELIST_URL, SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS } from './sui.config';
 import { CoinForPool, CoinWhitelistItem } from './types';
 import closeConversation from '../inline-keyboards/closeConversation';
 
@@ -97,16 +90,12 @@ const isTransactionResult = (value: unknown): value is TransactionResult => {
   );
 };
 
-export const isTransactionSuccessful = (
-  transactionResult: unknown,
-): boolean => {
+export const isTransactionSuccessful = (transactionResult: unknown): boolean => {
   if (isTransactionResult(transactionResult)) {
     const isSuccess = transactionResult.effects.status.status === 'success';
 
     if (!isSuccess) {
-      console.warn(
-        `Transaction ${transactionResult.digest} was not successful.`,
-      );
+      console.warn(`Transaction ${transactionResult.digest} was not successful.`);
     }
 
     return isSuccess;
@@ -154,9 +143,7 @@ export function isCoinForPool(data: unknown): data is CoinForPool {
  * in the array, and it will be returned.
  */
 export function getSuitableCoinImageData(imagesData: PhotoSize[]): PhotoSize {
-  const sortedByHeightImagesData = imagesData.sort(
-    (imageA, imageB) => imageA.height - imageB.height,
-  );
+  const sortedByHeightImagesData = imagesData.sort((imageA, imageB) => imageA.height - imageB.height);
 
   return sortedByHeightImagesData[1] || sortedByHeightImagesData[0];
 }
@@ -174,9 +161,7 @@ export function extractFileExtension(url: string): string {
   if (fileNameParts.length > 1) {
     return fileNameParts[fileNameParts.length - 1];
   } else {
-    throw new Error(
-      `[extractFileExtension] Cannot extract extension of file in url "${url}"`,
-    );
+    throw new Error(`[extractFileExtension] Cannot extract extension of file in url "${url}"`);
   }
 }
 
@@ -229,15 +214,8 @@ export function isExponential(num: number): boolean {
   return numStr.includes('e') || numStr.includes('E');
 }
 
-export function findCoinInAssets(
-  assets: CoinAssetData[],
-  coinType: string,
-): CoinAssetData | undefined {
-  return assets.find(
-    (asset) =>
-      (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) ||
-      asset.type === coinType,
-  );
+export function findCoinInAssets(assets: CoinAssetData[], coinType: string): CoinAssetData | undefined {
+  return assets.find((asset) => (isSuiCoinType(asset.type) && isSuiCoinType(coinType)) || asset.type === coinType);
 }
 
 // TODO: Pass only coinType as `string`
@@ -265,11 +243,13 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   } else return 'Could not fetch the data.\n\n';
 }
 
-export async function reactOnUnexpectedBehaviour(
-  ctx: BotContext,
-  retryButton: InlineKeyboard,
-  cancelSubject: string,
-) {
+export async function getCoinPrice(type: string): Promise<number | null> {
+  const priceApiGetResponse = await getPriceApi('sui', type);
+
+  return priceApiGetResponse?.data?.data?.price ?? null;
+}
+
+export async function reactOnUnexpectedBehaviour(ctx: BotContext, retryButton: InlineKeyboard, cancelSubject: string) {
   // If there is no clicked button, this function will throw an error, which will be showed to user.
   // Because of that, we catch it here and ignore.
   try {
@@ -299,10 +279,7 @@ export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
     const whitelistJson = await whitelist.json();
 
     if (!isCoinWhitelistItemArray(whitelistJson)) {
-      console.warn(
-        '[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:',
-        whitelistJson,
-      );
+      console.warn('[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:', whitelistJson);
 
       return null;
     }
@@ -315,17 +292,12 @@ export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
   }
 }
 
-export function isCoinWhitelistItemArray(
-  data: unknown,
-): data is CoinWhitelistItem[] {
+export function isCoinWhitelistItemArray(data: unknown): data is CoinWhitelistItem[] {
   return (
     Array.isArray(data) &&
     data.every(
       (item) =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.symbol === 'string' &&
-        typeof item.type === 'string',
+        typeof item === 'object' && item !== null && typeof item.symbol === 'string' && typeof item.type === 'string',
     )
   );
 }
@@ -368,19 +340,12 @@ export async function coinCannotBeSoldDueToDelay({
     if (selectedCoinTradesInfo !== undefined) {
       const { lastTradeTimestamp } = selectedCoinTradesInfo;
 
-      const notAllowedToSellCoin =
-        lastTradeTimestamp + SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS >
-        Date.now();
+      const notAllowedToSellCoin = lastTradeTimestamp + SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS > Date.now();
 
       if (notAllowedToSellCoin) {
-        const remainingTimeToAllowSell =
-          lastTradeTimestamp +
-          SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS -
-          Date.now();
+        const remainingTimeToAllowSell = lastTradeTimestamp + SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS - Date.now();
 
-        const formattedRemainingTime = formatMilliseconds(
-          remainingTimeToAllowSell,
-        );
+        const formattedRemainingTime = formatMilliseconds(remainingTimeToAllowSell);
 
         await ctx.reply(
           `You won't be able to sell <b>${coin.symbol || coin.type}</b> you've just ` +

@@ -3,62 +3,40 @@ import { autoRetry } from '@grammyjs/auto-retry';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
-import {
-  Bot,
-  BotError,
-  Composer,
-  Enhance,
-  GrammyError,
-  HttpError,
-  enhanceStorage,
-  session,
-} from 'grammy';
+import { Bot, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { checkCurrentWallet } from './chains/refunds/conversations/checkCurrentWallet';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
-import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
-import {
-  createAftermathPool,
-  createCoin,
-  generateWallet,
-  home,
-  withdraw,
-} from './chains/sui.functions';
-import { buy, instantBuy } from './chains/trading/buy';
+import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
+import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
+import { buy, instantBuy } from './chains/trading/buy/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
-import { importNewWallet } from './chains/wallet/conversations/import';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { balances } from './commands/balances';
-import {
-  BOT_TOKEN,
-  ENVIRONMENT,
-  HISTORY_TABLE,
-  WELCOME_BONUS_AMOUNT,
-} from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import { conversationErrorBoundaryHandler } from './error-boundaries/conversations-boundary';
+import { generalErrorBoundaryHandler } from './error-boundaries/general-boundary';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
+import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
 import { addTradeAmountPercentageField } from './migrations/addTradeAmountPercentage';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addTradesField } from './migrations/addTradesField';
 import { addWelcomeBonus } from './migrations/addWelcomeBonus';
 import { createBoostedRefundAccount } from './migrations/createBoostedRefundAccount';
 import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
+import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
-function errorBoundaryHandler(err: BotError) {
-  console.error('[Error Boundary Handler]', err);
-}
-
-const APP_VERSION = '3.0.2';
+const APP_VERSION = '3.0.5';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -67,10 +45,13 @@ if (instance && instance['opts']) {
 const storage = new RedisAdapter<Enhance<SessionData>>({ instance });
 
 const bot = new Bot<BotContext>(BOT_TOKEN);
-const composer = new Composer<BotContext>();
 
 async function startBot(): Promise<void> {
   console.debug('[startBot] triggered');
+  const composer = new Composer<BotContext>();
+  const conversationsComposer = new Composer<BotContext>();
+  const protectedConversationsComposer = conversationsComposer.errorBoundary(conversationErrorBoundaryHandler);
+
   composer.use(timeoutMiddleware);
 
   bot.lazy((ctx) => {
@@ -104,7 +85,6 @@ async function startBot(): Promise<void> {
           .catch((e) => console.error('ERROR storing boosted account', e));
 
         return {
-          step: 'main',
           privateKey,
           publicKey,
           suiAsset: {
@@ -114,7 +94,7 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false,
           },
-          settings: { slippagePercentage: DEFAULT_SLIPPAGE },
+          settings: { slippagePercentage: DEFAULT_SLIPPAGE, swapWithConfirmation: true },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -150,72 +130,71 @@ async function startBot(): Promise<void> {
           7: addTradesField,
           8: addSuiAssetField,
           9: addTradeAmountPercentageField,
+          10: removeStep,
+          11: addSwapConfirmationSetting,
         },
       }),
     });
   });
 
-  bot.api.config.use(
-    autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }),
-  );
+  bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }));
 
-  composer.use(conversations());
+  protectedConversationsComposer.use(conversations());
 
-  composer.use(createConversation(buy, { id: ConversationId.Buy }));
-  composer.use(
-    createConversation(instantBuy, { id: ConversationId.InstantBuy }),
-  );
-  composer.use(createConversation(sell, { id: ConversationId.Sell }));
-  composer.use(
+  protectedConversationsComposer.use(createConversation(buy, { id: ConversationId.Buy }));
+  protectedConversationsComposer.use(createConversation(sell, { id: ConversationId.Sell }));
+  protectedConversationsComposer.use(
     createConversation(exportPrivateKey, {
       id: ConversationId.ExportPrivateKey,
     }),
   );
-  composer.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
-  composer.use(
+  protectedConversationsComposer.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
+  protectedConversationsComposer.use(
     createConversation(createAftermathPool, {
       id: ConversationId.CreateAftermathPool,
     }),
   );
-  // composer.use(
+  // protectedConversationsComposer.use(
   //   createConversation(addCetusLiquidity, {
   //     id: ConversationId.AddCetusPoolLiquidity,
   //   }),
   // );
-  // composer.use(
+  // protectedConversationsComposer.use(
   //   createConversation(createCetusPool, {
   //     id: ConversationId.CreateCetusPool,
   //   }),
   // );
-  composer.use(
-    createConversation(createCoin, { id: ConversationId.CreateCoin }),
-  );
-  composer.use(
+  protectedConversationsComposer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
+  protectedConversationsComposer.use(
     createConversation(buySurfdogTickets, {
       id: SurfdogConversationId.BuySurfdogTickets,
     }),
   );
-  composer.use(
+  protectedConversationsComposer.use(
     createConversation(welcomeBonusConversation, {
       id: ConversationId.WelcomeBonus,
     }),
   );
-  // composer.use(
+  // protectedConversationsComposer.use(
   //   createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
   // );
-  // composer.use(
+  // protectedConversationsComposer.use(
   //   createConversation(checkCurrentWallet, {
   //     id: ConversationId.CheckCurrentWalletForRefund,
   //   }),
   // );
-  composer.use(
+  protectedConversationsComposer.use(
     createConversation(checkProvidedAddress, {
       id: ConversationId.CheckProvidedAddressForRefund,
     }),
   );
+  protectedConversationsComposer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
 
-  bot.errorBoundary(errorBoundaryHandler).use(composer);
-  bot.use(menu);
+  bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
+
+  composer.use(menu);
+
+  bot.errorBoundary(generalErrorBoundaryHandler).use(composer);
 
   // TODO: Move these `command` calls to separated file like with `useCallbackQueries`
   bot.command('version', async (ctx) => {
@@ -322,7 +301,6 @@ async function startBot(): Promise<void> {
     const ctx = err.ctx;
     console.error(`Error while handling update ${ctx.update.update_id}:`);
     const e = err.error;
-    ctx.session.step = 'main';
     if (e instanceof GrammyError) {
       console.error('Error in request:', e.description);
     } else if (e instanceof HttpError) {
@@ -332,18 +310,11 @@ async function startBot(): Promise<void> {
     }
   });
 
-  // bot.errorBoundary(errorBoundaryHandler)
-
   if (ENVIRONMENT === 'local') {
     await bot.start();
   }
 }
 
 startBot();
-
-//prod mode (Vercel)
-// export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-//   await production(req, res, bot);
-// };
 
 export { bot };

@@ -11,36 +11,24 @@ export async function showUserTickets(ctx: BotContext) {
 
   const surfdog = getSurfdogLaunchpad();
   const userTickets = await surfdog.getUserState(ctx.session.publicKey);
-  const userHasNoTickets =
-    userTickets === null || userTickets.allTickets.toString() === '0';
+  const userHasNoTickets = userTickets === null || userTickets.allTickets.toString() === '0';
 
   if (userHasNoTickets) {
-    await ctx.api.editMessageText(
-      loadingMessage.chat.id,
-      loadingMessage.message_id,
-      'You have no tickets yet.',
-      {
-        reply_markup: userTicketsMenu,
-      },
-    );
+    await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, 'You have no tickets yet.', {
+      reply_markup: userTicketsMenu,
+    });
 
     return;
   }
 
   const globalStats = await surfdog.getGameState();
 
-  const tokensPerTicket = new BigNumber(
-    globalStats.tokensPerTicket.toString(),
-  ).dividedBy(
-    10 **
-      new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber(),
+  const tokensPerTicket = new BigNumber(globalStats.tokensPerTicket.toString()).dividedBy(
+    10 ** new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber(),
   );
   const allTickets = userTickets.allTickets.toString();
   const wonTickets = userTickets.wonTickets.toString();
-  const successRate = new BigNumber(wonTickets)
-    .dividedBy(allTickets)
-    .multipliedBy(100)
-    .toFixed(2);
+  const successRate = new BigNumber(wonTickets).dividedBy(allTickets).multipliedBy(100).toFixed(2);
   const successRateString = isNaN(+successRate) ? `-` : `${successRate}%`;
   const wonPrize = tokensPerTicket.multipliedBy(wonTickets).toFormat();
 
@@ -50,13 +38,8 @@ export async function showUserTickets(ctx: BotContext) {
   userTicketsString += `<b>Success rate</b>: ${successRateString}\n`;
   userTicketsString += `<b>Won prize</b>: ${wonPrize} SURF`;
 
-  await ctx.api.editMessageText(
-    loadingMessage.chat.id,
-    loadingMessage.message_id,
-    userTicketsString,
-    {
-      reply_markup: userTicketsMenu,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, userTicketsString, {
+    reply_markup: userTicketsMenu,
+    parse_mode: 'HTML',
+  });
 }

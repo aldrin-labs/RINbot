@@ -6,10 +6,8 @@ import { BotContext } from '../../types';
 
 export function backupCurrentAccount(ctx: BotContext) {
   const currentAccountIsAlreadyBackuped =
-    ctx.session.refund.walletBeforeBoostedRefundClaim?.privateKey ===
-      ctx.session.privateKey &&
-    ctx.session.refund.walletBeforeBoostedRefundClaim?.publicKey ===
-      ctx.session.publicKey;
+    ctx.session.refund.walletBeforeBoostedRefundClaim?.privateKey === ctx.session.privateKey &&
+    ctx.session.refund.walletBeforeBoostedRefundClaim?.publicKey === ctx.session.publicKey;
 
   if (!currentAccountIsAlreadyBackuped) {
     // Store into AWS Table
@@ -23,9 +21,7 @@ export function backupCurrentAccount(ctx: BotContext) {
           publicKey: ctx.session.publicKey,
         },
       })
-      .catch((e) =>
-        console.error('ERROR creating backup account in the history', e),
-      );
+      .catch((e) => console.error('ERROR creating backup account in the history', e));
 
     // Store into session
     ctx.session.refund.walletBeforeBoostedRefundClaim = {
@@ -39,18 +35,14 @@ export async function userHasBoostedRefundAccount(ctx: BotContext) {
   const userId = ctx.from?.id;
 
   if (userId === undefined) {
-    throw new Error(
-      '[checkUserHasBoostedRefundAccount] Cannot get user id from ctx object.',
-    );
+    throw new Error('[checkUserHasBoostedRefundAccount] Cannot get user id from ctx object.');
   }
 
   const { redisClient } = await getRedisClient();
   const userData = await redisClient.get(userId.toString());
 
   if (userData === null) {
-    throw new Error(
-      '[checkUserHasBoostedRefundAccount] Cannot read user data from DB.',
-    );
+    throw new Error('[checkUserHasBoostedRefundAccount] Cannot read user data from DB.');
   }
 
   const parsedUserData = JSON.parse(userData);
@@ -62,9 +54,7 @@ export async function userHasBackupedAccount(ctx: BotContext) {
   const userId = ctx.from?.id;
 
   if (userId === undefined) {
-    throw new Error(
-      '[userHasBackupedAccount] Cannot get user id from ctx object.',
-    );
+    throw new Error('[userHasBackupedAccount] Cannot get user id from ctx object.');
   }
 
   const { redisClient } = await getRedisClient();
@@ -81,16 +71,12 @@ export async function userHasBackupedAccount(ctx: BotContext) {
 
 export function isSessionDataContainingBoostedRefundAccount(data: unknown) {
   return (
-    sessionWithVersionContainsBoostedRefundAccount(data) ||
-    sessionWithoutVersionContainsBoostedRefundAccount(data)
+    sessionWithVersionContainsBoostedRefundAccount(data) || sessionWithoutVersionContainsBoostedRefundAccount(data)
   );
 }
 
 export function isSessionDataContainingBackupedAccount(data: unknown) {
-  return (
-    sessionWithVersionContainsBackupedAccount(data) ||
-    sessionWithoutVersionContainsBackupedAccount(data)
-  );
+  return sessionWithVersionContainsBackupedAccount(data) || sessionWithoutVersionContainsBackupedAccount(data);
 }
 
 function sessionWithVersionContainsBoostedRefundAccount(data: unknown) {
@@ -171,13 +157,9 @@ function sessionWithVersionContainsBackupedAccount(data: unknown) {
     data.__d.refund.walletBeforeBoostedRefundClaim !== null &&
     'publicKey' in data.__d.refund.walletBeforeBoostedRefundClaim &&
     'privateKey' in data.__d.refund.walletBeforeBoostedRefundClaim &&
-    typeof data.__d.refund.walletBeforeBoostedRefundClaim.publicKey ===
-      'string' &&
-    typeof data.__d.refund.walletBeforeBoostedRefundClaim.privateKey ===
-      'string' &&
-    isValidSuiAddress(
-      data.__d.refund.walletBeforeBoostedRefundClaim.publicKey,
-    ) &&
+    typeof data.__d.refund.walletBeforeBoostedRefundClaim.publicKey === 'string' &&
+    typeof data.__d.refund.walletBeforeBoostedRefundClaim.privateKey === 'string' &&
+    isValidSuiAddress(data.__d.refund.walletBeforeBoostedRefundClaim.publicKey) &&
     isValidSuiAddress(data.__d.refund.walletBeforeBoostedRefundClaim.privateKey)
   );
 }

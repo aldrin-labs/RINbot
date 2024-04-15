@@ -1,7 +1,4 @@
-import {
-  WalletManagerSingleton,
-  isValidPrivateKey,
-} from '@avernikoz/rinbot-sui-sdk';
+import { WalletManagerSingleton, isValidPrivateKey } from '@avernikoz/rinbot-sui-sdk';
 import { HISTORY_TABLE } from '../../../config/bot.config';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
@@ -13,25 +10,21 @@ import { ConversationId } from '../../conversations.config';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../utils';
 
-export async function importNewWallet(
-  conversation: MyConversation,
-  ctx: BotContext,
-): Promise<void> {
+export async function importNewWallet(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.ImportNewWallet];
   const warnMessage =
     '✅ Before proceeding with importing a new wallet, please be aware that you will need to <i><b>export the private ' +
     'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +
-    'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the private key</b></i> ' +
-    'may result in <i><b>loss of access to your current funds</b></i>.';
+    'the private key of your current wallet.\n\n⚠️ Importing a new wallet <i><b>without exporting the ' +
+    'private key</b></i> may result in <i><b>loss of access to your current funds</b></i>.';
 
-  const warnWithCheckAndPrintSucceeded =
-    await warnWithCheckAndPrivateKeyPrinting({
-      conversation,
-      ctx,
-      operation: 'new wallet import',
-      warnMessage,
-      retryButton,
-    });
+  const warnWithCheckAndPrintSucceeded = await warnWithCheckAndPrivateKeyPrinting({
+    conversation,
+    ctx,
+    operation: 'new wallet import',
+    warnMessage,
+    retryButton,
+  });
 
   if (!warnWithCheckAndPrintSucceeded) {
     return;
@@ -46,8 +39,7 @@ export async function importNewWallet(
   );
 
   const newWalletCredsContext = await conversation.wait();
-  const newWalletCredsCallbackQueryData =
-    newWalletCredsContext.callbackQuery?.data;
+  const newWalletCredsCallbackQueryData = newWalletCredsContext.callbackQuery?.data;
   const newWalletCreds = newWalletCredsContext.msg?.text;
 
   if (newWalletCredsCallbackQueryData === CallbackQueryData.Cancel) {
@@ -56,51 +48,42 @@ export async function importNewWallet(
     const credsAreValid = isValidPrivateKey(newWalletCreds);
 
     if (!credsAreValid) {
-      await ctx.reply(
-        'Invalid <b>private key</b>. Please, enter a valid one.',
-        { reply_markup: closeConversation, parse_mode: 'HTML' },
-      );
+      await ctx.reply('Invalid <b>private key</b>. Please, enter a valid one.', {
+        reply_markup: closeConversation,
+        parse_mode: 'HTML',
+      });
 
       await conversation.skip({ drop: true });
     }
 
-    const newWalletCredsAreTheSameAsOld =
-      newWalletCreds === ctx.session.privateKey;
+    const newWalletCredsAreTheSameAsOld = newWalletCreds === ctx.session.privateKey;
 
     if (newWalletCredsAreTheSameAsOld) {
-      await ctx.reply(
-        'You are trying to import your current wallet 😎\n\nPlease, import new one.',
-        { reply_markup: closeConversation },
-      );
+      await ctx.reply('You are trying to import your current wallet 😎\n\nPlease, import new one.', {
+        reply_markup: closeConversation,
+      });
 
       await conversation.skip({ drop: true });
     }
   } else {
-    await reactOnUnexpectedBehaviour(
-      newWalletCredsContext,
-      retryButton,
-      'new wallet import',
-    );
+    await reactOnUnexpectedBehaviour(newWalletCredsContext, retryButton, 'new wallet import');
     return;
   }
 
   if (newWalletCreds === undefined) {
-    await ctx.reply(
-      'Cannot process new wallet credentials. Please, try again or contact support.',
-      { reply_markup: retryButton },
-    );
+    await ctx.reply('Cannot process new wallet credentials. Please, try again or contact support.', {
+      reply_markup: retryButton,
+    });
 
     return;
   }
 
   // Creating new wallet keypair
-  const newKeypair =
-    WalletManagerSingleton.getKeyPairFromPrivateKey(newWalletCreds);
+  const newKeypair = WalletManagerSingleton.getKeyPairFromPrivateKey(newWalletCreds);
 
   // Replacing current wallet credentials with new ones
   conversation.session.publicKey = newKeypair.getPublicKey().toSuiAddress();
-  conversation.session.privateKey =
-    WalletManagerSingleton.getPrivateKeyFromKeyPair(newKeypair);
+  conversation.session.privateKey = WalletManagerSingleton.getPrivateKeyFromKeyPair(newKeypair);
 
   // Storing imported wallet into AWS Table
   documentClient

@@ -1,13 +1,10 @@
 import { InlineKeyboard } from 'grammy';
-import { slippagePercentages } from '../../chains/slippage/percentages';
+import { slippagePercentages } from '../../../chains/settings/slippage/percentages';
 
 const slippageConfigurationKeyboard = new InlineKeyboard();
 
 slippagePercentages.forEach((percentage: number, index: number) => {
-  slippageConfigurationKeyboard.text(
-    `${percentage}%`,
-    `slippage-${percentage}`,
-  );
+  slippageConfigurationKeyboard.text(`${percentage}%`, `slippage-${percentage}`);
 
   if (index % 2 !== 0) {
     slippageConfigurationKeyboard.row();

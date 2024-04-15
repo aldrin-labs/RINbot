@@ -13,28 +13,15 @@ export async function showGlobalStats(ctx: BotContext) {
   const globalStats = await surfdog.getGameState();
 
   const allTickets = globalStats.allTickets.toString();
-  const ticketPrice = new BigNumber(globalStats.ticketPrice.toString())
-    .dividedBy(10 ** SUI_DECIMALS)
-    .toString();
+  const ticketPrice = new BigNumber(globalStats.ticketPrice.toString()).dividedBy(10 ** SUI_DECIMALS).toString();
   const tokensPerTicket = new BigNumber(globalStats.tokensPerTicket.toString())
-    .dividedBy(
-      10 **
-        new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber(),
-    )
+    .dividedBy(10 ** new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber())
     .toFormat();
   const winningTickets = globalStats.winningTickets.toString();
-  const generalSuccessRate = new BigNumber(winningTickets)
-    .dividedBy(allTickets)
-    .multipliedBy(100)
-    .toFixed(2);
-  const generalSuccessRateString = isNaN(+generalSuccessRate)
-    ? `-`
-    : `${generalSuccessRate}%`;
+  const generalSuccessRate = new BigNumber(winningTickets).dividedBy(allTickets).multipliedBy(100).toFixed(2);
+  const generalSuccessRateString = isNaN(+generalSuccessRate) ? `-` : `${generalSuccessRate}%`;
   const pricePoolBalance = new BigNumber(globalStats.balanceLeft.toString())
-    .dividedBy(
-      10 **
-        new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber(),
-    )
+    .dividedBy(10 ** new BigNumber(testnetSurfdogConfig.SURF_DECIMALS.toString()).toNumber())
     .toFormat();
 
   let globalStatsString = '<b>Global Stats</b>:\n\n';
@@ -45,13 +32,8 @@ export async function showGlobalStats(ctx: BotContext) {
   globalStatsString += `<b>Winning ticket value</b>: ${tokensPerTicket} SURF\n`;
   globalStatsString += `<b>Prize Pool Balance</b>: ${pricePoolBalance} SURF`;
 
-  await ctx.api.editMessageText(
-    loadingMessage.chat.id,
-    loadingMessage.message_id,
-    globalStatsString,
-    {
-      reply_markup: globalStatsMenu,
-      parse_mode: 'HTML',
-    },
-  );
+  await ctx.api.editMessageText(loadingMessage.chat.id, loadingMessage.message_id, globalStatsString, {
+    reply_markup: globalStatsMenu,
+    parse_mode: 'HTML',
+  });
 }

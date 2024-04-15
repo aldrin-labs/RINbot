@@ -1,11 +1,13 @@
 import { Bot } from 'grammy';
+import { showCoinWhitelist } from '../chains/coin-whitelist/showCoinWhitelist';
 import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
-import { slippagePercentages } from '../chains/slippage/percentages';
-import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
+import { slippagePercentages } from '../chains/settings/slippage/percentages';
+import { showSlippageConfiguration } from '../chains/settings/slippage/showSlippageConfiguration';
+import { showSwapConfirmationPage } from '../chains/settings/swap-confirmation/show-swap-confirmation-page';
 import { assets, home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
@@ -14,14 +16,13 @@ import { CallbackQueryData } from '../types/callback-queries-data';
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
     await ctx.conversation.exit();
-    ctx.session.step = 'main';
     await ctx.deleteMessage();
     await home(ctx);
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('go-home', async (ctx) => {
-    ctx.session.step = 'main';
+  bot.callbackQuery(CallbackQueryData.Home, async (ctx) => {
+    await ctx.conversation.exit();
     await home(ctx);
     await ctx.answerCallbackQuery();
   });
@@ -35,6 +36,8 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useSlippageCallbackQueries(bot);
   useRefundsCallbackQueries(bot);
   useWalletCallbackQueries(bot);
+  useCoinWhitelistCallbackQueries(bot);
+  useSwapConfirmationCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -103,5 +106,26 @@ function useWalletCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+}
+
+function useCoinWhitelistCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.CoinWhitelist, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showCoinWhitelist(ctx);
+  });
+}
+
+function useSwapConfirmationCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.EnableSwapConfirmation, async (ctx) => {
+    ctx.session.settings.swapWithConfirmation = true;
+    await ctx.answerCallbackQuery();
+    await showSwapConfirmationPage(ctx);
+  });
+
+  bot.callbackQuery(CallbackQueryData.DisableSwapConfirmation, async (ctx) => {
+    ctx.session.settings.swapWithConfirmation = false;
+    await ctx.answerCallbackQuery();
+    await showSwapConfirmationPage(ctx);
   });
 }

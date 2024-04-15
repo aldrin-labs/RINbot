@@ -1,15 +1,8 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
-import { DEFAULT_SLIPPAGE } from '../chains/slippage/percentages';
+import { DEFAULT_SLIPPAGE } from '../chains/settings/slippage/percentages';
 
 export function enlargeDefaultSlippage(old: {
-  step:
-    | 'main'
-    | 'buy'
-    | 'sell'
-    | 'positions'
-    | 'wallet'
-    | 'wallet-deposit'
-    | 'nft-menu';
+  step: 'main' | 'buy' | 'sell' | 'positions' | 'wallet' | 'wallet-deposit' | 'nft-menu';
   privateKey: string;
   publicKey: string;
   settings: { slippagePercentage: number };

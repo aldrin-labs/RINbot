@@ -44,7 +44,11 @@ async function updateMessage(ctx: BotContext) {
   const suiBalance = await balance(ctx);
   const suiAvlBalance = await availableBalance(ctx);
 
-  const newMessage = `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\nYour available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\nShare: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
+  const newMessage =
+    `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">` +
+    `${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\n` +
+    `Your available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\n` +
+    `Share: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
 
   try {
     await ctx.editMessageText(newMessage, {
@@ -54,7 +58,7 @@ async function updateMessage(ctx: BotContext) {
   } catch {}
 }
 
-const positions_menu = new Menu<BotContext>('positions-menu')
+const positionsMenu = new Menu<BotContext>('positions-menu')
   .text('Home', async (ctx) => {
     await home(ctx);
   })
@@ -191,16 +195,11 @@ const positions_menu = new Menu<BotContext>('positions-menu')
       const priceApiGetResponse = await getPriceApi('sui', currentToken.type);
 
       if (priceApiGetResponse === undefined) {
-        console.warn(
-          '[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.',
-        );
+        console.warn('[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.');
         return;
       }
 
-      currentToken = getExtendedWithGetPriceApiResponseDataCoin(
-        currentToken,
-        priceApiGetResponse.data.data,
-      );
+      currentToken = getExtendedWithGetPriceApiResponseDataCoin(currentToken, priceApiGetResponse.data.data);
 
       await updateMessage(ctx);
     } catch (error) {
@@ -212,4 +211,4 @@ const positions_menu = new Menu<BotContext>('positions-menu')
     }
   });
 
-export default positions_menu;
+export default positionsMenu;
