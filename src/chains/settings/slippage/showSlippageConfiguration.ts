@@ -1,5 +1,5 @@
-import slippageConfigurationKeyboard from '../../inline-keyboards/slippage/slippage-configuration';
-import { BotContext } from '../../types';
+import slippageConfigurationKeyboard from '../../../inline-keyboards/settings/slippage/slippage-configuration';
+import { BotContext } from '../../../types';
 
 export async function showSlippageConfiguration(ctx: BotContext) {
   await ctx.reply(
