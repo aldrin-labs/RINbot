@@ -14,8 +14,18 @@ export async function showSwapConfirmationPage(ctx: BotContext) {
     .row()
     .add(...homeButtons);
 
-  await ctx.reply(`Swap Confirmation: <i><b>${swapConfirmationState}</b></i>`, {
-    reply_markup: keyboardWithHome,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    `${swapWithConfirmation ? '✅' : '❌'}  <b>Swap Confirmation</b>: <i><b>${swapConfirmationState}</b></i>\n\n` +
+      `✏  <b>Know Before You Swap</b>\n\n` +
+      `With Swap Confirmation enabled, you can review the approximate output tokens for a given route ` +
+      `before finalizing a swap. After specifying the token you want to buy and the amount you're willing ` +
+      `to trade, you'll have the option to either confirm or cancel the trade.\n\n` +
+      `Enabling this feature empowers you to trade with confidence, allowing you to make informed decisions ` +
+      `based on the projected outcome of your swaps. Disable Swap Confirmation to streamline your trading ` +
+      `experience and execute trades more swiftly.`,
+    {
+      reply_markup: keyboardWithHome,
+      parse_mode: 'HTML',
+    },
+  );
 }
