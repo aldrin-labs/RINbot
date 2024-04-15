@@ -63,12 +63,11 @@ import {
 import {
   calculate,
   formatTokenInfo,
-  getPriceApi,
   hasDefinedPrice,
   isCoinAssetDataExtended,
-  postPriceApi,
   pullFromPriceAPIdb,
 } from './priceapi.utils';
+import { PriceApiClient } from './services/price-api';
 
 export enum TransactionResultStatus {
   Success = 'success',
@@ -482,21 +481,22 @@ export async function refreshAssets(ctx: BotContext) {
   if (suiAsset) {
     ctx.session.suiAsset = suiAsset;
   }
-  const data: PriceApiPayload = { data: [] };
-  allCoinsAssets.forEach((coin) => {
-    // move to price api
-    data.data.push({ chainId: 'sui', tokenAddress: coin.type });
-  });
   try {
-    const priceApiReponse = await postPriceApi([...allCoinsAssets, suiAsset]);
+    const priceApiReponse = await PriceApiClient.getInstance().getPrices([
+      ...allCoinsAssets.map((c) => ({
+        chainId: 'sui',
+        tokenAddress: c.type
+      })),
+      {chainId: 'sui', tokenAddress: suiAsset.type}
+    ]);
     if (priceApiReponse !== undefined) {
       allCoinsAssets = allCoinsAssets.map((coin, index) => ({
         ...coin,
-        price: priceApiReponse.data.data[index].price,
+        price: priceApiReponse[coin.type]?.price,
         timestamp: Date.now(),
-        mcap: priceApiReponse.data.data[index].mcap || 0,
-        priceChange1h: priceApiReponse.data.data[index].priceChange1h || 0,
-        priceChange24h: priceApiReponse.data.data[index].priceChange24h || 0,
+        mcap: priceApiReponse[coin.type]?.mcap || 0,
+        priceChange1h: priceApiReponse[coin.type]?.priceChange1h || 0,
+        priceChange24h: priceApiReponse[coin.type]?.priceChange24h || 0,
       }));
     } else {
       const priceApiReponseDB = await pullFromPriceAPIdb(allCoinsAssets);
@@ -547,7 +547,7 @@ export async function refreshAssets(ctx: BotContext) {
       });
     }
 
-    const lastPriceApiResponseItem = priceApiReponse?.data.data[priceApiReponse.data.data.length - 1];
+    const lastPriceApiResponseItem = priceApiReponse[LONG_SUI_COIN_TYPE];
     suiAsset.price = lastPriceApiResponseItem?.price;
     suiAsset.timestamp = Date.now();
     suiAsset.mcap = lastPriceApiResponseItem?.mcap || 0;
@@ -568,8 +568,8 @@ export async function home(ctx: BotContext) {
   let positionOverview = '';
 
   try {
-    const priceApiGetResponse = await getPriceApi('sui', '0x2::sui::SUI');
-    price = priceApiGetResponse?.data.data.price;
+    const priceApiGetResponse = await PriceApiClient.getInstance().getPrice('sui', '0x2::sui::SUI');
+    price = priceApiGetResponse.price;
   } catch (error) {
     if (error instanceof Error) {
       console.error('[home] Price API error:', error.message);

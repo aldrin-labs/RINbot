@@ -4,10 +4,10 @@ import { InlineKeyboard } from 'grammy';
 import { File, PhotoSize } from 'grammy/types';
 import { BOT_TOKEN } from '../config/bot.config';
 import { BotContext, MyConversation } from '../types';
-import { getPriceApi } from './priceapi.utils';
 import { COIN_WHITELIST_URL, SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS } from './sui.config';
 import { CoinForPool, CoinWhitelistItem } from './types';
 import closeConversation from '../inline-keyboards/closeConversation';
+import { PriceApiClient } from './services/price-api';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -223,18 +223,18 @@ export function findCoinInAssets(assets: CoinAssetData[], coinType: string): Coi
 export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   let price = undefined;
   if (isCoinAssetData(validCoin)) {
-    const priceApiGetResponse = await getPriceApi('sui', validCoin.type);
-    if (priceApiGetResponse?.data?.data?.price) {
-      price = priceApiGetResponse.data.data.price;
+    const priceApiGetResponse = await PriceApiClient.getInstance().getPrice('sui', validCoin.type);
+    if (priceApiGetResponse.price) {
+      price = priceApiGetResponse.price;
       return `You are selling <code>${validCoin.type}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
       // Handle case where price data is not available but the request did not fail
       return `Price information for <code>${validCoin.type}</code> is currently unavailable.\n\n`;
     }
   } else if (typeof validCoin === 'string') {
-    const priceApiGetResponse = await getPriceApi('sui', validCoin);
-    if (priceApiGetResponse?.data?.data?.price) {
-      price = priceApiGetResponse.data.data.price;
+    const priceApiGetResponse = await PriceApiClient.getInstance().getPrice('sui', validCoin);
+    if (priceApiGetResponse.price) {
+      price = priceApiGetResponse.price;
       return `You are buying <code>${validCoin}</code> for <b>$${price} USD</b> per token\n\n`;
     } else {
       // Handle case where price data is not available but the request did not fail

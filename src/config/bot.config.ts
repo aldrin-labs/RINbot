@@ -15,7 +15,8 @@ export const WELCOME_BONUS_AMOUNT =
   0;
 export const WELCOME_BONUS_MIN_TRADES_LIMIT = 15;
 export const EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES = process.env.EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES || '';
-export const PRICE_API_URL = process.env.PRICE_API_URL || '';
+export const PRICE_API_URL = process.env.PRICE_API_URL!;
+export const PRICE_API_KEY = process.env.PRICE_API_KEY!;
 export const ALDRIN_AUTHORITY = process.env.ALDRIN_AUTHORITY || '';
 export const KV_PRICE_API_DB_URL = process.env.KV_PRICE_API_DB_URL || '';
 export const imgs = [

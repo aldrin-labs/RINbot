@@ -3,12 +3,12 @@ import { ConversationId } from '../chains/conversations.config';
 import {
   formatTokenInfo,
   getExtendedWithGetPriceApiResponseDataCoin,
-  getPriceApi,
   hasDefinedPrice,
 } from '../chains/priceapi.utils';
 import { availableBalance, balance, home } from '../chains/sui.functions';
 import { instantBuy } from '../chains/trading/buy/buy';
 import { BotContext, CoinAssetDataExtended } from '../types';
+import { PriceApiClient } from '../chains/services/price-api';
 
 let currentTokenIndex: number = 0;
 let currentToken: CoinAssetDataExtended;
@@ -193,14 +193,14 @@ const positionsMenu = new Menu<BotContext>('positions-menu')
   .row()
   .text('Refresh', async (ctx) => {
     try {
-      const priceApiGetResponse = await getPriceApi('sui', currentToken.type);
+      const priceApiGetResponse = await PriceApiClient.getInstance().getPrice('sui', currentToken.type);
 
       if (priceApiGetResponse === undefined) {
         console.warn('[Refresh] priceApiGetResponse is undefined, cannot refresh coin data.');
         return;
       }
 
-      currentToken = getExtendedWithGetPriceApiResponseDataCoin(currentToken, priceApiGetResponse.data.data);
+      currentToken = getExtendedWithGetPriceApiResponseDataCoin(currentToken, priceApiGetResponse);
 
       await updateMessage(ctx);
     } catch (error) {
