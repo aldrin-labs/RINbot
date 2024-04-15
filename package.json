@@ -5,7 +5,6 @@
   "main": "src/index.ts",
   "author": "rincels",
   "node": "v20",
-  "type": "module",
   "engines": {
     "node": "20"
   },
