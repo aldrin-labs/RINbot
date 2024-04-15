@@ -8,8 +8,10 @@ import {
 } from '@avernikoz/rinbot-sui-sdk';
 import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
 import closeConversation from '../../inline-keyboards/closeConversation';
+import coinWhitelistKeyboard from '../../inline-keyboards/coin-whitelist/coin-whitelist';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../types';
+import { CallbackQueryData } from '../../types/callback-queries-data';
 import { ConversationId } from '../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
 import { getUserFeePercentage } from '../fees/utils';
@@ -48,7 +50,12 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
     const coinManager = await getCoinManager();
     await conversation.waitUntil(async (ctx) => {
-      if (ctx.callbackQuery?.data === 'close-conversation') {
+      const callbackQueryData = ctx.callbackQuery?.data;
+      if (
+        callbackQueryData === CallbackQueryData.Cancel ||
+        callbackQueryData === CallbackQueryData.CoinWhitelist ||
+        callbackQueryData === CallbackQueryData.Home
+      ) {
         return false;
       }
 
@@ -111,12 +118,15 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
         const requiredCoinInWhitelist = coinWhitelist.find((coin) => coin.type === fetchedCoin.type);
 
         if (requiredCoinInWhitelist === undefined) {
+          const cancelButtons = closeConversation.inline_keyboard[0];
+          const coinWhitelistWithCancelKeyboard = coinWhitelistKeyboard.clone().add(...cancelButtons);
+
           await ctx.reply(
             'This coin is not in the whitelist. Please, specify another one or contact support.\n\n' +
               '<span class="tg-spoiler"><b>Hint</b>: you can request coin whitelisting in ' +
               `<a href="${RINBOT_CHAT_URL}">RINbot_chat</a>.</span>`,
             {
-              reply_markup: closeConversation,
+              reply_markup: coinWhitelistWithCancelKeyboard,
               parse_mode: 'HTML',
               link_preview_options: { is_disabled: true },
             },

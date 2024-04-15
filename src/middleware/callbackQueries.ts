@@ -1,4 +1,5 @@
 import { Bot } from 'grammy';
+import { showCoinWhitelist } from '../chains/coin-whitelist/showCoinWhitelist';
 import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
@@ -19,7 +20,8 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
     await ctx.answerCallbackQuery();
   });
 
-  bot.callbackQuery('go-home', async (ctx) => {
+  bot.callbackQuery(CallbackQueryData.Home, async (ctx) => {
+    await ctx.conversation.exit();
     await home(ctx);
     await ctx.answerCallbackQuery();
   });
@@ -33,6 +35,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useSlippageCallbackQueries(bot);
   useRefundsCallbackQueries(bot);
   useWalletCallbackQueries(bot);
+  useCoinWhitelistCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -101,5 +104,12 @@ function useWalletCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+}
+
+function useCoinWhitelistCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.CoinWhitelist, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showCoinWhitelist(ctx);
   });
 }

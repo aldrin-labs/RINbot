@@ -10,4 +10,6 @@ export enum CallbackQueryData {
   ImportWallet = 'import-wallet',
   Continue = 'continue',
   Refunds = 'refunds',
+  CoinWhitelist = 'coin-whitelist',
+  Home = 'go-home',
 }
