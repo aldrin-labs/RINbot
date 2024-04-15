@@ -8,6 +8,7 @@ import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { slippagePercentages } from '../chains/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/slippage/showSlippageConfiguration';
 import { assets, home } from '../chains/sui.functions';
+import { instantBuy } from '../chains/trading/buy/buy';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
 import { CallbackQueryData } from '../types/callback-queries-data';
@@ -35,6 +36,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useSlippageCallbackQueries(bot);
   useRefundsCallbackQueries(bot);
   useWalletCallbackQueries(bot);
+  useTradingCallbackQueries(bot);
   useCoinWhitelistCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
@@ -104,6 +106,13 @@ function useWalletCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  });
+}
+
+function useTradingCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.RepeatSameBuy, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await instantBuy(ctx);
   });
 }
 
