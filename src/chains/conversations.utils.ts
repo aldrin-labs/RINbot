@@ -80,6 +80,7 @@ export async function getTransactionFromMethodWithoutConversation<
     } else if (isTransactionBlock(tx.tx)) {
       return tx.tx;
     } else {
+      console.warn('[getTransactionFromMethodWithoutConversation] Transaction is not found in method result.');
       return;
     }
   } catch (error) {
