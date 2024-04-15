@@ -9,9 +9,9 @@ import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conv
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
-import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
+import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
-import { buy } from './chains/trading/buy/buy';
+import { buy, instantBuy } from './chains/trading/buy/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -188,6 +188,7 @@ async function startBot(): Promise<void> {
       id: ConversationId.CheckProvidedAddressForRefund,
     }),
   );
+  protectedConversationsComposer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
 
   bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
 
