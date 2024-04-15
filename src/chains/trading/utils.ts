@@ -45,18 +45,28 @@ export async function printSwapInfo({
 
   // const calculatedPrice = side === SwapSide.Buy ? new BigNumber(outputAmount.toString()).div().toString() : ``;
 
+  const userShouldConfirmSwap = conversation.session.settings.swapWithConfirmation;
+
+  let actionPartString = '';
+
+  if (userShouldConfirmSwap) {
+    actionPartString = `You are going to ${side}`;
+  } else {
+    actionPartString = side === SwapSide.Buy ? 'You are buying' : 'You are selling';
+  }
+
   let message =
     side === SwapSide.Buy
-      ? `You are going to buy <code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> for ` +
+      ? `${actionPartString} <code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> for ` +
         `<code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> on <b><i>${providerName}</i></b>.\n\n`
-      : `You are going to sell <code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> for ` +
+      : `${actionPartString} <code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> for ` +
         `<code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> on <b><i>${providerName}</i></b>.\n\n`;
 
-  message +=
-    '<span class="tg-spoiler"><b>Note</b>: you should confirm your swap within 15 seconds. ' +
-    'Otherwise, swap could be failed due to price changes.</span>';
-
-  const userShouldConfirmSwap = conversation.session.settings.swapWithConfirmation;
+  message += userShouldConfirmSwap
+    ? `<span class="tg-spoiler"><b>Hint</b>: you can switch <b><i>Swap Confirmation</i></b> in ` +
+      `<b><i>Settings</i></b>.\n\n<b>Note</b>: you should confirm your swap within 15 seconds. ` +
+      `Otherwise, swap could be failed due to price changes.</span>`
+    : '';
 
   await ctx.reply(message, {
     parse_mode: 'HTML',
