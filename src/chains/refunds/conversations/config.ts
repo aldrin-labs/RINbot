@@ -16,4 +16,4 @@ export const BOOSTED_REFUND_EXAMPLE_FOR_USER_URL =
 
 export const MINIMUM_SUI_BALANCE_FOR_REFUND = 0.5;
 
-export const ALDRIN_REFUND_WEBSITE = 'https://inspiring-licorice-4b4519.netlify.app';
+export const ALDRIN_REFUND_WEBSITE = 'https://pikka-refund.aldrin.com';

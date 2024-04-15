@@ -2,6 +2,7 @@ import { SUI_DECIMALS, isSuiCoinType, isValidTokenAddress, isValidTokenAmount } 
 import { InlineKeyboard } from 'grammy';
 import { EndConversationError } from '../../../errors/end-conversation.error';
 import closeConversation from '../../../inline-keyboards/closeConversation';
+import coinWhitelistKeyboard from '../../../inline-keyboards/coin-whitelist/coin-whitelist';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { RINBOT_CHAT_URL, RINCEL_COIN_TYPE } from '../../sui.config';
@@ -40,7 +41,11 @@ export async function askForCoinToBuy({
   const coinToBuyCallbackQueryData = coinToBuyContext.callbackQuery?.data;
   const coinToBuyMessage = coinToBuyContext.msg?.text;
 
-  if (coinToBuyCallbackQueryData === CallbackQueryData.Cancel) {
+  if (
+    coinToBuyCallbackQueryData === CallbackQueryData.Cancel ||
+    coinToBuyCallbackQueryData === CallbackQueryData.CoinWhitelist ||
+    coinToBuyCallbackQueryData === CallbackQueryData.Home
+  ) {
     await conversation.skip();
     throw new EndConversationError();
   } else if (coinToBuyCallbackQueryData !== undefined || coinToBuyMessage === undefined) {
@@ -112,12 +117,15 @@ export async function askForCoinToBuy({
     const requiredCoinInWhitelist = coinWhitelist.find((coin) => coin.type === fetchedCoin.type);
 
     if (requiredCoinInWhitelist === undefined) {
+      const cancelButtons = closeConversation.inline_keyboard[0];
+      const coinWhitelistWithCancelKeyboard = coinWhitelistKeyboard.clone().add(...cancelButtons);
+
       await ctx.reply(
         'This coin is not in the whitelist. Please, specify another one or contact support.\n\n' +
           '<span class="tg-spoiler"><b>Hint</b>: you can request coin whitelisting in ' +
           `<a href="${RINBOT_CHAT_URL}">RINbot_chat</a>.</span>`,
         {
-          reply_markup: closeConversation,
+          reply_markup: coinWhitelistWithCancelKeyboard,
           parse_mode: 'HTML',
           link_preview_options: { is_disabled: true },
         },

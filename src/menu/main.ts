@@ -26,24 +26,25 @@ const menu = new Menu<BotContext>('main')
     await assets(ctx);
   })
   .row()
-  .text('Manage NFTs', async (ctx) => {
-    await nftHome(ctx);
-  })
+  // .text('Manage NFTs', async (ctx) => {
+  //   await nftHome(ctx);
+  // })
   .text('Wallet', async (ctx) => {
     ctx.menu.nav('wallet-menu');
   })
-  .row()
   .text('Launchpad', (ctx) => {
     ctx.menu.nav('launchpad');
   })
+  .row()
   .text('Settings', (ctx) => {
     ctx.menu.nav('settings');
   })
-  .row()
-  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .text('Refunds', async (ctx) => {
     await showRefundsPage(ctx);
   })
+  .row()
+  .url('Sui Tracking Channel', "https://t.me/sui_new_tokens")
+  .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus;
 
