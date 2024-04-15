@@ -58,9 +58,9 @@ export async function printSwapInfo({
   let message =
     side === SwapSide.Buy
       ? `${actionPartString} <code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> for ` +
-        `<code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> on <b><i>${providerName}</i></b>.\n\n`
+        `<code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> using <b><i>${providerName}</i></b> liquidity provider.\n\n`
       : `${actionPartString} <code>${formattedInputAmount}</code> <b>${inputCoinSymbol}</b> for ` +
-        `<code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> on <b><i>${providerName}</i></b>.\n\n`;
+        `<code>${formattedOutputAmount}</code> <b>${outputCoinSymbol}</b> using <b><i>${providerName}</i></b> liquidity provider.\n\n`;
 
   message += userShouldConfirmSwap
     ? `<span class="tg-spoiler"><b>Hint</b>: you can switch <b><i>Swap Confirmation</i></b> in ` +
