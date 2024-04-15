@@ -1,5 +1,5 @@
 import { InlineKeyboard } from 'grammy';
-import { slippagePercentages } from '../../chains/slippage/percentages';
+import { slippagePercentages } from '../../../chains/settings/slippage/percentages';
 
 const slippageConfigurationKeyboard = new InlineKeyboard();
 

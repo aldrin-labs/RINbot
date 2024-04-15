@@ -9,9 +9,9 @@ import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conv
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
-import { DEFAULT_SLIPPAGE } from './chains/slippage/percentages';
+import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
-import { buy } from './chains/trading/buy/buy';
+import { buy, instantBuy } from './chains/trading/buy/buy';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -25,6 +25,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
+import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
 import { addTradeAmountPercentageField } from './migrations/addTradeAmountPercentage';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addTradesField } from './migrations/addTradesField';
@@ -93,7 +94,7 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false,
           },
-          settings: { slippagePercentage: DEFAULT_SLIPPAGE },
+          settings: { slippagePercentage: DEFAULT_SLIPPAGE, swapWithConfirmation: true },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -130,6 +131,7 @@ async function startBot(): Promise<void> {
           8: addSuiAssetField,
           9: addTradeAmountPercentageField,
           10: removeStep,
+          11: addSwapConfirmationSetting,
         },
       }),
     });
@@ -186,6 +188,7 @@ async function startBot(): Promise<void> {
       id: ConversationId.CheckProvidedAddressForRefund,
     }),
   );
+  protectedConversationsComposer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
 
   bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
 

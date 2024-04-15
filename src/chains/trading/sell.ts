@@ -12,9 +12,9 @@ import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversat
 import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
 import { ConversationId } from '../conversations.config';
-import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
+import { signAndExecuteTransaction } from '../conversations.utils';
 import { RINCEL_COIN_TYPE } from '../sui.config';
-import { getCoinManager, getRouteManager, getWalletManager, randomUuid } from '../sui.functions';
+import { getCoinManager, getWalletManager, randomUuid } from '../sui.functions';
 import {
   coinCannotBeSoldDueToDelay,
   extractCoinTypeFromLink,
@@ -25,6 +25,8 @@ import {
   isValidCoinLink,
   reactOnUnexpectedBehaviour,
 } from '../utils';
+import { SwapSide } from './types';
+import { getBestRouteTransactionDataWithExternal, printSwapInfo } from './utils';
 
 async function askForCoinToSell({
   ctx,
@@ -295,21 +297,19 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
 
   await ctx.reply('Finding the best route to save your money… ☺️');
 
-  const routerManager = await getRouteManager();
-  const transaction = await getTransactionFromMethod({
+  const data = await getBestRouteTransactionDataWithExternal({
     conversation,
     ctx,
-    method: routerManager.getBestRouteTransaction.bind(routerManager) as typeof routerManager.getBestRouteTransaction,
-    params: {
+    methodParams: {
       tokenFrom: validCoinToSell.type,
       tokenTo: LONG_SUI_COIN_TYPE,
       amount: amountToSell,
       signerAddress: conversation.session.publicKey,
-      slippagePercentage: conversation.session.settings.slippagePercentage || 10,
+      slippagePercentage: conversation.session.settings.slippagePercentage,
     },
   });
 
-  if (transaction === undefined) {
+  if (data === undefined) {
     await ctx.reply('Transaction creation failed ❌', {
       reply_markup: retryButton,
     });
@@ -317,7 +317,32 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + randomUuid);
+  const { outputAmount, providerName, tx: transaction } = data;
+
+  await printSwapInfo({
+    ctx,
+    conversation,
+    formattedInputAmount: amountToSell,
+    outputAmount: outputAmount,
+    providerName: providerName,
+    side: SwapSide.Sell,
+  });
+
+  if (conversation.session.settings.swapWithConfirmation) {
+    const confirmContext = await conversation.wait();
+    const callbackQueryData = confirmContext.callbackQuery?.data;
+
+    if (callbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    } else if (callbackQueryData !== CallbackQueryData.Confirm) {
+      await reactOnUnexpectedBehaviour(ctx, retryButton, 'sell');
+      return;
+    }
+
+    await confirmContext.answerCallbackQuery();
+  }
+
+  await ctx.reply('Sending transaction... 🔄' + randomUuid);
 
   const resultOfSwap = await signAndExecuteTransaction({
     conversation,

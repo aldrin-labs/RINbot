@@ -243,6 +243,12 @@ export async function getPriceOutputData(validCoin: string | CoinAssetData) {
   } else return 'Could not fetch the data.\n\n';
 }
 
+export async function getCoinPrice(type: string): Promise<number | null> {
+  const priceApiGetResponse = await getPriceApi('sui', type);
+
+  return priceApiGetResponse?.data?.data?.price ?? null;
+}
+
 export async function reactOnUnexpectedBehaviour(ctx: BotContext, retryButton: InlineKeyboard, cancelSubject: string) {
   // If there is no clicked button, this function will throw an error, which will be showed to user.
   // Because of that, we catch it here and ignore.

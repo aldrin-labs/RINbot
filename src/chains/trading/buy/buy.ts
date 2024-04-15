@@ -1,16 +1,15 @@
 import { FeeManager, LONG_SUI_COIN_TYPE, SUI_DECIMALS } from '@avernikoz/rinbot-sui-sdk';
 import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../../config/bot.config';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
-import repeatSameBuyWithHomeKeyboard from '../../../inline-keyboards/trading/repeat-buy-with-home';
 import { BotContext, MyConversation } from '../../../types';
+import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
-import {
-  getTransactionFromMethodWithoutConversation,
-  signAndExecuteTransactionWithoutConversation,
-} from '../../conversations.utils';
+import { signAndExecuteTransactionWithoutConversation } from '../../conversations.utils';
 import { getUserFeePercentage } from '../../fees/utils';
-import { TransactionResultStatus, getRouteManager, randomUuid } from '../../sui.functions';
-import { getSuiVisionTransactionLink, userMustUseCoinWhitelist } from '../../utils';
+import { TransactionResultStatus, randomUuid } from '../../sui.functions';
+import { getSuiVisionTransactionLink, reactOnUnexpectedBehaviour, userMustUseCoinWhitelist } from '../../utils';
+import { SwapSide } from '../types';
+import { getBestRouteTransactionDataWithExternal, printSwapInfo } from '../utils';
 import { askForAmountToSpendOnBuy, askForCoinToBuy } from './utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
@@ -37,22 +36,22 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
 
   conversation.session.tradeCoin.tradeAmountPercentage = amount;
 
-  return await instantBuy(ctx, conversation);
+  return await instantBuy(conversation, ctx);
 }
 
 /**
  * Makes buy with params specified in `session.tradeCoin`.
- *
- * @param conversation must be defined when method is used in conversation, so the session will be fetched from
- * `conversation.session`. Otherwise, method will get session from `ctx.session`.
  */
-export const instantBuy = async (ctx: BotContext, conversation: MyConversation | undefined = undefined) => {
+export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
+  const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
+
   await ctx.reply('Finding the best route to save your money… ☺️' + randomUuid);
-  const session = conversation?.session ?? ctx.session;
 
   const {
+    publicKey,
     tradeCoin: { coinType, tradeAmountPercentage },
-  } = session;
+    settings: { swapWithConfirmation, slippagePercentage },
+  } = conversation.session;
 
   const feePercentage = (await getUserFeePercentage(ctx)).toString();
   const feeAmount = FeeManager.calculateFeeAmountIn({
@@ -61,15 +60,15 @@ export const instantBuy = async (ctx: BotContext, conversation: MyConversation |
     tokenDecimals: SUI_DECIMALS,
   });
 
-  const routerManager = await getRouteManager();
-  const transaction = await getTransactionFromMethodWithoutConversation({
-    method: routerManager.getBestRouteTransaction.bind(routerManager) as typeof routerManager.getBestRouteTransaction,
-    params: {
+  const data = await getBestRouteTransactionDataWithExternal({
+    conversation,
+    ctx,
+    methodParams: {
       tokenFrom: LONG_SUI_COIN_TYPE,
       tokenTo: coinType,
       amount: tradeAmountPercentage,
-      signerAddress: session.publicKey,
-      slippagePercentage: session.settings.slippagePercentage,
+      signerAddress: publicKey,
+      slippagePercentage: slippagePercentage,
       fee: {
         feeAmount,
         feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
@@ -77,15 +76,40 @@ export const instantBuy = async (ctx: BotContext, conversation: MyConversation |
     },
   });
 
-  if (transaction === undefined) {
+  if (data === undefined) {
     await ctx.reply('Transaction creation failed ❌', {
-      reply_markup: repeatSameBuyWithHomeKeyboard,
+      reply_markup: retryButton,
     });
 
     return;
   }
 
-  await ctx.reply('Route for swap found, sending transaction... 🔄' + randomUuid);
+  const { outputAmount, providerName, tx: transaction } = data;
+
+  await printSwapInfo({
+    ctx,
+    conversation,
+    formattedInputAmount: tradeAmountPercentage,
+    outputAmount: outputAmount,
+    providerName: providerName,
+    side: SwapSide.Buy,
+  });
+
+  if (swapWithConfirmation) {
+    const confirmContext = await conversation.wait();
+    const callbackQueryData = confirmContext.callbackQuery?.data;
+
+    if (callbackQueryData === CallbackQueryData.Cancel) {
+      await conversation.skip();
+    } else if (callbackQueryData !== CallbackQueryData.Confirm) {
+      await reactOnUnexpectedBehaviour(ctx, retryButton, 'buy');
+      return;
+    }
+
+    await confirmContext.answerCallbackQuery();
+  }
+
+  await ctx.reply('Sending transaction... 🔄' + randomUuid);
 
   const resultOfSwap = await signAndExecuteTransactionWithoutConversation({
     ctx,
@@ -94,15 +118,15 @@ export const instantBuy = async (ctx: BotContext, conversation: MyConversation |
 
   if (resultOfSwap.result === TransactionResultStatus.Success && resultOfSwap.digest !== undefined) {
     await ctx.reply(`Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">successful</a> ✅`, {
-      reply_markup: repeatSameBuyWithHomeKeyboard,
+      reply_markup: retryButton,
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
     });
 
-    session.tradesCount = session.tradesCount + 1;
+    conversation.session.tradesCount = conversation.session.tradesCount + 1;
 
     if (userMustUseCoinWhitelist(ctx)) {
-      session.trades[coinType] = {
+      conversation.session.trades[coinType] = {
         lastTradeTimestamp: Date.now(),
       };
     }
@@ -112,7 +136,7 @@ export const instantBuy = async (ctx: BotContext, conversation: MyConversation |
 
   if (resultOfSwap.result === TransactionResultStatus.Failure && resultOfSwap.digest !== undefined) {
     await ctx.reply(`Swap <a href="${getSuiVisionTransactionLink(resultOfSwap.digest)}">failed</a> ❌`, {
-      reply_markup: repeatSameBuyWithHomeKeyboard,
+      reply_markup: retryButton,
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
     });
@@ -138,6 +162,6 @@ export const instantBuy = async (ctx: BotContext, conversation: MyConversation |
   }
 
   await ctx.reply('Transaction sending failed ❌', {
-    reply_markup: repeatSameBuyWithHomeKeyboard,
+    reply_markup: retryButton,
   });
 };
