@@ -25,6 +25,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
+import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
 import { addTradeAmountPercentageField } from './migrations/addTradeAmountPercentage';
 import { addTradeCoin } from './migrations/addTradeCoin';
 import { addTradesField } from './migrations/addTradesField';
@@ -93,7 +94,7 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false,
           },
-          settings: { slippagePercentage: DEFAULT_SLIPPAGE },
+          settings: { slippagePercentage: DEFAULT_SLIPPAGE, swapWithConfirmation: true },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -130,6 +131,7 @@ async function startBot(): Promise<void> {
           8: addSuiAssetField,
           9: addTradeAmountPercentageField,
           10: removeStep,
+          11: addSwapConfirmationSetting,
         },
       }),
     });
