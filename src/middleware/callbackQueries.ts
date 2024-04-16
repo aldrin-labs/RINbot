@@ -5,6 +5,9 @@ import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
+import { priceDifferenceThresholdPercentages } from '../chains/settings/price-difference-threshold/percentages';
+// eslint-disable-next-line max-len
+import { showPriceDifferenceThresholdPage } from '../chains/settings/price-difference-threshold/show-price-difference-page';
 import { slippagePercentages } from '../chains/settings/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/settings/slippage/showSlippageConfiguration';
 import { showSwapConfirmationPage } from '../chains/settings/swap-confirmation/show-swap-confirmation-page';
@@ -38,6 +41,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useWalletCallbackQueries(bot);
   useCoinWhitelistCallbackQueries(bot);
   useSwapConfirmationCallbackQueries(bot);
+  usePriceDifferenceThresholdCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -85,6 +89,17 @@ function useSlippageCallbackQueries(bot: Bot<BotContext>) {
 
       await showSlippageConfiguration(ctx);
       await ctx.answerCallbackQuery();
+    });
+  });
+}
+
+function usePriceDifferenceThresholdCallbackQueries(bot: Bot<BotContext>) {
+  priceDifferenceThresholdPercentages.forEach((percentage) => {
+    bot.callbackQuery(`price-difference-threshold-${percentage}`, async (ctx) => {
+      ctx.session.settings.priceDifferenceThreshold = percentage;
+
+      await ctx.answerCallbackQuery();
+      await showPriceDifferenceThresholdPage(ctx);
     });
   });
 }
