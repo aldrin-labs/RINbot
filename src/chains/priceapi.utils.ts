@@ -4,6 +4,7 @@ import { AxiosPriceApiResponsePost, AxiosPriceApiResponseGet, CoinAssetDataExten
 import { PRICE_API_URL } from '../config/bot.config';
 // Import the Redis singleton
 import Redis from './redis-priceapi';
+import { PriceApiResponse } from './services/types';
 
 export function calculate(balance: string, price: number | undefined) {
   if (price === undefined) return null;
@@ -53,55 +54,9 @@ export function hasDefinedPrice(data: unknown) {
   return typeof data === 'object' && data !== null && 'price' in data && typeof data.price === 'number';
 }
 
-export async function postPriceApi(allCoinsAssets: CoinAssetData[], useTimeout: boolean = true) {
-  try {
-    const data: PriceApiPayload = { data: [] };
-    allCoinsAssets.forEach((coin) => {
-      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
-    });
-
-    const startTime = Date.now();
-
-    const response = await axios.post<AxiosPriceApiResponsePost>(`${PRICE_API_URL}/assets`, data, {
-      timeout: useTimeout ? 300 : undefined,
-    });
-
-    const endTime = Date.now();
-    const requestTime = endTime - startTime;
-    console.log(`Price API post response time: ${requestTime}ms`);
-    return response;
-  } catch (error) {
-    // console.error('Price API error: ', error);
-    return undefined;
-  }
-}
-
-export async function getPriceApi(chainId: string, tokenAddress: string) {
-  try {
-    const startTime = Date.now();
-    const response = await axios.get<AxiosPriceApiResponseGet>(`${PRICE_API_URL}/api/assets`, {
-      params: {
-        chainId,
-        tokenAddress,
-      },
-    });
-    const endTime = Date.now();
-    const requestTime = endTime - startTime;
-    console.log(`Price API get response time: ${requestTime}ms`);
-    return response;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('Price API error:', error.message);
-    } else {
-      console.error('Price API error: unknown error');
-    }
-    return undefined;
-  }
-}
-
 export function getExtendedWithGetPriceApiResponseDataCoin(
   coin: CoinAssetDataExtended,
-  priceApiResponseData: AxiosPriceApiResponseGet['data'],
+  priceApiResponseData: PriceApiResponse,
 ): CoinAssetDataExtended {
   return {
     ...coin,
@@ -139,3 +94,5 @@ export async function pullFromPriceAPIdb(allCoinsAssets: CoinAssetData[]) {
 
   return results;
 }
+
+

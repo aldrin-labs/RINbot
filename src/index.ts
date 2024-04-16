@@ -17,7 +17,7 @@ import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { balances } from './commands/balances';
-import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
+import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, PRICE_API_KEY, PRICE_API_URL, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import { conversationErrorBoundaryHandler } from './error-boundaries/conversations-boundary';
 import { generalErrorBoundaryHandler } from './error-boundaries/general-boundary';
 import menu from './menu/main';
@@ -37,6 +37,8 @@ import { enlargeDefaultSlippage } from './migrations/enlargeDefaultSlippage';
 import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
+import { PriceApiClient } from './chains/services/price-api';
+import axios from 'axios';
 
 const APP_VERSION = '3.0.5';
 
@@ -53,7 +55,11 @@ async function startBot(): Promise<void> {
   const composer = new Composer<BotContext>();
   const conversationsComposer = new Composer<BotContext>();
   const protectedConversationsComposer = conversationsComposer.errorBoundary(conversationErrorBoundaryHandler);
-
+  PriceApiClient.getInstance({
+    axios,
+    apiKey: PRICE_API_KEY,
+    url: PRICE_API_URL
+  });
   composer.use(timeoutMiddleware);
 
   bot.lazy((ctx) => {

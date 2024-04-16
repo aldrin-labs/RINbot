@@ -2,13 +2,12 @@ import { SHORT_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
 import {
   calculate,
   formatTokenInfo,
-  getPriceApi,
   isCoinAssetDataExtended,
-  postPriceApi,
 } from '../chains/priceapi.utils';
 import { availableBalance, balance, refreshAssets } from '../chains/sui.functions';
 import goHome from '../inline-keyboards/goHome';
 import { BotContext, PriceApiPayload } from '../types';
+import { PriceApiClient } from '../chains/services/price-api';
 
 export const balances = async (ctx: BotContext) => {
   const loadingMessage = await ctx.reply('<b>Loading...</b>', {
@@ -22,9 +21,9 @@ export const balances = async (ctx: BotContext) => {
   let totalBalanceStr: string = '';
 
   try {
-    const priceApiGetResponse = await getPriceApi('sui', SHORT_SUI_COIN_TYPE);
+    const priceApiGetResponse = await PriceApiClient.getInstance().getPrice('sui', SHORT_SUI_COIN_TYPE);
 
-    price = priceApiGetResponse?.data.data.price;
+    price = priceApiGetResponse?.price;
   } catch (error) {
     console.error(error);
 
@@ -41,19 +40,14 @@ export const balances = async (ctx: BotContext) => {
       positionOverview = `You don't have tokens yet.`;
     }
 
-    [...allCoinsAssets, suiAsset].forEach((coin) => {
-      // Move to price api
-      data.data.push({ chainId: 'sui', tokenAddress: coin.type });
-    });
-
-    const response = await postPriceApi([...allCoinsAssets, suiAsset], false);
-    const coinsPriceApi = response?.data.data;
-
-    const priceMap = new Map(coinsPriceApi!.map((coin) => [coin.tokenAddress, coin.price]));
+    const response = await PriceApiClient.getInstance().getPrices([...allCoinsAssets, suiAsset].map((c) => ({
+      chainId: 'sui',
+      tokenAddress: c.type
+    })));
 
     let balance = 0;
     [...allCoinsAssets, suiAsset].forEach((coin) => {
-      const price = priceMap.get(coin.type);
+      const {price} = response[coin.type] || {};
 
       if (price !== undefined) {
         balance += +coin.balance * price;
