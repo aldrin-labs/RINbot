@@ -84,7 +84,7 @@ export async function buyFromPositionsMenu({
     useSpecifiedCoin: true,
   };
 
-  await ctx.conversation.enter(ConversationId.InstantBuy);
+  await ctx.conversation.enter(absoluteAmountPercentage === 0 ? ConversationId.Buy : ConversationId.InstantBuy);
 }
 
 export async function sellFromPositionsMenu({
