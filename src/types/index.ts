@@ -58,7 +58,10 @@ export interface SessionData {
   publicKey: string;
   settings: { slippagePercentage: number; swapWithConfirmation: boolean; priceDifferenceThreshold: number };
   suiAsset: CoinAssetDataExtended;
-  assets: CoinAssetDataExtended[];
+  assets: {
+    currentIndex: number;
+    data: CoinAssetDataExtended[];
+  };
   welcomeBonus: {
     amount: number;
     isUserEligibleToGetBonus: boolean;
