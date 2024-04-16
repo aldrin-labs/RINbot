@@ -36,6 +36,12 @@ export async function updateMessage(ctx: BotContext) {
     `Your available SUI balance: <b>${suiAvlBalance}</b>${totalNetWorth}\n\n` +
     `Share: 🤖<a href="https://t.me/RINsui_bot">Trade ${currentToken.symbol} on RINSui_Bot</a>`;
 
+  /**
+   * Previously, `editMessageText` threw an error, when a user had only 1 asset and tried to switch it
+   * with menu arrows. In such case `newMessage` was the same as the already existing one, and this
+   * caused the error. Currently, we do not show menu arrows to the user, when he/she has only 1 asset,
+   * so the error on this point should never occur.
+   */
   try {
     await ctx.editMessageText(newMessage, {
       parse_mode: 'HTML',
