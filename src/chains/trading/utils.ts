@@ -51,57 +51,20 @@ export async function printSwapInfo({
 
   // Getting prices
   const offchainPrice = await conversation.external(() => getCoinPrice(coinTypeToPrintPrice));
-  let calculatedPrice: string | null = null;
-
-  if (!outputAmountIsRaw) {
-    const suiPrice = await conversation.external(() => getCoinPrice(LONG_SUI_COIN_TYPE));
-
-    if (suiPrice !== null) {
-      if (side === SwapSide.Buy) {
-        const outputCoinPriceInInputCoin = new BigNumber(formattedInputAmount).div(formattedOutputAmount);
-        const outputCoinPriceInUsd = outputCoinPriceInInputCoin.multipliedBy(suiPrice).toFixed(9);
-
-        calculatedPrice = outputCoinPriceInUsd;
-      } else {
-        const inputCoinPriceInOutputCoin = new BigNumber(formattedOutputAmount).div(formattedInputAmount);
-        const inputCoinPriceInUsd = inputCoinPriceInOutputCoin.multipliedBy(suiPrice).toFixed(9);
-
-        calculatedPrice = inputCoinPriceInUsd;
-      }
-    }
-  }
+  const calculatedPrice = await conversation.external(() =>
+    getCalculatedPrice({
+      formattedInputAmount,
+      formattedOutputAmount,
+      outputAmountIsRaw,
+      side,
+    }),
+  );
 
   // Getting rate warning part
-  let rateWarningString = '';
-
-  if (offchainPrice !== null && calculatedPrice !== null) {
-    if (side === SwapSide.Buy && new BigNumber(calculatedPrice).gt(offchainPrice)) {
-      const priceDifference = new BigNumber(calculatedPrice).minus(offchainPrice);
-      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
-
-      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
-        rateWarningString =
-          `⚠ <b>Rate Warning</b>: swap price is more than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
-      }
-    } else if (side === SwapSide.Sell && new BigNumber(calculatedPrice).lt(offchainPrice)) {
-      const priceDifference = new BigNumber(offchainPrice).minus(calculatedPrice);
-      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
-
-      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
-        rateWarningString =
-          `⚠ <b>Rate Warning</b>: swap price is less than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
-      }
-    }
-  }
+  const rateWarningString = getRateWarningString({ side, calculatedPrice, offchainPrice, priceDifferenceThreshold });
 
   // Getting action part
-  let actionPartString = '';
-
-  if (userShouldConfirmSwap) {
-    actionPartString = `You are going to ${side}`;
-  } else {
-    actionPartString = side === SwapSide.Buy ? 'You are buying' : 'You are selling';
-  }
+  const actionPartString = getActionString({ side, userShouldConfirmSwap });
 
   const rawOutputAmountString = outputAmountIsRaw ? ` <i>(*raw)</i>` : '';
 
@@ -187,4 +150,86 @@ export async function getBestRouteTransactionDataWithExternal({
       console.error(error);
     },
   });
+}
+
+export function getRateWarningString({
+  side,
+  calculatedPrice,
+  offchainPrice,
+  priceDifferenceThreshold,
+}: {
+  side: SwapSide;
+  offchainPrice: number | null;
+  calculatedPrice: string | null;
+  priceDifferenceThreshold: number;
+}): string {
+  let rateWarningString = '';
+
+  if (offchainPrice !== null && calculatedPrice !== null) {
+    if (side === SwapSide.Buy && new BigNumber(calculatedPrice).gt(offchainPrice)) {
+      const priceDifference = new BigNumber(calculatedPrice).minus(offchainPrice);
+      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
+
+      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
+        rateWarningString =
+          `⚠ <b>Rate Warning</b>: swap price is more than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
+      }
+    } else if (side === SwapSide.Sell && new BigNumber(calculatedPrice).lt(offchainPrice)) {
+      const priceDifference = new BigNumber(offchainPrice).minus(calculatedPrice);
+      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
+
+      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
+        rateWarningString =
+          `⚠ <b>Rate Warning</b>: swap price is less than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
+      }
+    }
+  }
+
+  return rateWarningString;
+}
+
+export async function getCalculatedPrice({
+  formattedInputAmount,
+  formattedOutputAmount,
+  outputAmountIsRaw,
+  side,
+}: {
+  outputAmountIsRaw: boolean;
+  side: SwapSide;
+  formattedInputAmount: string;
+  formattedOutputAmount: string;
+}): Promise<string | null> {
+  let calculatedPrice: string | null = null;
+
+  if (!outputAmountIsRaw) {
+    const suiPrice = await getCoinPrice(LONG_SUI_COIN_TYPE);
+
+    if (suiPrice !== null) {
+      if (side === SwapSide.Buy) {
+        const outputCoinPriceInInputCoin = new BigNumber(formattedInputAmount).div(formattedOutputAmount);
+        const outputCoinPriceInUsd = outputCoinPriceInInputCoin.multipliedBy(suiPrice).toFixed(9);
+
+        calculatedPrice = outputCoinPriceInUsd;
+      } else {
+        const inputCoinPriceInOutputCoin = new BigNumber(formattedOutputAmount).div(formattedInputAmount);
+        const inputCoinPriceInUsd = inputCoinPriceInOutputCoin.multipliedBy(suiPrice).toFixed(9);
+
+        calculatedPrice = inputCoinPriceInUsd;
+      }
+    }
+  }
+
+  return calculatedPrice;
+}
+
+export function getActionString({ side, userShouldConfirmSwap }: { side: SwapSide; userShouldConfirmSwap: boolean }) {
+  let actionPartString = '';
+
+  if (userShouldConfirmSwap) {
+    actionPartString = `You are going to ${side}`;
+  } else {
+    actionPartString = side === SwapSide.Buy ? 'You are buying' : 'You are selling';
+  }
+
+  return actionPartString;
 }
