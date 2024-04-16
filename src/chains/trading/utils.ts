@@ -66,6 +66,7 @@ export async function printSwapInfo({
   // Getting action part
   const actionPartString = getActionString({ side, userShouldConfirmSwap });
 
+  // Getting raw output amount string addition
   const rawOutputAmountString = outputAmountIsRaw ? ` <i>(*raw)</i>` : '';
 
   // Constructing result message
@@ -88,6 +89,7 @@ export async function printSwapInfo({
       `Otherwise, swap could be failed due to price changes.</span>\n\n`
     : '';
 
+  // Adding raw output amount mark description when it's needed
   if (outputAmountIsRaw) {
     message += "<i>*raw</i> — amount doesn't respect decimals.";
   }
