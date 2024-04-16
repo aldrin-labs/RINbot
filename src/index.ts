@@ -12,6 +12,7 @@ import { checkProvidedAddress } from './chains/refunds/conversations/checkProvid
 import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
 import { buy, instantBuy } from './chains/trading/buy/buy';
+import { DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE } from './chains/trading/config';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -23,6 +24,8 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addIndexToAssets } from './migrations/addIndexToAssets';
+import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
 import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
@@ -36,7 +39,7 @@ import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
-const APP_VERSION = '3.0.5';
+const APP_VERSION = '3.0.6';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -94,8 +97,15 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false,
           },
-          settings: { slippagePercentage: DEFAULT_SLIPPAGE, swapWithConfirmation: true },
-          assets: [],
+          settings: {
+            slippagePercentage: DEFAULT_SLIPPAGE,
+            swapWithConfirmation: true,
+            priceDifferenceThreshold: DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE,
+          },
+          assets: {
+            currentIndex: 0,
+            data: [],
+          },
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
             isUserEligibleToGetBonus: true,
@@ -132,6 +142,8 @@ async function startBot(): Promise<void> {
           9: addTradeAmountPercentageField,
           10: removeStep,
           11: addSwapConfirmationSetting,
+          12: addPriceDifferenceThreshold,
+          13: addIndexToAssets,
         },
       }),
     });

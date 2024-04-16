@@ -1,14 +1,14 @@
 import { Menu, MenuRange } from '@grammyjs/menu';
 import { ConversationId } from '../chains/conversations.config';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
-import { assets, nftHome } from '../chains/sui.functions';
+import { assets } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 import { BotContext } from '../types';
 import feesMenu from './fees';
 import launchpadMenu from './launchpad/launchpad';
 import { nftExitMenu, nftMenu } from './nft';
 import poolsMenu from './pools';
-import positionsMenu from './positions';
+import positionsMenu from './positions/positions';
 import refundsMenu from './refunds';
 import settingsMenu from './settings';
 import walletMenu from './wallet';
@@ -43,7 +43,7 @@ const menu = new Menu<BotContext>('main')
     await showRefundsPage(ctx);
   })
   .row()
-  .url('Sui Tracking Channel', "https://t.me/sui_new_tokens")
+  .url('Sui Tracking Channel', 'https://t.me/sui_new_tokens')
   .url('Buy $RIN token', 'https://jup.ag/swap/USDC-RIN')
   .dynamic((ctx: BotContext, range: MenuRange<BotContext>) => {
     const { isUserEligibleToGetBonus, isUserAgreeWithBonus, isUserClaimedBonus } = ctx.session.welcomeBonus;
