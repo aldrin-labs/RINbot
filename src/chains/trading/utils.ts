@@ -28,7 +28,7 @@ export async function printSwapInfo({
   providerName: string;
   side: SwapSide;
 }) {
-  const userShouldConfirmSwap = conversation.session.settings.swapWithConfirmation;
+  const { swapWithConfirmation: userShouldConfirmSwap, priceDifferenceThreshold } = conversation.session.settings;
   const coinManager = await getCoinManager();
 
   const inputCoinType = side === SwapSide.Buy ? SHORT_SUI_COIN_TYPE : conversation.session.tradeCoin.coinType;
@@ -48,17 +48,9 @@ export async function printSwapInfo({
   const outputCoinSymbol = outputCoinData?.symbol?.toUpperCase() ?? outputCoinType;
 
   const coinTypeToPrintPrice = side === SwapSide.Buy ? outputCoinType : inputCoinType;
-  const coinSymbolToPrintPrice = side === SwapSide.Buy ? outputCoinSymbol : inputCoinSymbol;
 
-  // Getting offchain price part
+  // Getting prices
   const offchainPrice = await conversation.external(() => getCoinPrice(coinTypeToPrintPrice));
-  const offchainPriceString =
-    offchainPrice !== null
-      ? `Current offchain <b>${coinSymbolToPrintPrice}</b> price: $<code>${offchainPrice}</code>\n`
-      : '';
-
-  // Getting calculated from swap price part
-  let calculatedPriceString = '';
   let calculatedPrice: string | null = null;
 
   if (!outputAmountIsRaw) {
@@ -76,17 +68,30 @@ export async function printSwapInfo({
 
         calculatedPrice = inputCoinPriceInUsd;
       }
-
-      calculatedPriceString = `Current swap <b>${coinSymbolToPrintPrice}</b> price: $<code>${calculatedPrice}</code>\n`;
     }
   }
 
-  // Getting prices difference part
-  let pricesDifferenceString = '';
+  // Getting rate warning part
+  let rateWarningString = '';
 
   if (offchainPrice !== null && calculatedPrice !== null) {
-    const priceDifference = new BigNumber(offchainPrice).minus(calculatedPrice).abs().toFixed(9);
-    pricesDifferenceString = `Difference in prices: $<code>${priceDifference}</code>\n`;
+    if (side === SwapSide.Buy && new BigNumber(calculatedPrice).gt(offchainPrice)) {
+      const priceDifference = new BigNumber(calculatedPrice).minus(offchainPrice);
+      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
+
+      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
+        rateWarningString =
+          `⚠ <b>Rate Warning</b>: swap price is more than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
+      }
+    } else if (side === SwapSide.Sell && new BigNumber(calculatedPrice).lt(offchainPrice)) {
+      const priceDifference = new BigNumber(offchainPrice).minus(calculatedPrice);
+      const diffPercentage = priceDifference.div(offchainPrice).multipliedBy(100).toFixed(2);
+
+      if (new BigNumber(diffPercentage).gt(priceDifferenceThreshold)) {
+        rateWarningString =
+          `⚠ <b>Rate Warning</b>: swap price is less than fair price by ` + `<code>${diffPercentage}%</code>\n\n`;
+      }
+    }
   }
 
   // Getting action part
@@ -110,12 +115,8 @@ export async function printSwapInfo({
         `<code>${formattedOutputAmount}</code>${rawOutputAmountString} <b>${outputCoinSymbol}</b> ` +
         `using <b><i>${providerName}</i></b> liquidity provider.\n\n`;
 
-  // Adding prices strings after general swap info
-  const pricesString = offchainPriceString + calculatedPriceString + pricesDifferenceString;
-
-  if (pricesString !== '') {
-    message += pricesString + '\n';
-  }
+  // Adding rate warning after general swap info
+  message += rateWarningString;
 
   // Adding hint and note if user should confirm the swap
   message += userShouldConfirmSwap
