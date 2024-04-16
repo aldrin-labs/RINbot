@@ -30,7 +30,7 @@ import skip from '../inline-keyboards/skip';
 import yesOrNo from '../inline-keyboards/yesOrNo';
 import menu from '../menu/main';
 import { nftMenu } from '../menu/nft';
-import positionsMenu from '../menu/positions';
+import positionsMenu from '../menu/positions/positions';
 import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
 import { ConversationId } from './conversations.config';
 import {
@@ -437,6 +437,8 @@ export async function assets(ctx: BotContext): Promise<void> {
     const suiBalance = await balance(ctx);
     const suiAvlBalance = await availableBalance(ctx);
 
+    ctx.session.assets.currentIndex = 0;
+
     const newMessage =
       `🪙 <a href="https://suiscan.xyz/mainnet/coin/${currentToken.type}/txs">` +
       `${currentToken.symbol}</a>${priceApiDataStr}\n\nYour SUI balance: <b>${suiBalance}</b>\n` +
@@ -556,7 +558,7 @@ export async function refreshAssets(ctx: BotContext) {
   } catch (error) {
     console.error('ERROR during postPriceApi', error);
   } finally {
-    ctx.session.assets = allCoinsAssets;
+    ctx.session.assets.data = allCoinsAssets;
   }
   return { suiAsset, allCoinsAssets };
 }

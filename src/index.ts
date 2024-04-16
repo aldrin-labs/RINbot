@@ -24,6 +24,7 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addIndexToAssets } from './migrations/addIndexToAssets';
 import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
@@ -101,7 +102,10 @@ async function startBot(): Promise<void> {
             swapWithConfirmation: true,
             priceDifferenceThreshold: DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE,
           },
-          assets: [],
+          assets: {
+            currentIndex: 0,
+            data: [],
+          },
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
             isUserEligibleToGetBonus: true,
@@ -139,6 +143,7 @@ async function startBot(): Promise<void> {
           10: removeStep,
           11: addSwapConfirmationSetting,
           12: addPriceDifferenceThreshold,
+          13: addIndexToAssets,
         },
       }),
     });
