@@ -12,6 +12,7 @@ import { checkProvidedAddress } from './chains/refunds/conversations/checkProvid
 import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
 import { buy, instantBuy } from './chains/trading/buy/buy';
+import { DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE } from './chains/trading/config';
 import { sell } from './chains/trading/sell';
 import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
 import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
@@ -23,6 +24,7 @@ import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
+import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
 import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
@@ -94,7 +96,11 @@ async function startBot(): Promise<void> {
             decimals: 9,
             noDecimals: false,
           },
-          settings: { slippagePercentage: DEFAULT_SLIPPAGE, swapWithConfirmation: true },
+          settings: {
+            slippagePercentage: DEFAULT_SLIPPAGE,
+            swapWithConfirmation: true,
+            priceDifferenceThreshold: DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE,
+          },
           assets: [],
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -132,6 +138,7 @@ async function startBot(): Promise<void> {
           9: addTradeAmountPercentageField,
           10: removeStep,
           11: addSwapConfirmationSetting,
+          12: addPriceDifferenceThreshold,
         },
       }),
     });
