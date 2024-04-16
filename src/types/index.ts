@@ -56,7 +56,7 @@ export interface CoinAssetDataExtended extends CoinAssetData {
 export interface SessionData {
   privateKey: string;
   publicKey: string;
-  settings: { slippagePercentage: number; swapWithConfirmation: boolean };
+  settings: { slippagePercentage: number; swapWithConfirmation: boolean; priceDifferenceThreshold: number };
   suiAsset: CoinAssetDataExtended;
   assets: CoinAssetDataExtended[];
   welcomeBonus: {
