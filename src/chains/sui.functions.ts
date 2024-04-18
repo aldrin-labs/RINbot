@@ -563,7 +563,7 @@ export async function refreshAssets(ctx: BotContext) {
   return { suiAsset, allCoinsAssets };
 }
 
-export async function home(ctx: BotContext) {
+export async function home(ctx: BotContext, refresh: boolean = false) {
   const userBalance = await balance(ctx);
   const avlBalance = await availableBalance(ctx);
   let price;
@@ -643,11 +643,22 @@ export async function home(ctx: BotContext) {
     `Your wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n` +
     `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
     `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.reply(welcomeText, {
-    reply_markup: menu,
-    parse_mode: 'HTML',
-    link_preview_options: { is_disabled: true },
-  });
+
+  if (refresh && ctx.chat?.id !== undefined && ctx.msg?.message_id !== undefined) {
+    try {
+      await ctx.api.editMessageText(ctx.chat.id, ctx.msg.message_id, welcomeText, {
+        reply_markup: menu,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      });
+    } catch (error) {}
+  } else {
+    await ctx.reply(welcomeText, {
+      reply_markup: menu,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    });
+  }
 }
 
 export async function nftHome(ctx: BotContext) {
