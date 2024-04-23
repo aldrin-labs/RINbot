@@ -17,4 +17,5 @@ export const createAftermathPoolPart1Article: OnboardingArticle = {
     )}\n\nSo, you have to specify the ${ib('LP coin name')} (e.g. ${c('My new coin')}) and the ` +
     `${ib('LP coin symbol')} (e.g. ${c('MY_NEW_COIN')}).`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreateAftermathPoolPart2,
+  videoUrl: 'https://fastupload.io/JqDH5vaN41AA/iCqDyyHt9e5pEHA/dZxG58QRYzVjK/create-aftermath-pool.mp4',
 };

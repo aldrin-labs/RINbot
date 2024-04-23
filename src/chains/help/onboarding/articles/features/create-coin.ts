@@ -19,4 +19,5 @@ export const createCoinArticle: OnboardingArticle = {
     `supply will be sent to the burn address.\nIf not, the entire supply will be sent to you.\n\nAfter all these ` +
     `enterings, you will be able to enjoy your newly ${ib('created coin')} 😉`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreatePoolStart,
+  videoUrl: 'https://filebin.net/nb2k59r3vxovkcof/create-coin.mp4',
 };

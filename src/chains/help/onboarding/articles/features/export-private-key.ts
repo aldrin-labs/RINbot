@@ -11,4 +11,5 @@ export const exportPrivateKeyArticle: OnboardingArticle = {
     `simple: just go to the ${ib('Wallet')} —> ${ib('Export Private Key')} and type a ${ib('CONFIRM')} word (one ` +
     `more step for your safety) – and you are done!`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.SettingsStart,
+  videoUrl: 'https://fastupload.io/Jhrg9OP1WiJA/LCy1fO3yzi7Yljt/ZvqzldP1yzaD2/export-private-key.mp4',
 };

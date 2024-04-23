@@ -16,4 +16,5 @@ export const createAftermathPoolPart2Article: OnboardingArticle = {
     `${ib('Owned Aftermath Pools')} page (${ib('Launchpad')} —> ${ib('Pools')} —> ` +
     `${ib('Owned Aftermath Pools')}).\n\nThat's it, you already are the advanced ${b('RINsui_bot')} user! 😊`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.Withdraw,
+  videoUrl: 'https://fastupload.io/JqDH5vaN41AA/iCqDyyHt9e5pEHA/dZxG58QRYzVjK/create-aftermath-pool.mp4',
 };

@@ -14,4 +14,5 @@ export const sellArticle: OnboardingArticle = {
     `you will be notified about the selling amount and how much ${b('SUI')} you will receive.\nAs for ` +
     `${ib('buying')}, you can either confirm or cancel the swap.`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.IncreasePosition,
+  videoUrl: 'https://fastupload.io/XcSUxMEpOemv/3NySbcafUpI1WFa/Z9dzBwNqxGk1b/sell-and-manage.mp4',
 };

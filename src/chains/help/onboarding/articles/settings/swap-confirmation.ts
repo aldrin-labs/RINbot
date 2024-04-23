@@ -18,4 +18,5 @@ export const swapConfirmationArticle: OnboardingArticle = {
     `always be ${ib('enabled')} back). After that, you will just receive the message with the swap information, but ` +
     `there will be no need to confirm.\n\nThat's it! 😎`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.PriceDifferenceThreshold,
+  videoUrl: 'https://fastupload.io/4c71TIOZTkN6/tJ3DwSSRsdGYSBD/QN9mExQRyG6dW/swap-confirmation.mp4',
 };

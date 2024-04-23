@@ -15,4 +15,5 @@ export const viewPositionsArticle: OnboardingArticle = {
     `you can see each ${ib('position')} information (if you have more than one, switch between them with the ` +
     `help of arrows in the menu).`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.Sell,
+  videoUrl: 'https://fastupload.io/XcSUxMEpOemv/3NySbcafUpI1WFa/Z9dzBwNqxGk1b/sell-and-manage.mp4',
 };

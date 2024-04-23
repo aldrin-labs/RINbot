@@ -14,4 +14,5 @@ export const depositArticle: OnboardingArticle = {
     `${b('SUI')} to your ${b('RINsui_bot')} wallet using your ${ib('public key')} (watch the attached video ` +
     `for an illustrative example), and that's it!`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.ActivitiesWithDepositedFunds,
+  videoUrl: 'https://fastupload.io/xT6Fe0Eoo9pC/lvgc3EUEnhkfIiW/wgWGqkZD634oy/deposit.mp4',
 };

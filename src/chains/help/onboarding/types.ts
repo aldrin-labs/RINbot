@@ -15,6 +15,7 @@ export type OnboardingArticle = {
   name: string;
   callbackQueryData: OnboardingCallbackQueryData;
   nextItemCallbackQueryData: OnboardingCallbackQueryData;
+  videoUrl?: string;
 };
 
 /**

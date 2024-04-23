@@ -12,4 +12,5 @@ export const buyAtSellAndManageArticle: OnboardingArticle = {
     `choose, as for ${ib('selling')}, either a predefined amount, or choose ${ib('Buy X SUI')} and enter the ` +
     `amount of ${b('SUI')} you want to spend manually.\n\nPretty simple, let's explore further! 😉`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreateCoin,
+  videoUrl: 'https://fastupload.io/XcSUxMEpOemv/3NySbcafUpI1WFa/Z9dzBwNqxGk1b/sell-and-manage.mp4',
 };

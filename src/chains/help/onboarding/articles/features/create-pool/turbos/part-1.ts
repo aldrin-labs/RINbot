@@ -15,4 +15,5 @@ export const createTurbosPoolPart1Article: OnboardingArticle = {
     `there is much less chance, that your pool creation will be failed.\n\nAfter entering ${ib('types')} or ` +
     `Suiscan links of both ${ib('coins')}, you need to choose a ${ib('tick spacing')} of your pool.\n\n`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreateTurbosPoolPart2,
+  videoUrl: 'https://fastupload.io/kxkuLd2eDlyd/XnyRu92QOFI3jJA/5pVzNR5Kkz7wv/create-turbos-pool.mp4',
 };

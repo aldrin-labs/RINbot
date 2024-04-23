@@ -12,4 +12,5 @@ export const withdrawArticle: OnboardingArticle = {
     `enter an address to which you'd like to send your ${b('SUI')}.\n\nAfter that, enter the amount of ${b('SUI')} ` +
     `you want to ${ib('withdraw')}, and that's it! You've successfully ${ib('withdrawed')} your funds!`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.ExportPrivateKey,
+  videoUrl: 'https://fastupload.io/TSFX13WQDwII/MVNcGBYyvIrllBu/k0embOEP93Vb4/withdraw.mp4',
 };

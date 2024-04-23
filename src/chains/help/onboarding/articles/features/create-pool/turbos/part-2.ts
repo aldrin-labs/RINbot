@@ -14,4 +14,5 @@ export const createTurbosPoolPart2Article: OnboardingArticle = {
     `will check, whether the pool with such ${ib('coins')} and ${ib('fee rates')} already exists.\nIf yes, you will ` +
     `have to change the ${ib('coin(s)')} or ${ib('tick spacing')} and try again.`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreateTurbosPoolPart3,
+  videoUrl: 'https://fastupload.io/kxkuLd2eDlyd/XnyRu92QOFI3jJA/5pVzNR5Kkz7wv/create-turbos-pool.mp4',
 };

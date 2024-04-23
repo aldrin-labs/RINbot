@@ -23,4 +23,5 @@ export const buyArticle: OnboardingArticle = {
     `${ib('buy')}. After that, you will be notified, how much the desired ${ib('coin')} you are going to ` +
     `${ib('buy')}, and you can either confirm or cancel the ${ib('swap')}.\n\nCongrats, you have succeeded! 😎`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.ViewPositions,
+  videoUrl: 'https://fastupload.io/rWsS84bB8Fx3/IT1L3xaadxvckHo/2bJG85QlrmOBE/buy.mp4',
 };

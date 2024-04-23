@@ -20,4 +20,5 @@ export const createTurbosPoolPart3Article: OnboardingArticle = {
     `moment you can visit an ${ib('Owned Turbos Pools')} page (${ib('Launchpad')} —> ${ib('Pools')} —> ` +
     `${ib('Owned Turbos Pools')}) and explore your pool statistics, nice!`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CreateAftermathPoolPart1,
+  videoUrl: 'https://fastupload.io/kxkuLd2eDlyd/XnyRu92QOFI3jJA/5pVzNR5Kkz7wv/create-turbos-pool.mp4',
 };

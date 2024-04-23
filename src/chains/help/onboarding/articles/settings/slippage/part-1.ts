@@ -17,4 +17,5 @@ export const slippagePart1Article: OnboardingArticle = {
     `receive ${c('5%')} less or ${c('5%')} more of the amount of ${ib('coins')} that I ` +
     `${ib('expect to receive')}».`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.SlippagePart2,
+  videoUrl: 'https://fastupload.io/i72qX8aYZ2N2/fjgYwLSMhjfuWaC/Pbe3PZlNeGlX6/slippage.mp4',
 };

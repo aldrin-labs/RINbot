@@ -26,4 +26,5 @@ export const priceDifferenceThresholdArticle: OnboardingArticle = {
     `You can change your ${ib('price difference threshold')} at any time in ${ib('Settings')} —> ` +
     `${ib('Price Difference Threshold')} 😉`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.CoinWhitelist,
+  videoUrl: 'https://fastupload.io/B9WBc9tFqS1F/wHnMx0nsL44d9mf/qLQ36YQEQm19j/price-difference-threshold.mp4',
 };

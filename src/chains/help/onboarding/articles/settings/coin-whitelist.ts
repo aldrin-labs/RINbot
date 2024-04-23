@@ -14,4 +14,5 @@ export const coinWhitelistArticle: OnboardingArticle = {
     `${ib('coins')} on ${b('SUI')} blockchain and is created to prevent a malicious behaviour.\n\nYou can have a ` +
     `look at it on ${ib('Settings')} —> ${ib('Coin Whitelist')}.`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.Conclusion,
+  videoUrl: 'https://fastupload.io/zzuZC1SUQ8oF/bo44Syn7yinuj5q/jar3X15bNz2dD/coin-whitelist.mp4',
 };

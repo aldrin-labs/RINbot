@@ -15,4 +15,5 @@ export const feeSystemArticle: OnboardingArticle = {
     `You can always have a look at your ${ib('fee level')} on the fees page: ${ib('Settings')} —> ${ib('Fees')}.\n\n` +
     `${s(`P.S. The fees are charged only on a ${ib('coin buy')}. All the other features do not have any fees now.`)}`,
   nextItemCallbackQueryData: OnboardingCallbackQueryData.SwapConfirmation,
+  videoUrl: 'https://fastupload.io/2QcKjIZU9CwA/0BkSKAHuJ9rgG15/gXeGOM5qX3Aa7/fees.mp4',
 };
