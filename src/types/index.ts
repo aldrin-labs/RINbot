@@ -88,6 +88,7 @@ export interface SessionData {
     } | null;
   };
   trades: { [coinType: string]: { lastTradeTimestamp: number } };
+  onboarding: { startWithOnboarding: boolean };
 }
 
 export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
