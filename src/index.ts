@@ -5,6 +5,7 @@ import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { Bot, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
 import { ConversationId } from './chains/conversations.config';
+import { showWelcomeOnboardingPage } from './chains/help/onboarding/pages/welcome';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
@@ -25,6 +26,7 @@ import { useCallbackQueries } from './middleware/callbackQueries';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addIndexToAssets } from './migrations/addIndexToAssets';
+import { addOnboardingStartField } from './migrations/addOnboardingStartField';
 import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
@@ -126,6 +128,7 @@ async function startBot(): Promise<void> {
             boostedRefundAccount,
           },
           trades: {},
+          onboarding: { startWithOnboarding: true },
         };
       },
       storage: enhanceStorage({
@@ -144,6 +147,7 @@ async function startBot(): Promise<void> {
           11: addSwapConfirmationSetting,
           12: addPriceDifferenceThreshold,
           13: addIndexToAssets,
+          14: addOnboardingStartField,
         },
       }),
     });
@@ -262,7 +266,12 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
-    await home(ctx);
+    if (ctx.session.onboarding.startWithOnboarding) {
+      ctx.session.onboarding.startWithOnboarding = false;
+      await showWelcomeOnboardingPage(ctx);
+    } else {
+      await home(ctx);
+    }
   });
 
   bot.command('close', async (ctx) => {

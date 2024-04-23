@@ -6,6 +6,8 @@ import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurf
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { priceDifferenceThresholdPercentages } from '../chains/settings/price-difference-threshold/percentages';
+import { OnboardingCallbackQueryData } from '../chains/help/onboarding/callback-query-data';
+import { showStartOnboardingPage } from '../chains/help/onboarding/pages/start';
 // eslint-disable-next-line max-len
 import { showPriceDifferenceThresholdPage } from '../chains/settings/price-difference-threshold/show-price-difference-page';
 import { slippagePercentages } from '../chains/settings/slippage/percentages';
@@ -42,6 +44,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useCoinWhitelistCallbackQueries(bot);
   useSwapConfirmationCallbackQueries(bot);
   usePriceDifferenceThresholdCallbackQueries(bot);
+  useOnboardingCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -142,5 +145,17 @@ function useSwapConfirmationCallbackQueries(bot: Bot<BotContext>) {
     ctx.session.settings.swapWithConfirmation = false;
     await ctx.answerCallbackQuery();
     await showSwapConfirmationPage(ctx);
+  });
+}
+
+function useOnboardingCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(OnboardingCallbackQueryData.Start, async (ctx) => {
+    await showStartOnboardingPage(ctx);
+    await ctx.answerCallbackQuery();
+  });
+
+  bot.callbackQuery(OnboardingCallbackQueryData.Finish, async (ctx) => {
+    await home(ctx);
+    await ctx.answerCallbackQuery();
   });
 }

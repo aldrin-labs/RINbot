@@ -5,6 +5,7 @@ import { assets, home } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
 import { BotContext } from '../types';
 import feesMenu from './fees';
+import helpMenu from './help';
 import launchpadMenu from './launchpad/launchpad';
 import { nftExitMenu, nftMenu } from './nft';
 import poolsMenu from './pools';
@@ -60,6 +61,7 @@ const menu = new Menu<BotContext>('main')
     }
   })
   .row()
+  .submenu('Help', 'help')
   .text('Refresh', async (ctx) => {
     await home(ctx, true);
   });
@@ -73,5 +75,6 @@ menu.register(poolsMenu);
 menu.register(launchpadMenu);
 menu.register(feesMenu);
 menu.register(refundsMenu);
+menu.register(helpMenu);
 
 export default menu;
