@@ -12,6 +12,8 @@ export const COIN_WHITELIST_URL = 'https://rinbot-dev.vercel.app/api/coin-whitel
 
 export const RINBOT_CHAT_URL = 'https://t.me/rinbot_chat';
 
+export const RINBOT_URL = 'https://t.me/RINsui_bot';
+
 export const SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 export const SUI_COIN_DATA = { symbol: 'SUI', decimals: SUI_DECIMALS, type: LONG_SUI_COIN_TYPE };
