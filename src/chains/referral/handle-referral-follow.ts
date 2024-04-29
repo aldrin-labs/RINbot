@@ -18,13 +18,14 @@ export async function handleReferralFollow({
     return { referrerIsChanging: false };
   }
 
+  // Prevent a scenario, when user tries to become a referrer of himself
+  if (referrerId === ctx.session.referral.referralId) {
+    await ctx.reply('❌ You cannot be a <b>referrer</b> of yourself.', { reply_markup: goHome, parse_mode: 'HTML' });
+
+    return { referrerIsChanging: false };
+  }
+
   if (currentReferrerId === null) {
-    if (referrerId === ctx.session.referral.referralId) {
-      await ctx.reply('❌ You cannot be a <b>referrer</b> of yourself.', { reply_markup: goHome, parse_mode: 'HTML' });
-
-      return { referrerIsChanging: false };
-    }
-
     ctx.session.referral.referrer.id = referrerId;
 
     setReferrerPublicKey({ ctx, referrerId });
