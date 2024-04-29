@@ -1,12 +1,13 @@
+/* eslint-disable max-len */
 import { Bot } from 'grammy';
 import { showCoinWhitelist } from '../chains/coin-whitelist/showCoinWhitelist';
 import { ConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
+import { showMainReferralPage } from '../chains/referral/pages/main';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { priceDifferenceThresholdPercentages } from '../chains/settings/price-difference-threshold/percentages';
-// eslint-disable-next-line max-len
 import { showPriceDifferenceThresholdPage } from '../chains/settings/price-difference-threshold/show-price-difference-page';
 import { slippagePercentages } from '../chains/settings/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/settings/slippage/showSlippageConfiguration';
@@ -42,6 +43,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useCoinWhitelistCallbackQueries(bot);
   useSwapConfirmationCallbackQueries(bot);
   usePriceDifferenceThresholdCallbackQueries(bot);
+  useReferralCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -142,5 +144,12 @@ function useSwapConfirmationCallbackQueries(bot: Bot<BotContext>) {
     ctx.session.settings.swapWithConfirmation = false;
     await ctx.answerCallbackQuery();
     await showSwapConfirmationPage(ctx);
+  });
+}
+
+function useReferralCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.BackToMainReferralMenu, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showMainReferralPage(ctx);
   });
 }
