@@ -13,6 +13,11 @@ export async function handleReferralFollow({
 }): Promise<{ referrerIsChanging: boolean }> {
   const currentReferrerId = ctx.session.referral.referrer.id;
 
+  // Just silent exit, when user tries to change his referrer to his current referrer
+  if (referrerId === currentReferrerId) {
+    return { referrerIsChanging: false };
+  }
+
   if (currentReferrerId === null) {
     if (referrerId === ctx.session.referral.referralId) {
       await ctx.reply('❌ You cannot be a <b>referrer</b> of yourself.', { reply_markup: goHome, parse_mode: 'HTML' });
