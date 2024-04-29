@@ -1,16 +1,20 @@
 import {
   LONG_SUI_COIN_TYPE,
+  NonEmptyArray,
   RouteManager,
   SHORT_SUI_COIN_TYPE,
   isSuiCoinType,
   transactionFromSerializedTransaction,
 } from '@avernikoz/rinbot-sui-sdk';
 import BigNumber from 'bignumber.js';
+import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../config/bot.config';
 import confirmWithCloseKeyboard from '../../inline-keyboards/mixed/confirm-with-close';
 import { BotContext, MyConversation } from '../../types';
+import { getReferrerPublicKey } from '../referral/redis/utils';
 import { SUI_COIN_DATA } from '../sui.config';
 import { getCoinManager, getRouteManager, randomUuid } from '../sui.functions';
 import { getCoinPrice } from '../utils';
+import { REFERRER_FEE_SHARE_PERCENTAGE } from './config';
 import { SwapSide } from './types';
 
 export async function printSwapInfo({
@@ -234,4 +238,46 @@ export function getActionString({ side, userShouldConfirmSwap }: { side: SwapSid
   }
 
   return actionPartString;
+}
+
+export async function getSwapFees({
+  referrerId,
+  referrerPublicKey,
+  generalFeeAmount,
+  conversation,
+}: {
+  referrerId: string | null;
+  referrerPublicKey: string | null;
+  generalFeeAmount: string;
+  conversation?: MyConversation;
+}): Promise<NonEmptyArray<{ feeAmount: string; feeCollectorAddress: string }>> {
+  let fees: NonEmptyArray<{ feeAmount: string; feeCollectorAddress: string }>;
+
+  // Edge case scenario, when something went wrong while setting the referrer public key
+  if (referrerId !== null && referrerPublicKey === null) {
+    referrerPublicKey = await getReferrerPublicKey(referrerId);
+
+    if (conversation !== undefined) {
+      conversation.session.referral.referrer.publicKey = referrerPublicKey;
+    }
+  }
+
+  if (referrerId !== null && referrerPublicKey !== null) {
+    const referrerFeeAmount = new BigNumber(generalFeeAmount)
+      .multipliedBy(REFERRER_FEE_SHARE_PERCENTAGE)
+      .dividedBy(100)
+      .toFixed(0);
+
+    const aldrinFeePercentage = new BigNumber(100).minus(REFERRER_FEE_SHARE_PERCENTAGE);
+    const aldrinFeeAmount = new BigNumber(generalFeeAmount).multipliedBy(aldrinFeePercentage).dividedBy(100).toFixed(0);
+
+    fees = [
+      { feeAmount: referrerFeeAmount, feeCollectorAddress: referrerPublicKey },
+      { feeAmount: aldrinFeeAmount, feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES },
+    ];
+  } else {
+    fees = [{ feeAmount: generalFeeAmount, feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES }];
+  }
+
+  return fees;
 }
