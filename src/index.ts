@@ -8,6 +8,10 @@ import { ConversationId } from './chains/conversations.config';
 import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
+import { changeReferrer } from './chains/referral/conversations/change-referrer';
+import { handleReferralFollow } from './chains/referral/handle-referral-follow';
+import { storeReferral } from './chains/referral/redis/utils';
+import { generateReferralId, getReferrerIdByParams } from './chains/referral/utils';
 import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
 import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
 import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
@@ -26,6 +30,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addIndexToAssets } from './migrations/addIndexToAssets';
 import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
+import { addReferralField } from './migrations/addReferralField';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
 import { addSwapConfirmationSetting } from './migrations/addSwapConfirmationSetting';
@@ -62,6 +67,7 @@ async function startBot(): Promise<void> {
       initial: (): SessionData => {
         const { privateKey, publicKey } = generateWallet();
         const boostedRefundAccount = generateWallet();
+        const referralId = generateReferralId();
 
         documentClient
           .put({
@@ -86,6 +92,8 @@ async function startBot(): Promise<void> {
             },
           })
           .catch((e) => console.error('ERROR storing boosted account', e));
+
+        storeReferral({ referralId, publicKey }).catch((e) => console.error('ERROR storing referral:', e));
 
         return {
           privateKey,
@@ -126,6 +134,7 @@ async function startBot(): Promise<void> {
             boostedRefundAccount,
           },
           trades: {},
+          referral: { referralId, referrer: { id: null, publicKey: null, newId: null } },
         };
       },
       storage: enhanceStorage({
@@ -144,6 +153,7 @@ async function startBot(): Promise<void> {
           11: addSwapConfirmationSetting,
           12: addPriceDifferenceThreshold,
           13: addIndexToAssets,
+          14: addReferralField,
         },
       }),
     });
@@ -201,6 +211,7 @@ async function startBot(): Promise<void> {
     }),
   );
   protectedConversationsComposer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
+  protectedConversationsComposer.use(createConversation(changeReferrer, { id: ConversationId.ChangeReferrer }));
 
   bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
 
@@ -262,6 +273,18 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('start', async (ctx) => {
+    const params = ctx.match;
+    const referrerId = getReferrerIdByParams(params);
+
+    if (referrerId !== '') {
+      const { referrerIsChanging } = await handleReferralFollow({ ctx, referrerId });
+
+      // If `ChangeReferrer` conversation started, we do not need `home()` to be called
+      if (referrerIsChanging) {
+        return;
+      }
+    }
+
     await home(ctx);
   });
 
