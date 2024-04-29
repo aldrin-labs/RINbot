@@ -16,10 +16,14 @@ export async function askForReferrerId({
 }): Promise<string> {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.ChangeReferrer];
 
-  await ctx.reply('Please, enter your <b>new referrer id</b>.', {
-    reply_markup: closeConversation,
-    parse_mode: 'HTML',
-  });
+  await ctx.reply(
+    'Please, enter your <b>new referrer id</b>.\n\n<span class="tg-spoiler"><b>Hint</b>: you also can change your ' +
+      '<b>referrer</b> by following his/her <b>referral link</b> or <b>referral QR-code</b>.</span>',
+    {
+      reply_markup: closeConversation,
+      parse_mode: 'HTML',
+    },
+  );
 
   const newReferrerIdContext = await conversation.wait();
   const callbackQueryData = newReferrerIdContext.callbackQuery?.data;
