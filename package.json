@@ -16,6 +16,7 @@
     "@grammyjs/conversations": "^1.2.0",
     "@grammyjs/menu": "^1.2.1",
     "@grammyjs/storage-redis": "^2.4.1",
+    "@loskir/styled-qr-code-node": "^1.5.1",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",
     "@vercel/kv": "^1.0.1",
