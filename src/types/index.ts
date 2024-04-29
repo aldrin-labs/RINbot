@@ -88,6 +88,7 @@ export interface SessionData {
     } | null;
   };
   trades: { [coinType: string]: { lastTradeTimestamp: number } };
+  referral: { referralId: string; referrer: { id: string | null; publicKey: string | null; newId: string | null } };
 }
 
 export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
