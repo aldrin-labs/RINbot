@@ -1,7 +1,9 @@
 import {
   CoinAssetData,
   CoinManagerSingleton,
+  FeeManager,
   LONG_SUI_COIN_TYPE,
+  SwapFee,
   isSuiCoinType,
   isValidTokenAddress,
 } from '@avernikoz/rinbot-sui-sdk';
@@ -13,6 +15,7 @@ import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
 import { ConversationId } from '../conversations.config';
 import { signAndExecuteTransaction } from '../conversations.utils';
+import { getUserFeePercentage } from '../fees/utils';
 import { RINCEL_COIN_TYPE } from '../sui.config';
 import { getCoinManager, getWalletManager, randomUuid } from '../sui.functions';
 import {
@@ -26,7 +29,7 @@ import {
   reactOnUnexpectedBehaviour,
 } from '../utils';
 import { SwapSide } from './types';
-import { getBestRouteTransactionDataWithExternal, printSwapInfo } from './utils';
+import { getBestRouteTransactionDataWithExternal, getSwapFees, printSwapInfo } from './utils';
 
 async function askForCoinToSell({
   ctx,
@@ -295,6 +298,51 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
 
   const amountToSell = new BigNumber(validCoinToSell.balance).multipliedBy(absolutePercentage).toString();
 
+  const { id: referrerId, publicKey: referrerPublicKey } = conversation.session.referral.referrer;
+  const feePercentage = await conversation.external(async () => (await getUserFeePercentage(ctx)).toString());
+
+  let fee: SwapFee | undefined = undefined;
+  let coinDecimals: number | undefined;
+
+  // We need the input coin decimals to calculate `generalFeeAmount`
+  if (validCoinToSell.decimals !== null) {
+    coinDecimals = validCoinToSell.decimals;
+  } else {
+    const fetchedCoinDecimals = await conversation.external(async () => {
+      const coinManager = await getCoinManager();
+      return (await coinManager.getCoinByType2(validCoinToSell.type))?.decimals;
+    });
+
+    coinDecimals = fetchedCoinDecimals;
+  }
+
+  // Charging fees only when the input coin decimals are defined
+  if (coinDecimals !== undefined) {
+    const generalFeeAmount = FeeManager.calculateFeeAmountIn({
+      feePercentage,
+      amount: amountToSell,
+      tokenDecimals: coinDecimals,
+    });
+
+    const fees = await conversation.external(() =>
+      getSwapFees({ generalFeeAmount, referrerId, referrerPublicKey, conversation }),
+    );
+
+    const inputCoinObjects = await conversation.external(async () => {
+      const wallet = await getWalletManager();
+      return await wallet.getAllCoinObjects({
+        publicKey: conversation.session.publicKey,
+        coinType: validCoinToSell.type,
+      });
+    });
+
+    fee = {
+      fees,
+      tokenFromDecimals: coinDecimals,
+      tokenFromCoinObjects: inputCoinObjects,
+    };
+  }
+
   await ctx.reply('Finding the best route to save your money… ☺️');
 
   const data = await getBestRouteTransactionDataWithExternal({
@@ -306,6 +354,7 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
       amount: amountToSell,
       signerAddress: conversation.session.publicKey,
       slippagePercentage: conversation.session.settings.slippagePercentage,
+      fee,
     },
   });
 
