@@ -1,5 +1,4 @@
 import { FeeManager, LONG_SUI_COIN_TYPE, SUI_DECIMALS } from '@avernikoz/rinbot-sui-sdk';
-import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../../config/bot.config';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
@@ -9,7 +8,7 @@ import { getUserFeePercentage } from '../../fees/utils';
 import { TransactionResultStatus, randomUuid } from '../../sui.functions';
 import { getSuiVisionTransactionLink, reactOnUnexpectedBehaviour, userMustUseCoinWhitelist } from '../../utils';
 import { SwapSide } from '../types';
-import { getBestRouteTransactionDataWithExternal, printSwapInfo } from '../utils';
+import { getBestRouteTransactionDataWithExternal, getSwapFees, printSwapInfo } from '../utils';
 import { askForAmountToSpendOnBuy, askForCoinToBuy } from './utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
@@ -44,6 +43,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
  */
 export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
   const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
+  const { id: referrerId, publicKey: referrerPublicKey } = conversation.session.referral.referrer;
 
   await ctx.reply('Finding the best route to save your money… ☺️' + randomUuid);
 
@@ -53,12 +53,17 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
     settings: { swapWithConfirmation, slippagePercentage },
   } = conversation.session;
 
-  const feePercentage = (await getUserFeePercentage(ctx)).toString();
-  const feeAmount = FeeManager.calculateFeeAmountIn({
+  const feePercentage = await conversation.external(async () => (await getUserFeePercentage(ctx)).toString());
+
+  const generalFeeAmount = FeeManager.calculateFeeAmountIn({
     feePercentage,
     amount: tradeAmountPercentage,
     tokenDecimals: SUI_DECIMALS,
   });
+
+  const fees = await conversation.external(() =>
+    getSwapFees({ generalFeeAmount, referrerId, referrerPublicKey, conversation }),
+  );
 
   const data = await getBestRouteTransactionDataWithExternal({
     conversation,
@@ -70,8 +75,8 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
       signerAddress: publicKey,
       slippagePercentage: slippagePercentage,
       fee: {
-        feeAmount,
-        feeCollectorAddress: EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES,
+        tokenFromDecimals: SUI_DECIMALS,
+        fees,
       },
     },
   });
