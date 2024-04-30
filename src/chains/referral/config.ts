@@ -11,6 +11,7 @@ export const REF_PARAM_KEY = 'ref';
 export enum ReferralRedisKeyFirstPart {
   Referrer = 'referrer',
   Referrals = 'referrals',
+  ReferralsTrades = 'referrals_trades',
 }
 
 export enum ReferrerFieldKey {
