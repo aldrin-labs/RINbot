@@ -30,6 +30,7 @@ import {
 } from '../utils';
 import { SwapSide } from './types';
 import { getBestRouteTransactionDataWithExternal, getSwapFees, printSwapInfo } from './utils';
+import { addReferralTrade } from '../referral/redis/utils';
 
 async function askForCoinToSell({
   ctx,
@@ -407,6 +408,18 @@ export async function sell(conversation: MyConversation, ctx: BotContext): Promi
     });
 
     conversation.session.tradesCount = conversation.session.tradesCount + 1;
+
+    const { id: referrerId, publicKey: referrerPublicKey } = conversation.session.referral.referrer;
+
+    if (referrerId !== null && referrerPublicKey !== null && fee !== undefined) {
+      addReferralTrade({
+        referrerId,
+        referrerPublicKey,
+        digest: resultOfSwap.digest,
+        feeCoinType: validCoinToSell.type,
+        fees: fee.fees,
+      });
+    }
 
     return;
   }

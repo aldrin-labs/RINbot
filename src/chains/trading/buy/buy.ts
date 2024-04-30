@@ -5,6 +5,7 @@ import { CallbackQueryData } from '../../../types/callback-queries-data';
 import { ConversationId } from '../../conversations.config';
 import { signAndExecuteTransactionWithoutConversation } from '../../conversations.utils';
 import { getUserFeePercentage } from '../../fees/utils';
+import { addReferralTrade } from '../../referral/redis/utils';
 import { TransactionResultStatus, randomUuid } from '../../sui.functions';
 import { getSuiVisionTransactionLink, reactOnUnexpectedBehaviour, userMustUseCoinWhitelist } from '../../utils';
 import { SwapSide } from '../types';
@@ -134,6 +135,18 @@ export const instantBuy = async (conversation: MyConversation, ctx: BotContext) 
       conversation.session.trades[coinType] = {
         lastTradeTimestamp: Date.now(),
       };
+    }
+
+    const { id: referrerId, publicKey: referrerPublicKey } = conversation.session.referral.referrer;
+
+    if (referrerId !== null && referrerPublicKey !== null) {
+      addReferralTrade({
+        referrerId,
+        referrerPublicKey,
+        digest: resultOfSwap.digest,
+        feeCoinType: LONG_SUI_COIN_TYPE,
+        fees,
+      });
     }
 
     return;
