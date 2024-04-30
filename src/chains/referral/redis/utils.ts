@@ -1,6 +1,8 @@
-import { RedisStorageClient } from '@avernikoz/rinbot-sui-sdk';
+import { RedisStorageClient, SwapFee } from '@avernikoz/rinbot-sui-sdk';
 import { getRedisClient } from '../../../config/redis.config';
 import { ReferralRedisKeyFirstPart, ReferrerFieldKey } from '../config';
+import { ReferralTradeData } from '../types';
+import { isReferralTradeData } from './type-guards';
 
 export async function storeReferral({
   referralId,
@@ -149,4 +151,78 @@ export async function getUserReferrals(userReferralId: string): Promise<string[]
   const referralIds = Object.keys(referralRecords);
 
   return referralIds;
+}
+
+export async function addReferralTrade({
+  referrerId,
+  referrerPublicKey,
+  fees,
+  digest,
+  feeCoinType,
+}: {
+  referrerId: string;
+  referrerPublicKey: string;
+  fees: SwapFee['fees'];
+  digest: string;
+  feeCoinType: string;
+}) {
+  const key = `${ReferralRedisKeyFirstPart.ReferralsTrades}:${referrerId}`;
+  const { redisClient } = await getRedisClient();
+
+  const referrerFeeObject = fees.find((feeObj) => feeObj.feeCollectorAddress === referrerPublicKey);
+
+  if (referrerFeeObject === undefined) {
+    console.warn(
+      `[addReferralTrade] Cannot find a fee object with feeCollectorAddress === "${referrerPublicKey}" ` +
+        `for digest "${digest}", referrerId "${referrerId}" and fees "${JSON.stringify(fees)}"`,
+    );
+
+    return;
+  }
+
+  const feeAmount = referrerFeeObject.feeAmount;
+
+  const fields = {
+    [digest]: JSON.stringify({ feeCoinType, feeAmount }),
+  };
+  const fieldsCount = Object.keys(fields).length;
+
+  const createdFieldsCount = await redisClient.hSet(key, fields);
+
+  if (createdFieldsCount !== fieldsCount) {
+    console.warn(
+      `[addReferralTrade] Count of created fields is not equal to ${fieldsCount} while adding referral trade ` +
+        `with "${digest}" digest to referrer with "${referrerId}" id`,
+    );
+  }
+}
+
+export async function getReferralsTrades(referrerId: string): Promise<ReferralTradeData[]> {
+  const key = `${ReferralRedisKeyFirstPart.ReferralsTrades}:${referrerId}`;
+  const { redisClient } = await getRedisClient();
+
+  const data = await redisClient.hGetAll(key);
+  const referralsTradesStringifiedData = Object.values(data);
+
+  const referralsTradesDataRaw: (ReferralTradeData | null)[] = referralsTradesStringifiedData.map((strData: string) => {
+    try {
+      const tradeData = JSON.parse(strData);
+
+      if (isReferralTradeData(tradeData)) {
+        return tradeData;
+      } else {
+        console.warn(`[getReferralsTrades] Trade data "${JSON.stringify(tradeData)}" is not the ReferralTradeData.`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`[getReferralsTrades] Cannot JSON.parse the following strData: ${strData}. Error occured:`, error);
+      return null;
+    }
+  });
+
+  const referralsTradesData: ReferralTradeData[] = referralsTradesDataRaw.filter(
+    (tradeData): tradeData is ReferralTradeData => tradeData !== null,
+  );
+
+  return referralsTradesData;
 }
