@@ -153,7 +153,9 @@ async function startBot(): Promise<void> {
 
   protectedConversationsComposer.use(conversations());
 
-  protectedConversationsComposer.use(createConversation(buy, { id: ConversationId.Buy }));
+  protectedConversationsComposer.use(
+    createConversation(buy, { id: ConversationId.Buy, maxMillisecondsToWait: 10_000 }),
+  );
   protectedConversationsComposer.use(createConversation(sell, { id: ConversationId.Sell }));
   protectedConversationsComposer.use(
     createConversation(exportPrivateKey, {

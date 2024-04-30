@@ -32,9 +32,9 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
     useSpecifiedCoin: false,
   };
 
-  const amount = await askForAmountToSpendOnBuy({ conversation, ctx, buyCoinType, retryButton });
+  // const amount = await askForAmountToSpendOnBuy({ conversation, ctx, buyCoinType, retryButton });
 
-  conversation.session.tradeCoin.tradeAmountPercentage = amount;
+  // conversation.session.tradeCoin.tradeAmountPercentage = amount;
 
   return await instantBuy(conversation, ctx);
 }
