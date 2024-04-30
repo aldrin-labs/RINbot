@@ -13,3 +13,6 @@ export type CoinWhitelistItem = {
   symbol: string;
   type: string;
 };
+
+export type CoinType = string;
+export type CoinAmount = string;
