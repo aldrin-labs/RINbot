@@ -32,7 +32,7 @@ import menu from '../menu/main';
 import { nftMenu } from '../menu/nft';
 import positionsMenu from '../menu/positions/positions';
 import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
-import { ConversationId } from './conversations.config';
+import { CommonConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
   getCoinTypeFromTransactionResult,
@@ -204,7 +204,7 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
   await ctx.reply(`Please, type the address to which you would like to send your SUI.`, {
     reply_markup: closeConversation,
   });
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.Withdraw];
 
   const messageData = await conversation.waitUntil(async (ctx) => {
     if (ctx.callbackQuery?.data === 'close-conversation') {
@@ -711,7 +711,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     { parse_mode: 'HTML' },
   );
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CreateAftermathPool];
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -1542,7 +1542,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
 export async function createCoin(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const skipButton = skip.inline_keyboard[0];
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateCoin];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CreateCoin];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
 
   const suiBalance = await balance(ctx);

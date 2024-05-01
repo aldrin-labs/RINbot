@@ -9,11 +9,11 @@ import {
 } from '../../config/bot.config';
 import { getTransactionFromMethod, signAndExecuteTransaction } from '../conversations.utils';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
-import { ConversationId } from '../conversations.config';
+import { CommonConversationId } from '../conversations.config';
 import goHome from '../../inline-keyboards/goHome';
 
 export async function welcomeBonusConversation(conversation: MyConversation, ctx: BotContext): Promise<void> {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.WelcomeBonus];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.WelcomeBonus];
   const caption =
     `To kickstart your journey with us, we're bestowing upon you ${conversation.session.welcomeBonus.amount} SUI ` +
     `to jumpstart your expedition with us. 🚀 \n\n🤔 👀 Here's the twist: After any withdrawal, your balance must ` +

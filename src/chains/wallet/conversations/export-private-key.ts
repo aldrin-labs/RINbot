@@ -2,7 +2,7 @@ import closeConversation from '../../../inline-keyboards/closeConversation';
 import goHome from '../../../inline-keyboards/goHome';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { getPrivateKeyString, userIsNotEligibleToExportPrivateKey } from '../utils';
 
 export async function exportPrivateKey(conversation: MyConversation, ctx: BotContext): Promise<void> {
@@ -15,7 +15,7 @@ export async function exportPrivateKey(conversation: MyConversation, ctx: BotCon
     parse_mode: 'HTML',
   });
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.ExportPrivateKey];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.ExportPrivateKey];
   const messageData = await conversation.waitFor(':text');
   const isExportConfirmed = messageData.msg.text === 'CONFIRM';
 
