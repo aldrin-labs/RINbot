@@ -1,6 +1,7 @@
 import { CoinAssetData } from '@avernikoz/rinbot-sui-sdk';
 import { type Conversation, type ConversationFlavor } from '@grammyjs/conversations';
 import { Context, SessionFlavor } from 'grammy';
+import { ConversationId } from './conversations';
 
 // For PNL
 export interface Trade {
@@ -88,6 +89,7 @@ export interface SessionData {
     } | null;
   };
   trades: { [coinType: string]: { lastTradeTimestamp: number } };
+  activeConversation: { id: ConversationId; version: number } | null;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
