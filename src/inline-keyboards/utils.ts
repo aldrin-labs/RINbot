@@ -5,6 +5,14 @@ export function getTwoButtonsInRow(firstKeyboard: InlineKeyboard, secondKeyboard
   return firstKeyboard.clone().add(...secondButtons);
 }
 
+export function getTwoButtonsInColumn(firstKeyboard: InlineKeyboard, secondKeyboard: InlineKeyboard): InlineKeyboard {
+  const secondButtons = secondKeyboard.inline_keyboard[0];
+  return firstKeyboard
+    .clone()
+    .row()
+    .add(...secondButtons);
+}
+
 export function shouldBeRowAfterButton(buttonIndex: number, maxButtonsInRowCount: number) {
-  return buttonIndex % maxButtonsInRowCount !== 0;
+  return (buttonIndex + 1) % maxButtonsInRowCount === 0;
 }
