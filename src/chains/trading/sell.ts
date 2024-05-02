@@ -9,8 +9,12 @@ import BigNumber from 'bignumber.js';
 import closeConversation from '../../inline-keyboards/closeConversation';
 import confirmWithCloseKeyboard from '../../inline-keyboards/mixed/confirm-with-close';
 import { retryAndGoHomeButtonsData } from '../../inline-keyboards/retryConversationButtonsFactory';
+import whitelistCoinsKeyboard, { coinCallbackQueriesData } from '../../inline-keyboards/trading/whitelist-coin-buttons';
+import { getTwoButtonsInColumn } from '../../inline-keyboards/utils';
+import coinWhitelist from '../../storage/coin-whitelist';
 import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
+import { getWhitelistCoinIndexFromCallbackQueryData } from '../coin-whitelist/utils';
 import { ConversationId } from '../conversations.config';
 import { signAndExecuteTransaction } from '../conversations.utils';
 import { RINCEL_COIN_TYPE } from '../sui.config';
@@ -39,9 +43,16 @@ async function askForCoinToSell({
   coinManager: CoinManagerSingleton;
   allCoinsAssets: CoinAssetData[];
 }) {
-  await ctx.reply('Which token do you want to sell? Please send a coin type or a link to suiscan.', {
-    reply_markup: closeConversation,
-  });
+  const coinButtonsWithCloseKeyboard = getTwoButtonsInColumn(whitelistCoinsKeyboard, closeConversation);
+
+  await ctx.reply(
+    '💸 What <b>coin</b> do you want to <b>sell</b>?\n\nPlease, <b>choose the coin</b> with buttons below or send a ' +
+      '<b>coin type</b> or a <b>link to Suiscan</b> of a different <b>coin</b>.',
+    {
+      reply_markup: coinButtonsWithCloseKeyboard,
+      parse_mode: 'HTML',
+    },
+  );
 
   await ctx.reply(
     'Example of coin type format:\n' +
@@ -53,11 +64,19 @@ async function askForCoinToSell({
   let resultCoin: CoinAssetData | undefined;
 
   await conversation.waitUntil(async (ctx) => {
-    if (ctx.callbackQuery?.data === 'close-conversation') {
+    const callbackQueryData = ctx.callbackQuery?.data;
+    if (callbackQueryData === 'close-conversation') {
       return false;
     }
 
-    const possibleCoin = ctx.msg?.text ?? '';
+    let possibleCoin = ctx.msg?.text ?? '';
+
+    if (callbackQueryData !== undefined && coinCallbackQueriesData.includes(callbackQueryData)) {
+      await ctx.answerCallbackQuery();
+
+      const coinIndex = getWhitelistCoinIndexFromCallbackQueryData(callbackQueryData);
+      possibleCoin = coinWhitelist[coinIndex].type;
+    }
 
     const coinTypeIsValid = isValidTokenAddress(possibleCoin);
     const suiScanLinkIsValid = isValidCoinLink(possibleCoin);
