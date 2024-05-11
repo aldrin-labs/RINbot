@@ -14,7 +14,7 @@ export const conversations: ConversationData[] = [
   { id: CommonConversationId.Buy, method: buy, version: 1 },
   { id: CommonConversationId.Sell, method: sell, version: 1 },
   { id: CommonConversationId.ExportPrivateKey, method: exportPrivateKey, version: 1 },
-  { id: CommonConversationId.Withdraw, method: withdraw, version: 2 },
+  { id: CommonConversationId.Withdraw, method: withdraw, version: 1 },
   { id: CommonConversationId.CreateAftermathPool, method: createAftermathPool, version: 1 },
   { id: CommonConversationId.CreateCoin, method: createCoin, version: 1 },
   { id: CommonConversationId.WelcomeBonus, method: welcomeBonusConversation, version: 1 },

@@ -21,7 +21,7 @@ export const checkActiveConversationVersion: MiddlewareFn<BotContext> = async (c
   }
 
   // This case, when there are active conversations, but the stored active conversation is `null`, may occur, when
-  // the user started the conversation(s) before the RINbot update with the active conversation storing to the session.
+  // the user started the conversation(s) before the active conversation storing feature.
   if (storedConversation === null) {
     await ctx.reply(
       '👋 Hey! The RINsui_bot is just got updated. To avoid any issues, all the active interactions with the bot ' +
