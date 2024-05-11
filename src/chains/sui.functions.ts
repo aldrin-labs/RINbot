@@ -4,6 +4,7 @@ import {
   CoinAssetData,
   CoinManagerSingleton,
   FlowxSingleton,
+  InterestProtocolSingleton,
   LONG_SUI_COIN_TYPE,
   RedisStorageSingleton,
   RouteManager,
@@ -32,7 +33,7 @@ import menu from '../menu/main';
 import { nftMenu } from '../menu/nft';
 import positionsMenu from '../menu/positions/positions';
 import { BotContext, CoinAssetDataExtended, MyConversation, PriceApiPayload } from '../types';
-import { ConversationId } from './conversations.config';
+import { CommonConversationId } from './conversations.config';
 import {
   calculateMaxTotalSupply,
   getCoinTypeFromTransactionResult,
@@ -138,9 +139,22 @@ export const getAftermath = async () => {
   return aftermath;
 };
 
+export const getInterest = async () => {
+  const { redisClient } = await getRedisClient();
+  const storage = RedisStorageSingleton.getInstance(redisClient);
+
+  const interest = await InterestProtocolSingleton.getInstance({
+    suiProviderUrl: SUI_PROVIDER_URL,
+    cacheOptions: { storage, ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS },
+    lazyLoading: false,
+  });
+
+  return interest;
+};
+
 export const getCoinManager = async () => {
   console.time(`CoinManagerSingleton.getInstance ${randomUuid}`);
-  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx(), getInterest()]);
 
   const coinManager = CoinManagerSingleton.getInstance(providers, SUI_PROVIDER_URL);
   console.timeEnd(`CoinManagerSingleton.getInstance ${randomUuid}`);
@@ -161,7 +175,7 @@ export const getWalletManager = async () => {
 export const getRouteManager = async () => {
   // console.time(`RouteManager.getInstance.${randomUuid}`)
   const coinManager = await getCoinManager();
-  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx(), getInterest()]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
   // console.timeEnd(`RouteManager.getInstance.${randomUuid}`)
@@ -204,7 +218,7 @@ export async function withdraw(conversation: MyConversation, ctx: BotContext): P
   await ctx.reply(`Please, type the address to which you would like to send your SUI.`, {
     reply_markup: closeConversation,
   });
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Withdraw];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.Withdraw];
 
   const messageData = await conversation.waitUntil(async (ctx) => {
     if (ctx.callbackQuery?.data === 'close-conversation') {
@@ -563,7 +577,7 @@ export async function refreshAssets(ctx: BotContext) {
   return { suiAsset, allCoinsAssets };
 }
 
-export async function home(ctx: BotContext) {
+export async function home(ctx: BotContext, refresh: boolean = false) {
   const userBalance = await balance(ctx);
   const avlBalance = await availableBalance(ctx);
   let price;
@@ -643,11 +657,24 @@ export async function home(ctx: BotContext) {
     `Your wallet address (click to copy): <code>${ctx.session.publicKey}</code>\n\n` +
     `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
     `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
-  await ctx.reply(welcomeText, {
-    reply_markup: menu,
-    parse_mode: 'HTML',
-    link_preview_options: { is_disabled: true },
-  });
+
+  const refreshIsAvailable = ctx.chat?.id !== undefined && ctx.msg?.message_id !== undefined;
+
+  if (refresh && refreshIsAvailable) {
+    try {
+      await ctx.api.editMessageText(ctx.chat.id, ctx.msg.message_id, welcomeText, {
+        reply_markup: menu,
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true },
+      });
+    } catch (error) {}
+  } else {
+    await ctx.reply(welcomeText, {
+      reply_markup: menu,
+      parse_mode: 'HTML',
+      link_preview_options: { is_disabled: true },
+    });
+  }
 }
 
 export async function nftHome(ctx: BotContext) {
@@ -700,7 +727,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
     { parse_mode: 'HTML' },
   );
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateAftermathPool];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CreateAftermathPool];
   const coinManager = await getCoinManager();
   const allCoinsAssets = await conversation.external(async () => {
     const walletManager = await getWalletManager();
@@ -1531,7 +1558,7 @@ export async function createAftermathPool(conversation: MyConversation, ctx: Bot
 
 export async function createCoin(conversation: MyConversation, ctx: BotContext): Promise<void> {
   const skipButton = skip.inline_keyboard[0];
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateCoin];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CreateCoin];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
 
   const suiBalance = await balance(ctx);

@@ -1,4 +1,4 @@
-export enum ConversationId {
+export enum CommonConversationId {
   InstantBuy = 'instantBuy',
   InstantSell = 'instantSell',
   Buy = 'buy',

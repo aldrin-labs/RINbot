@@ -2,7 +2,7 @@ import { getPoolObjectIdFromTransactionResult } from '@avernikoz/rinbot-sui-sdk'
 import addCetusLiquidityKeyboard from '../../../inline-keyboards/addCetusLiquidity';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransactionAndReturnResult } from '../../conversations.utils';
 import { TransactionResultStatus, getCetus, getCoinManager, getWalletManager } from '../../sui.functions';
 import { SuiTransactionBlockResponse } from '../../types';
@@ -19,7 +19,7 @@ export async function createCetusPool(conversation: MyConversation, ctx: BotCont
 
     return coinAssets;
   });
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CreateCetusPool];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CreateCetusPool];
 
   const firstValidatedCoin = await askForCoinInPool({
     conversation,

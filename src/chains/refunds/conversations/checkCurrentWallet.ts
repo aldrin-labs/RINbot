@@ -6,7 +6,7 @@ import refundOptionsKeyboard from '../../../inline-keyboards/refund-options';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { balance } from '../../sui.functions';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { getRefundManager } from '../getRefundManager';
@@ -15,7 +15,7 @@ import { claimBaseRefund, claimBoostedRefund } from './utils';
 
 export async function checkCurrentWallet(conversation: MyConversation, ctx: BotContext) {
   const refundManager = getRefundManager();
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CheckCurrentWalletForRefund];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CheckCurrentWalletForRefund];
   const closeButtons = closeConversation.inline_keyboard[0];
   const optionsWithCloseKeyboard = refundOptionsKeyboard
     .clone()

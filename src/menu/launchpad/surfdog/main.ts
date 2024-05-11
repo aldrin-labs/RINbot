@@ -4,6 +4,7 @@ import { showGlobalStats } from '../../../chains/launchpad/surfdog/show-pages/sh
 import { showRules } from '../../../chains/launchpad/surfdog/show-pages/showRules';
 import { showUserTickets } from '../../../chains/launchpad/surfdog/show-pages/showUserTickets';
 import { home } from '../../../chains/sui.functions';
+import { enterConversation } from '../../../middleware/conversations/utils';
 import { BotContext } from '../../../types';
 import globalStatsMenu from './globalStats';
 import userTicketsMenu from './userTickets';
@@ -13,7 +14,7 @@ const surfdogMenu = new Menu<BotContext>('surfdog')
     await showUserTickets(ctx);
   })
   .text('Buy Tickets', async (ctx) => {
-    await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+    await enterConversation({ ctx, conversationId: SurfdogConversationId.BuySurfdogTickets });
   })
   .row()
   .text('Global Stats', async (ctx) => {

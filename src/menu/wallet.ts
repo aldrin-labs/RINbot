@@ -1,7 +1,8 @@
 import { Menu } from '@grammyjs/menu';
+import { CommonConversationId } from '../chains/conversations.config';
 import { getExplorerLink } from '../chains/sui.functions';
+import { enterConversation } from '../middleware/conversations/utils';
 import { BotContext } from '../types';
-import { ConversationId } from '../chains/conversations.config';
 
 const walletMenu = new Menu<BotContext>('wallet-menu')
   .dynamic(async (ctx, range) => {
@@ -15,14 +16,14 @@ const walletMenu = new Menu<BotContext>('wallet-menu')
     });
   })
   .text('Withdraw X amount', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.Withdraw);
+    await enterConversation({ ctx, conversationId: CommonConversationId.Withdraw });
   })
   .row()
   .text('Export Private Key', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
+    await enterConversation({ ctx, conversationId: CommonConversationId.ExportPrivateKey });
   })
   // .text('Import New Wallet', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.ImportNewWallet });
   // })
   .row();
 

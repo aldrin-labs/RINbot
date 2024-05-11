@@ -1,8 +1,24 @@
 // Source: https://dexscreener.com/sui?rankBy=trendingScoreH6&order=desc&minLiq=30000&minFdv=150000&minAge=72
 export default [
   {
+    symbol: 'RINCEL',
+    type: '0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
+  },
+  {
+    symbol: 'RINWIF',
+    type: '0x4c023b94ba2e42e5ce1400191d0228216359f4de894150b813b1f514d2668426::rinwif::RINWIF',
+  },
+  {
     symbol: 'FUD',
     type: '0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD',
+  },
+  {
+    symbol: 'USDC',
+    type: '0x5d4b302506645c37ff133b98c4b50a5ae14841659738d6d733d59d0d217a93bf::coin::COIN',
+  },
+  {
+    symbol: 'USDT',
+    type: '0xc060006111016b8a020ad5b33834984a437aaa7d3c74c18e09a95d48aceab08c::coin::COIN',
   },
   {
     symbol: 'HSUI',
@@ -21,39 +37,15 @@ export default [
     type: '0x5d1f47ea69bb0de31c313d7acf89b890dbb8991ea8e03c6c355171f84bb1ba4a::turbos::TURBOS',
   },
   {
-    symbol: 'USDY',
-    type: '0x960b531667636f39e85867775f52f6b1f220a058c4de786905bdf761e06a56bb::usdy::USDY',
-  },
-  {
-    symbol: 'FLAME',
-    type: '0x247a6d271810efbe80943433e84b9360e2f976fce89e7c19dc680f5aae8738e2::flame::FLAME',
-  },
-  {
-    symbol: 'RINCEL',
-    type: '0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
-  },
-  {
-    symbol: 'ETHW',
-    type: '0xc103153755336ccfc91f5524745557868103ce2454d8d473ba0e560f7e52c9e5::ethw::ETHW',
-  },
-  {
-    symbol: 'HHS',
-    type: '0x996374e9df45796fe8112663a37272af4d33e7531c67d21aaa5cc93b3d1ded5c::hhs::HHS',
-  },
-  {
-    symbol: 'KIMCHI',
-    type: '0xb6baa75577e4bbffba70207651824606e51d38ae23aa94fb9fb700e0ecf50064::kimchi::KIMCHI',
-  },
-  {
-    symbol: 'uni the wonder dog',
-    type: '0xead92ec6492b9c51ab7dbb079e60d8049062f771951df15f8012d22baeff4c93::unithewonderdog::UNITHEWONDERDOG',
-  },
-  {
-    symbol: 'VAPOREON',
-    type: '0x84d155fb70aebcc1391bf497d8fc139154be745765dfec57faef4704f4112c79::vaporeon::VAPOREON',
-  },
-  {
     symbol: 'SUIB',
     type: '0xed4504e791e1dad7bf93b41e089b4733c27f35fde505693e18186c2ba8e2e14b::suib::SUIB',
+  },
+  {
+    symbol: 'DEEP',
+    type: '0xf505a11074f2f2400d5512a6b7140dda45ab347862f69c70e1acd1eb68d2d631::deep::DEEP',
+  },
+  {
+    symbol: 'haSUI',
+    type: '0x65ad5ec4d300b9bdcc6b97c9c53fc32859ce05cc0fe9656149e340dd07c8f363::hasui::HASUI',
   },
 ];

@@ -6,12 +6,12 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import { documentClient } from '../../../services/aws';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { reactOnUnexpectedBehaviour } from '../../utils';
 import { warnWithCheckAndPrivateKeyPrinting } from '../utils';
 
 export async function importNewWallet(conversation: MyConversation, ctx: BotContext): Promise<void> {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.ImportNewWallet];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.ImportNewWallet];
   const warnMessage =
     '✅ Before proceeding with importing a new wallet, please be aware that you will need to <i><b>export the private ' +
     'key of your current wallet</b></i>. Pressing the <b>Confirm</b> button will initiate the process of exporting ' +

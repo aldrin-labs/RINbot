@@ -3,7 +3,7 @@ import { EXTERNAL_WALLET_ADDRESS_TO_STORE_FEES } from '../../../config/bot.confi
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { signAndExecuteTransactionWithoutConversation } from '../../conversations.utils';
 import { getUserFeePercentage } from '../../fees/utils';
 import { TransactionResultStatus, randomUuid } from '../../sui.functions';
@@ -13,7 +13,7 @@ import { getBestRouteTransactionDataWithExternal, printSwapInfo } from '../utils
 import { askForAmountToSpendOnBuy, askForCoinToBuy } from './utils';
 
 export async function buy(conversation: MyConversation, ctx: BotContext) {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Buy];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.Buy];
   const useSpecifiedCoin = await conversation.external(() => conversation.session.tradeCoin.useSpecifiedCoin);
   const coinType = conversation.session.tradeCoin.coinType;
 
@@ -43,7 +43,7 @@ export async function buy(conversation: MyConversation, ctx: BotContext) {
  * Makes buy with params specified in `session.tradeCoin`.
  */
 export const instantBuy = async (conversation: MyConversation, ctx: BotContext) => {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.InstantBuy];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.InstantBuy];
 
   await ctx.reply('Finding the best route to save your money… ☺️' + randomUuid);
 
