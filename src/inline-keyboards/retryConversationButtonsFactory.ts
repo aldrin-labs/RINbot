@@ -1,19 +1,18 @@
 import { InlineKeyboard } from 'grammy';
-import { ConversationId } from '../chains/conversations.config';
+import { CommonConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
+import { ConversationId } from '../types/conversations';
 import goHome from './goHome';
 import surfdogHomeKeyboard from './surfdog/surfdogHome';
 
-export type RetriableConversationId = ConversationId | SurfdogConversationId;
-
-export type RetryAndGoHomeButtonsData = Record<RetriableConversationId, InlineKeyboard>;
+export type RetryAndGoHomeButtonsData = Record<ConversationId, InlineKeyboard>;
 
 export const retryAndGoHomeButtonsData = retryConversationButtonsFactory();
 
 function retryConversationButtonsFactory(): RetryAndGoHomeButtonsData {
-  const conversationIds = [...Object.values(ConversationId), ...Object.values(SurfdogConversationId)];
+  const conversationIds = [...Object.values(CommonConversationId), ...Object.values(SurfdogConversationId)];
 
-  return conversationIds.reduce((buttonsMap: RetryAndGoHomeButtonsData, conversationId: RetriableConversationId) => {
+  return conversationIds.reduce((buttonsMap: RetryAndGoHomeButtonsData, conversationId: ConversationId) => {
     let homeKeyboard: InlineKeyboard = goHome;
 
     if (Object.values(SurfdogConversationId).includes(conversationId as SurfdogConversationId)) {

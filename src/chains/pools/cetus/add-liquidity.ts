@@ -5,7 +5,7 @@ import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConver
 import skip from '../../../inline-keyboards/skip';
 import yesOrNo from '../../../inline-keyboards/yesOrNo';
 import { BotContext, MyConversation } from '../../../types';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransactionAndReturnResult } from '../../conversations.utils';
 import { TransactionResultStatus, getCetus, getCoinManager, getWalletManager } from '../../sui.functions';
 import { CetusPool, SuiTransactionBlockResponse } from '../../types';
@@ -17,7 +17,7 @@ export async function addCetusLiquidity(conversation: MyConversation, ctx: BotCo
     parse_mode: 'HTML',
   });
 
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.AddCetusPoolLiquidity];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.AddCetusPoolLiquidity];
   const skipButton = skip.inline_keyboard[0];
   const closeWithSkipReplyMarkup = closeConversation.clone().add(...skipButton);
 

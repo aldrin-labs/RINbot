@@ -1,4 +1,4 @@
-import { ConversationId } from '../../chains/conversations.config';
+import { CommonConversationId } from '../../chains/conversations.config';
 import {
   formatTokenInfo,
   getExtendedWithGetPriceApiResponseDataCoin,
@@ -6,6 +6,7 @@ import {
   hasDefinedPrice,
 } from '../../chains/priceapi.utils';
 import { availableBalance, balance } from '../../chains/sui.functions';
+import { enterConversation } from '../../middleware/conversations/utils';
 import { BotContext } from '../../types';
 
 export async function updateMessage(ctx: BotContext) {
@@ -84,7 +85,10 @@ export async function buyFromPositionsMenu({
     useSpecifiedCoin: true,
   };
 
-  await ctx.conversation.enter(absoluteAmountPercentage === 0 ? ConversationId.Buy : ConversationId.InstantBuy);
+  await enterConversation({
+    ctx,
+    conversationId: absoluteAmountPercentage === 0 ? CommonConversationId.Buy : CommonConversationId.InstantBuy,
+  });
 }
 
 export async function sellFromPositionsMenu({
@@ -106,7 +110,7 @@ export async function sellFromPositionsMenu({
     useSpecifiedCoin: false,
   };
 
-  await ctx.conversation.enter(ConversationId.Sell);
+  await enterConversation({ ctx, conversationId: CommonConversationId.Sell });
 }
 
 export async function refreshCurrentAsset(ctx: BotContext) {

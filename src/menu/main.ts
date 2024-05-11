@@ -1,8 +1,9 @@
 import { Menu, MenuRange } from '@grammyjs/menu';
-import { ConversationId } from '../chains/conversations.config';
+import { CommonConversationId } from '../chains/conversations.config';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { assets, home } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
+import { enterConversation } from '../middleware/conversations/utils';
 import { BotContext } from '../types';
 import feesMenu from './fees';
 import launchpadMenu from './launchpad/launchpad';
@@ -20,7 +21,8 @@ const menu = new Menu<BotContext>('main')
       tradeAmountPercentage: '0',
       useSpecifiedCoin: false,
     };
-    await ctx.conversation.enter('buy');
+
+    await enterConversation({ ctx, conversationId: CommonConversationId.Buy });
   })
   .text('Sell & Manage', async (ctx) => {
     await assets(ctx);
@@ -55,7 +57,7 @@ const menu = new Menu<BotContext>('main')
     ) {
       if (ENABLE_WELCOME_BONUS)
         range.row().text('Claim Free SUI', async (ctx: BotContext) => {
-          await ctx.conversation.enter(ConversationId.WelcomeBonus);
+          await enterConversation({ ctx, conversationId: CommonConversationId.WelcomeBonus });
         });
     }
   })
