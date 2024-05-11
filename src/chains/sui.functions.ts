@@ -658,7 +658,9 @@ export async function home(ctx: BotContext, refresh: boolean = false) {
     `${positionOverview}Your SUI balance: ${balanceSUIdStr}\n` +
     `Your available SUI balance: ${avlBalanceSUIdStr}\n\n${totalBalanceStr}`;
 
-  if (refresh && ctx.chat?.id !== undefined && ctx.msg?.message_id !== undefined) {
+  const refreshIsAvailable = ctx.chat?.id !== undefined && ctx.msg?.message_id !== undefined;
+
+  if (refresh && refreshIsAvailable) {
     try {
       await ctx.api.editMessageText(ctx.chat.id, ctx.msg.message_id, welcomeText, {
         reply_markup: menu,
