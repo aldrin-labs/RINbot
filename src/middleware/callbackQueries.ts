@@ -15,6 +15,7 @@ import { assets, home } from '../chains/sui.functions';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
 import { CallbackQueryData } from '../types/callback-queries-data';
+import { showMemechanLiveCoinsList } from '../chains/memecoin-list/showMemechanList';
 import { isConversationId } from './conversations/type-guards';
 import { enterConversation } from './conversations/utils';
 
@@ -44,6 +45,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useCoinWhitelistCallbackQueries(bot);
   useSwapConfirmationCallbackQueries(bot);
   usePriceDifferenceThresholdCallbackQueries(bot);
+  useMemechanLiveCoinsCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -133,6 +135,13 @@ function useCoinWhitelistCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.CoinWhitelist, async (ctx) => {
     await ctx.answerCallbackQuery();
     await showCoinWhitelist(ctx);
+  });
+}
+
+function useMemechanLiveCoinsCallbackQueries(bot: Bot<BotContext>) {
+  bot.callbackQuery(CallbackQueryData.MemechanLiveCoinsList, async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await showMemechanLiveCoinsList(ctx);
   });
 }
 
