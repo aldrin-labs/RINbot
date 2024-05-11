@@ -1,28 +1,24 @@
 import { LONG_SUI_COIN_TYPE } from '@avernikoz/rinbot-sui-sdk';
 import { autoRetry } from '@grammyjs/auto-retry';
-import { conversations, createConversation } from '@grammyjs/conversations';
+import { conversations } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { Bot, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
-import { ConversationId } from './chains/conversations.config';
-import { buySurfdogTickets } from './chains/launchpad/surfdog/conversations/conversations';
-import { SurfdogConversationId } from './chains/launchpad/surfdog/conversations/conversations.config';
-import { showSurfdogPage } from './chains/launchpad/surfdog/show-pages/showSurfdogPage';
-import { checkProvidedAddress } from './chains/refunds/conversations/checkProvidedAddress';
+import { CommonConversationId } from './chains/conversations.config';
 import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
-import { createAftermathPool, createCoin, generateWallet, home, withdraw } from './chains/sui.functions';
-import { buy, instantBuy } from './chains/trading/buy/buy';
+import { generateWallet, home } from './chains/sui.functions';
 import { DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE } from './chains/trading/config';
-import { sell } from './chains/trading/sell';
-import { exportPrivateKey } from './chains/wallet/conversations/export-private-key';
-import { welcomeBonusConversation } from './chains/welcome-bonus/welcomeBonus';
 import { balances } from './commands/balances';
 import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
 import { conversationErrorBoundaryHandler } from './error-boundaries/conversations-boundary';
 import { generalErrorBoundaryHandler } from './error-boundaries/general-boundary';
 import menu from './menu/main';
 import { useCallbackQueries } from './middleware/callbackQueries';
+import { checkActiveConversationVersion } from './middleware/conversation-version-check';
+import { useConversations } from './middleware/conversations/use-conversations';
+import { enterConversation } from './middleware/conversations/utils';
 import { timeoutMiddleware } from './middleware/timeoutMiddleware';
+import { addActiveConversation } from './migrations/addActiveConversation';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addIndexToAssets } from './migrations/addIndexToAssets';
 import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
@@ -39,7 +35,7 @@ import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
-const APP_VERSION = '3.0.6';
+const APP_VERSION = '3.0.7';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
@@ -126,6 +122,7 @@ async function startBot(): Promise<void> {
             boostedRefundAccount,
           },
           trades: {},
+          activeConversation: null,
         };
       },
       storage: enhanceStorage({
@@ -144,6 +141,7 @@ async function startBot(): Promise<void> {
           11: addSwapConfirmationSetting,
           12: addPriceDifferenceThreshold,
           13: addIndexToAssets,
+          14: addActiveConversation,
         },
       }),
     });
@@ -152,55 +150,8 @@ async function startBot(): Promise<void> {
   bot.api.config.use(autoRetry({ maxRetryAttempts: 1, retryOnInternalServerErrors: true }));
 
   protectedConversationsComposer.use(conversations());
-
-  protectedConversationsComposer.use(createConversation(buy, { id: ConversationId.Buy }));
-  protectedConversationsComposer.use(createConversation(sell, { id: ConversationId.Sell }));
-  protectedConversationsComposer.use(
-    createConversation(exportPrivateKey, {
-      id: ConversationId.ExportPrivateKey,
-    }),
-  );
-  protectedConversationsComposer.use(createConversation(withdraw, { id: ConversationId.Withdraw }));
-  protectedConversationsComposer.use(
-    createConversation(createAftermathPool, {
-      id: ConversationId.CreateAftermathPool,
-    }),
-  );
-  // protectedConversationsComposer.use(
-  //   createConversation(addCetusLiquidity, {
-  //     id: ConversationId.AddCetusPoolLiquidity,
-  //   }),
-  // );
-  // protectedConversationsComposer.use(
-  //   createConversation(createCetusPool, {
-  //     id: ConversationId.CreateCetusPool,
-  //   }),
-  // );
-  protectedConversationsComposer.use(createConversation(createCoin, { id: ConversationId.CreateCoin }));
-  protectedConversationsComposer.use(
-    createConversation(buySurfdogTickets, {
-      id: SurfdogConversationId.BuySurfdogTickets,
-    }),
-  );
-  protectedConversationsComposer.use(
-    createConversation(welcomeBonusConversation, {
-      id: ConversationId.WelcomeBonus,
-    }),
-  );
-  // protectedConversationsComposer.use(
-  //   createConversation(importNewWallet, { id: ConversationId.ImportNewWallet }),
-  // );
-  // protectedConversationsComposer.use(
-  //   createConversation(checkCurrentWallet, {
-  //     id: ConversationId.CheckCurrentWalletForRefund,
-  //   }),
-  // );
-  protectedConversationsComposer.use(
-    createConversation(checkProvidedAddress, {
-      id: ConversationId.CheckProvidedAddressForRefund,
-    }),
-  );
-  protectedConversationsComposer.use(createConversation(instantBuy, { id: ConversationId.InstantBuy }));
+  protectedConversationsComposer.use(checkActiveConversationVersion);
+  useConversations(protectedConversationsComposer);
 
   bot.errorBoundary(generalErrorBoundaryHandler).use(conversationsComposer);
 
@@ -220,7 +171,7 @@ async function startBot(): Promise<void> {
       useSpecifiedCoin: false,
     };
 
-    await ctx.conversation.enter(ConversationId.Buy);
+    await enterConversation({ ctx, conversationId: CommonConversationId.Buy });
   });
 
   bot.command('sell', async (ctx) => {
@@ -230,11 +181,11 @@ async function startBot(): Promise<void> {
       useSpecifiedCoin: false,
     };
 
-    await ctx.conversation.enter(ConversationId.Sell);
+    await enterConversation({ ctx, conversationId: CommonConversationId.Sell });
   });
 
   bot.command('withdrawal', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.Withdraw);
+    await enterConversation({ ctx, conversationId: CommonConversationId.Withdraw });
   });
 
   bot.command('balances', async (ctx) => {
@@ -242,23 +193,19 @@ async function startBot(): Promise<void> {
   });
 
   bot.command('createaftermathpool', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CreateAftermathPool);
+    await enterConversation({ ctx, conversationId: CommonConversationId.CreateAftermathPool });
   });
 
   // bot.command('createcetuspool', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.CreateCetusPool);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.CreateCetusPool });
   // });
 
   // bot.command('addcetuspoolliquidity', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.AddCetusPoolLiquidity });
   // });
 
   bot.command('createcoin', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CreateCoin);
-  });
-
-  bot.command('surfdog', async (ctx) => {
-    await showSurfdogPage(ctx);
+    await enterConversation({ ctx, conversationId: CommonConversationId.CreateCoin });
   });
 
   bot.command('start', async (ctx) => {
@@ -270,7 +217,7 @@ async function startBot(): Promise<void> {
   });
 
   // bot.command('importnewwallet', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.ImportNewWallet);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.ImportNewWallet });
   // });
 
   // Set commands suggestion
@@ -297,7 +244,6 @@ async function startBot(): Promise<void> {
     { command: 'createcoin', description: 'Create coin' },
     { command: 'createpool', description: 'Create liquidity pool' },
     { command: 'createcoin', description: 'Create coin' },
-    { command: 'surfdog', description: 'Enter into $SURFDOG launchpad' },
     // { command: 'importnewwallet', description: 'Import new wallet' },
   ]);
 
@@ -305,7 +251,7 @@ async function startBot(): Promise<void> {
 
   // TODO: Move this to `useCallbackQueries`
   bot.callbackQuery('add-cetus-liquidity', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
+    await enterConversation({ ctx, conversationId: CommonConversationId.AddCetusPoolLiquidity });
     await ctx.answerCallbackQuery();
   });
 

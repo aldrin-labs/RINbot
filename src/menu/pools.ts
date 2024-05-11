@@ -1,14 +1,15 @@
 import { Menu } from '@grammyjs/menu';
-import { ConversationId } from '../chains/conversations.config';
+import { CommonConversationId } from '../chains/conversations.config';
 import { ownedAftermathPools } from '../chains/sui.functions';
+import { enterConversation } from '../middleware/conversations/utils';
 import { BotContext } from '../types';
 
 const poolsMenu = new Menu<BotContext>('sui-pools')
   .text('Create Aftermath Pool', async (ctx) => {
-    await ctx.conversation.enter(ConversationId.CreateAftermathPool);
+    await enterConversation({ ctx, conversationId: CommonConversationId.CreateAftermathPool });
   })
   // .text('Create Cetus Pool', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.CreateCetusPool);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.CreateCetusPool });
   // })
   .row()
   .text('Owned Aftermath Pools', async (ctx) => {
@@ -19,7 +20,7 @@ const poolsMenu = new Menu<BotContext>('sui-pools')
   // })
   // .row()
   // .text('Add Liquidity (Cetus)', async (ctx) => {
-  //   await ctx.conversation.enter(ConversationId.AddCetusPoolLiquidity);
+  //   await enterConversation({ ctx, conversationId: CommonConversationId.AddCetusPoolLiquidity });
   // })
   .row()
   .back('Home');

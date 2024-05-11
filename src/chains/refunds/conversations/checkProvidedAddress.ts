@@ -11,7 +11,7 @@ import refundsKeyboard from '../../../inline-keyboards/refunds';
 import { retryAndGoHomeButtonsData } from '../../../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
-import { ConversationId } from '../../conversations.config';
+import { CommonConversationId } from '../../conversations.config';
 import { getTransactionFromMethod, signAndExecuteTransaction } from '../../conversations.utils';
 import { TransactionResultStatus } from '../../sui.functions';
 import { getSuiVisionTransactionLink, reactOnUnexpectedBehaviour } from '../../utils';
@@ -23,7 +23,7 @@ import { getBoostedClaimCap } from './utils';
 
 export async function checkProvidedAddress(conversation: MyConversation, ctx: BotContext) {
   const refundManager = getRefundManager();
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.CheckProvidedAddressForRefund];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.CheckProvidedAddressForRefund];
 
   const retryButtons = retryButton.inline_keyboard[0];
   const importWalletWithRetryKeyboard = importWalletKeyboard

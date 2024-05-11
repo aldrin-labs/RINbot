@@ -15,7 +15,7 @@ import coinWhitelist from '../../storage/coin-whitelist';
 import { BotContext, MyConversation } from '../../types';
 import { CallbackQueryData } from '../../types/callback-queries-data';
 import { getWhitelistCoinIndexFromCallbackQueryData } from '../coin-whitelist/utils';
-import { ConversationId } from '../conversations.config';
+import { CommonConversationId } from '../conversations.config';
 import { signAndExecuteTransaction } from '../conversations.utils';
 import { RINCEL_COIN_TYPE } from '../sui.config';
 import { getCoinManager, getWalletManager, randomUuid } from '../sui.functions';
@@ -208,7 +208,7 @@ async function askForPercentageToSell(
 }
 
 export async function sell(conversation: MyConversation, ctx: BotContext): Promise<void> {
-  const retryButton = retryAndGoHomeButtonsData[ConversationId.Sell];
+  const retryButton = retryAndGoHomeButtonsData[CommonConversationId.Sell];
 
   const availableBalance = await conversation.external(async () => {
     const walletManager = await getWalletManager();

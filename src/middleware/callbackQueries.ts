@@ -1,6 +1,6 @@
 import { Bot } from 'grammy';
 import { showCoinWhitelist } from '../chains/coin-whitelist/showCoinWhitelist';
-import { ConversationId } from '../chains/conversations.config';
+import { CommonConversationId } from '../chains/conversations.config';
 import { SurfdogConversationId } from '../chains/launchpad/surfdog/conversations/conversations.config';
 import { showSurfdogPage } from '../chains/launchpad/surfdog/show-pages/showSurfdogPage';
 import { showUserTickets } from '../chains/launchpad/surfdog/show-pages/showUserTickets';
@@ -16,6 +16,8 @@ import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversation
 import { BotContext } from '../types';
 import { CallbackQueryData } from '../types/callback-queries-data';
 import { showMemechanLiveCoinsList } from '../chains/memecoin-list/showMemechanList';
+import { isConversationId } from './conversations/type-guards';
+import { enterConversation } from './conversations/utils';
 
 export function useCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('close-conversation', async (ctx) => {
@@ -48,8 +50,11 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
       await ctx.answerCallbackQuery();
-      await ctx.conversation.exit();
-      await ctx.conversation.enter(conversationId);
+
+      if (isConversationId(conversationId)) {
+        await ctx.conversation.exit();
+        await enterConversation({ ctx, conversationId });
+      }
     });
   });
 
@@ -62,7 +67,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
 
 function useSurfdogCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery('buy-more-surfdog-tickets', async (ctx) => {
-    await ctx.conversation.enter(SurfdogConversationId.BuySurfdogTickets);
+    await enterConversation({ ctx, conversationId: SurfdogConversationId.BuySurfdogTickets });
     await ctx.answerCallbackQuery();
   });
 
@@ -117,12 +122,12 @@ function useWalletCallbackQueries(bot: Bot<BotContext>) {
   bot.callbackQuery(CallbackQueryData.ExportPrivateKey, async (ctx) => {
     await ctx.conversation.exit();
     await ctx.answerCallbackQuery();
-    await ctx.conversation.enter(ConversationId.ExportPrivateKey);
+    await enterConversation({ ctx, conversationId: CommonConversationId.ExportPrivateKey });
   });
 
   bot.callbackQuery(CallbackQueryData.ImportWallet, async (ctx) => {
     await ctx.answerCallbackQuery();
-    await ctx.conversation.enter(ConversationId.ImportNewWallet);
+    await enterConversation({ ctx, conversationId: CommonConversationId.ImportNewWallet });
   });
 }
 
