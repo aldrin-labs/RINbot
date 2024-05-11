@@ -21,14 +21,14 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@avernikoz/rinbot-sui-sdk@2.8.3":
-  version "2.8.3"
-  resolved "https://registry.yarnpkg.com/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.8.3.tgz#fb6e8e939c667e3062808b894ea4d80c94c21fb1"
-  integrity sha512-T+JcxIgdKLWfnHxHzNQjbMoUgc40prUI9C0eJBVJHaFDLS9xQMUzcUp8npEbohpGYwc+EC9VtJiwgu9ifOrZew==
+"@avernikoz/rinbot-sui-sdk@2.8.4":
+  version "2.8.4"
+  resolved "https://registry.npmjs.org/@avernikoz/rinbot-sui-sdk/-/rinbot-sui-sdk-2.8.4.tgz#9b5694c264896f79393083e605bf501936a2337b"
+  integrity sha512-UMrFPbL8Nm+xwQ7sTZZadubAK+pyQDVYe6/6zlORBJfOU8n8YwXWolXxuiXHApOnVrM3f6xGYwGnPbTEXMlDRQ==
   dependencies:
     "@cetusprotocol/cetus-sui-clmm-sdk" "^3.17.8"
     "@flowx-pkg/ts-sdk" "^0.0.11"
-    "@interest-protocol/clamm-sdk" "^6.1.1-alpha"
+    "@interest-protocol/clamm-sdk" "6.1.1-alpha"
     "@mysten/sui.js" "yarn:@mysten/sui.js@^0.42.0"
     "@mysten/sui.js-0.51.2" "yarn:@mysten/sui.js@^0.51.2"
     "@types/redis" "^4.0.11"
@@ -877,9 +877,9 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
 
-"@interest-protocol/clamm-sdk@^6.1.1-alpha":
+"@interest-protocol/clamm-sdk@6.1.1-alpha":
   version "6.1.1-alpha"
-  resolved "https://registry.yarnpkg.com/@interest-protocol/clamm-sdk/-/clamm-sdk-6.1.1-alpha.tgz#8d412e5a786d78e24fa04b4c54126ac46ac37e06"
+  resolved "https://registry.npmjs.org/@interest-protocol/clamm-sdk/-/clamm-sdk-6.1.1-alpha.tgz#8d412e5a786d78e24fa04b4c54126ac46ac37e06"
   integrity sha512-0nkWJSJlgvPFawCa5Z+k+RVZWcHihpybMCwhHUhA0YEM/Miwq+QkBFVH5UvEwT88tc5CEA86/4XWItCkRIi/sw==
   dependencies:
     "@mysten/sui.js" "^0.51.2"
@@ -972,6 +972,7 @@
     bs58 "^5.0.0"
 
 "@mysten/sui.js-0.51.2@yarn:@mysten/sui.js@^0.51.2", "@mysten/sui.js@^0.51.2":
+  name "@mysten/sui.js-0.51.2"
   version "0.51.2"
   resolved "https://registry.yarnpkg.com/@mysten/sui.js/-/sui.js-0.51.2.tgz#40c54bf1df57fdeaf27ad11efddeaa20ff5e6a7b"
   integrity sha512-RRG/VHhVvkQlWqodFZagRxVDo3SbXh4e3xTBplhPNNyybugbWj/V+wGrNv5/KtxfVxHBw6jTCoB798ijqPBq7g==
