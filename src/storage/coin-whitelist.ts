@@ -5,6 +5,10 @@ export default [
     type: '0xd2c7943bdb372a25c2ac7fa6ab86eb9abeeaa17d8d65e7dcff4c24880eac860b::rincel::RINCEL',
   },
   {
+    symbol: 'RINWIF',
+    type: '0x4c023b94ba2e42e5ce1400191d0228216359f4de894150b813b1f514d2668426::rinwif::RINWIF',
+  },
+  {
     symbol: 'FUD',
     type: '0x76cb819b01abed502bee8a702b4c2d547532c12f25001c9dea795a5e631c26f1::fud::FUD',
   },
