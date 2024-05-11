@@ -1,5 +1,6 @@
 import { Menu, MenuRange } from '@grammyjs/menu';
 import { ConversationId } from '../chains/conversations.config';
+import { showMemechanLiveCoinsList } from '../chains/memecoin-list/showMemechanList';
 import { showRefundsPage } from '../chains/refunds/showRefundsPage';
 import { assets, home } from '../chains/sui.functions';
 import { ENABLE_WELCOME_BONUS } from '../config/bot.config';
@@ -58,6 +59,10 @@ const menu = new Menu<BotContext>('main')
           await ctx.conversation.enter(ConversationId.WelcomeBonus);
         });
     }
+  })
+  .row()
+  .text('Memechan Live Coins', async (ctx) => {
+    await showMemechanLiveCoinsList(ctx);
   })
   .row()
   .text('Refresh', async (ctx) => {

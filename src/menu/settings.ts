@@ -9,7 +9,6 @@ import goHome from '../inline-keyboards/goHome';
 import { BotContext } from '../types';
 // eslint-disable-next-line max-len
 import { showPriceDifferenceThresholdPage } from '../chains/settings/price-difference-threshold/show-price-difference-page';
-import { showMemechanLiveCoinsList } from '../chains/memecoin-list/showMemechanList';
 
 const settingsMenu = new Menu<BotContext>('settings')
   .text('Slippage', async (ctx) => {
@@ -26,13 +25,6 @@ const settingsMenu = new Menu<BotContext>('settings')
     await showPriceDifferenceThresholdPage(ctx);
   })
   .row()
-  .text('Memechan Live Coins', async (ctx) => {
-    await showMemechanLiveCoinsList(ctx);
-  })
-  .text('User Agreement', async (ctx) => {
-    await ctx.reply(userAgreement, { parse_mode: 'HTML', reply_markup: goHome });
-  })
-  .row()
   .dynamic((ctx, range) => {
     if (userMustUseCoinWhitelist(ctx)) {
       range.text('Coin Whitelist', async (ctx) => {
@@ -40,6 +32,10 @@ const settingsMenu = new Menu<BotContext>('settings')
       });
     }
   })
+  .text('User Agreement', async (ctx) => {
+    await ctx.reply(userAgreement, { parse_mode: 'HTML', reply_markup: goHome });
+  })
+  .row()
   .back('Home');
 
 export default settingsMenu;
