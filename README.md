@@ -1,37 +1,20 @@
-# Telegram Bot Vercel Boilerplate
-
-Telegram Bot Vercel Boilerplate based on Node.js and [Telegraf](https://github.com/telegraf/telegraf) framework.
-
-This template inspired by [Telegram Bot Boilerplate](https://github.com/yakovlevyuri/telegram-bot-boilerplate) for easily deploy to [Vercel](https://vercel.com).
-
-[![Live Demo](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@7rodma/deploy-a-serverless-telegram-chatbot-using-vercel-57665d942a58)
-
-## Before you start
-
-First rename `.env-sample` file to `.env` and fill in all necessary values.
-
-```
-
-BOT_TOKEN="<YOUR_BOT_API_TOKEN>"
-```
-
-## Start your local server
-
-```
-yarn
-yarn dev
-```
+### RINbot on SUI
 
 
-## Production
+### Conversations
 
-You can fork this template and do the necessary changes you need. Then you when are done with your changes simply goto [vercel git import](https://vercel.com/import/git).
+To create new conversation, you should add your conversationId to `CommonConversationId` (src/chains/conversations.config.ts)
+Secondly, you should add version of your conversation into conversations config `conversations` (src/middleware/conversations/config.ts)
 
-Reference to [this update](https://vercel.com/docs/security/deployment-protection#migrating-to-standard-protection), you need turn off `Vercel Authentication`, Settings => Deployment Protection
+You must update the conversation version in conversations config each time when you do the changes to the conversation interface, otherwise it might lead to the unexpected behaviour for users' who were using the previous conversation version.
 
-Feel free to create PR!
+You must use the `enterConversation` method instead of `conversation.enter`.
+This rule exists because `enterConversation` method saves the current version of conversation that the user entered in the user's session data (`activeConversation`).
 
-## Demo
+The conversations version check middleware (src/middleware/conversation-version-check.ts) allows to check the conversation version each time when user interact with the bot. It compares the current version of user's conversation and the conversation version in config, and in case user is using the outdated (old) conversation version, it would forcibly close сonversation.
 
-You can see a working version of the bot at [@Node_api_m_bot](https://t.me/Node_api_m_bot)
+This conversation version check middleware exists to prevent cases when:
+1. Coversation interface changed
+2. User already entered conversation with old interface
 
+Without the conversation version check middleware, user would stuck forever in the conversation without ability to do anything in the bot itself.
