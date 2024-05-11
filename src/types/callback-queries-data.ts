@@ -14,4 +14,5 @@ export enum CallbackQueryData {
   Home = 'go-home',
   DisableSwapConfirmation = 'disable-swap-confirmation',
   EnableSwapConfirmation = 'enable-swap-confirmation',
+  MemechanLiveCoinsList = 'memechan-live-coins-list',
 }

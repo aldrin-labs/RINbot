@@ -8,6 +8,7 @@ import { getPriceApi } from './priceapi.utils';
 import { COIN_WHITELIST_URL, SELL_DELAY_AFTER_BUY_FOR_CLAIMERS_IN_MS } from './sui.config';
 import { CoinForPool, CoinWhitelistItem } from './types';
 import closeConversation from '../inline-keyboards/closeConversation';
+import memechanlivecoinslist from '../storage/memechangg-live-coint';
 
 /**
  * Checks if the given string is a valid suiscan link.
@@ -280,6 +281,24 @@ export async function getCoinWhitelist(): Promise<CoinWhitelistItem[] | null> {
 
     if (!isCoinWhitelistItemArray(whitelistJson)) {
       console.warn('[getCoinWhitelist] Fetched coin whitelist is not valid. Parsed JSON:', whitelistJson);
+
+      return null;
+    }
+
+    return whitelistJson;
+  } catch (error) {
+    console.error('[getCoinWhitelist] Error occured:', error);
+
+    return null;
+  }
+}
+
+export async function getMemechanLiveCoinsList(): Promise<CoinWhitelistItem[] | null> {
+  try {
+    const whitelistJson = memechanlivecoinslist;
+
+    if (!isCoinWhitelistItemArray(whitelistJson)) {
+      console.warn('[getMemechanLiveCoinsList] Fetched coins list is not valid. Parsed JSON:', whitelistJson);
 
       return null;
     }
