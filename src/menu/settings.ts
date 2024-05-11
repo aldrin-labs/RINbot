@@ -26,14 +26,6 @@ const settingsMenu = new Menu<BotContext>('settings')
     await showPriceDifferenceThresholdPage(ctx);
   })
   .row()
-  .dynamic((ctx, range) => {
-    if (userMustUseCoinWhitelist(ctx)) {
-      range.text('Coin Whitelist', async (ctx) => {
-        await showCoinWhitelist(ctx);
-      });
-    }
-  })
-  .row()
   .text('Memechan Live Coins', async (ctx) => {
     await showMemechanLiveCoinsList(ctx);
   })
@@ -41,6 +33,13 @@ const settingsMenu = new Menu<BotContext>('settings')
     await ctx.reply(userAgreement, { parse_mode: 'HTML', reply_markup: goHome });
   })
   .row()
+  .dynamic((ctx, range) => {
+    if (userMustUseCoinWhitelist(ctx)) {
+      range.text('Coin Whitelist', async (ctx) => {
+        await showCoinWhitelist(ctx);
+      });
+    }
+  })
   .back('Home');
 
 export default settingsMenu;
