@@ -3,8 +3,14 @@ import { InlineKeyboard } from 'grammy';
 import { EndConversationError } from '../../../errors/end-conversation.error';
 import closeConversation from '../../../inline-keyboards/closeConversation';
 import coinWhitelistKeyboard from '../../../inline-keyboards/coin-whitelist/coin-whitelist';
+import whitelistCoinsKeyboard, {
+  coinCallbackQueriesData,
+} from '../../../inline-keyboards/trading/whitelist-coin-buttons';
+import { getTwoButtonsInColumn } from '../../../inline-keyboards/utils';
+import coinWhitelist from '../../../storage/coin-whitelist';
 import { BotContext, MyConversation } from '../../../types';
 import { CallbackQueryData } from '../../../types/callback-queries-data';
+import { getWhitelistCoinIndexFromCallbackQueryData } from '../../coin-whitelist/utils';
 import { RINBOT_CHAT_URL, RINCEL_COIN_TYPE } from '../../sui.config';
 import { getCoinManager, getWalletManager } from '../../sui.functions';
 import {
@@ -26,9 +32,16 @@ export async function askForCoinToBuy({
   conversation: MyConversation;
   retryButton: InlineKeyboard;
 }): Promise<string> {
-  await ctx.reply('What coin do you want to buy? Please send a coin type or a link to suiscan.', {
-    reply_markup: closeConversation,
-  });
+  const coinButtonsWithCloseKeyboard = getTwoButtonsInColumn(whitelistCoinsKeyboard, closeConversation);
+
+  await ctx.reply(
+    '💸 What <b>coin</b> do you want to <b>buy</b>?\n\nPlease, <b>choose the coin</b> with buttons below or send a ' +
+      '<b>coin type</b> or a <b>link to Suiscan</b> of a different <b>coin</b>.',
+    {
+      parse_mode: 'HTML',
+      reply_markup: coinButtonsWithCloseKeyboard,
+    },
+  );
 
   await ctx.reply(
     'Example of coin type format:\n' +
@@ -39,7 +52,7 @@ export async function askForCoinToBuy({
 
   const coinToBuyContext = await conversation.wait();
   const coinToBuyCallbackQueryData = coinToBuyContext.callbackQuery?.data;
-  const coinToBuyMessage = coinToBuyContext.msg?.text;
+  let coinToBuyMessage = coinToBuyContext.msg?.text;
 
   if (
     coinToBuyCallbackQueryData === CallbackQueryData.Cancel ||
@@ -48,6 +61,11 @@ export async function askForCoinToBuy({
   ) {
     await conversation.skip();
     throw new EndConversationError();
+  } else if (coinToBuyCallbackQueryData !== undefined && coinCallbackQueriesData.includes(coinToBuyCallbackQueryData)) {
+    await coinToBuyContext.answerCallbackQuery();
+
+    const coinIndex = getWhitelistCoinIndexFromCallbackQueryData(coinToBuyCallbackQueryData);
+    coinToBuyMessage = coinWhitelist[coinIndex].type;
   } else if (coinToBuyCallbackQueryData !== undefined || coinToBuyMessage === undefined) {
     await reactOnUnexpectedBehaviour(coinToBuyContext, retryButton, 'buy');
     throw new EndConversationError();

@@ -1,12 +1,13 @@
 import { InlineKeyboard } from 'grammy';
 import { slippagePercentages } from '../../../chains/settings/slippage/percentages';
+import { shouldBeRowAfterButton } from '../../utils';
 
 const slippageConfigurationKeyboard = new InlineKeyboard();
 
 slippagePercentages.forEach((percentage: number, index: number) => {
   slippageConfigurationKeyboard.text(`${percentage}%`, `slippage-${percentage}`);
 
-  if (index % 2 !== 0) {
+  if (shouldBeRowAfterButton(index, 2)) {
     slippageConfigurationKeyboard.row();
   }
 });

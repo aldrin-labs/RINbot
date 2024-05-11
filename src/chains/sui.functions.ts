@@ -4,6 +4,7 @@ import {
   CoinAssetData,
   CoinManagerSingleton,
   FlowxSingleton,
+  InterestProtocolSingleton,
   LONG_SUI_COIN_TYPE,
   RedisStorageSingleton,
   RouteManager,
@@ -138,9 +139,22 @@ export const getAftermath = async () => {
   return aftermath;
 };
 
+export const getInterest = async () => {
+  const { redisClient } = await getRedisClient();
+  const storage = RedisStorageSingleton.getInstance(redisClient);
+
+  const interest = await InterestProtocolSingleton.getInstance({
+    suiProviderUrl: SUI_PROVIDER_URL,
+    cacheOptions: { storage, ...SUI_LIQUIDITY_PROVIDERS_CACHE_OPTIONS },
+    lazyLoading: false,
+  });
+
+  return interest;
+};
+
 export const getCoinManager = async () => {
   console.time(`CoinManagerSingleton.getInstance ${randomUuid}`);
-  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx(), getInterest()]);
 
   const coinManager = CoinManagerSingleton.getInstance(providers, SUI_PROVIDER_URL);
   console.timeEnd(`CoinManagerSingleton.getInstance ${randomUuid}`);
@@ -161,7 +175,7 @@ export const getWalletManager = async () => {
 export const getRouteManager = async () => {
   // console.time(`RouteManager.getInstance.${randomUuid}`)
   const coinManager = await getCoinManager();
-  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx()]);
+  const providers = await Promise.all([getAftermath(), getCetus(), getTurbos(), getFlowx(), getInterest()]);
 
   const routerManager = RouteManager.getInstance(providers, coinManager);
   // console.timeEnd(`RouteManager.getInstance.${randomUuid}`)
