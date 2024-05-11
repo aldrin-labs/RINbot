@@ -18,3 +18,4 @@ This conversation version check middleware exists to prevent cases when:
 2. User already entered conversation with old interface
 
 Without the conversation version check middleware, user would stuck forever in the conversation without ability to do anything in the bot itself.
+
