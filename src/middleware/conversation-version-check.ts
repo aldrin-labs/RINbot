@@ -30,7 +30,6 @@ export const checkActiveConversationVersion: MiddlewareFn<BotContext> = async (c
     );
     await ctx.conversation.exit();
 
-    await next();
     return;
   }
 
@@ -48,7 +47,6 @@ export const checkActiveConversationVersion: MiddlewareFn<BotContext> = async (c
     );
     await ctx.conversation.exit();
 
-    await next();
     return;
   }
 
@@ -64,7 +62,6 @@ export const checkActiveConversationVersion: MiddlewareFn<BotContext> = async (c
     );
     await ctx.conversation.exit();
 
-    await next();
     return;
   }
 
