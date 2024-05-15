@@ -60,7 +60,7 @@ export const balances = async (ctx: BotContext) => {
       }
     });
 
-    totalBalanceStr = `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
+    totalBalanceStr = balance === 0 ? '' : `Your Net Worth: <b>$${balance.toFixed(2)} USD</b>`;
 
     let assetsString = '';
     for (let index = 0; index < allCoinsAssets.length; index++) {

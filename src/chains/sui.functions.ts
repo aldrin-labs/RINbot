@@ -416,7 +416,7 @@ export async function assets(ctx: BotContext): Promise<void> {
       });
       return;
     }
-    const totalNetWorth = `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
+    const totalNetWorth = netWorth === 0 ? '' : `\nYour Net Worth: <b>$${netWorth.toFixed(2)} USD</b>`;
     let priceApiDataStr: string;
     if (hasDefinedPrice(currentToken)) {
       priceApiDataStr =
