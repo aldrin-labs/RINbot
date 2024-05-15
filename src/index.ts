@@ -35,7 +35,7 @@ import { removeStep } from './migrations/removeStep';
 import { documentClient } from './services/aws';
 import { BotContext, SessionData } from './types';
 
-const APP_VERSION = '3.0.7';
+const APP_VERSION = '3.0.8';
 
 if (instance && instance['opts']) {
   instance['opts'].automaticDeserialization = false;
