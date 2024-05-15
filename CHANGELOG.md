@@ -11,3 +11,4 @@ Conversation version check middleware
 Use stable version of sdk (previous was [wip])
 Migrate to npm instead of yarn (because of the issues with `yarn` resolution field in package.json)
 Conversation middleware upgrade
+Fix issue with denormalized whitelist coin (Cetus)
