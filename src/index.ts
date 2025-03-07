@@ -4,9 +4,11 @@ import { conversations } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { kv as instance } from '@vercel/kv';
 import { Bot, Composer, Enhance, GrammyError, HttpError, enhanceStorage, session } from 'grammy';
+import { ChainType } from './chains/config';
+import { generateWalletForChain } from './chains/chain-utils';
 import { CommonConversationId } from './chains/conversations.config';
+import { home } from './chains/home';
 import { DEFAULT_SLIPPAGE } from './chains/settings/slippage/percentages';
-import { generateWallet, home } from './chains/sui.functions';
 import { DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE } from './chains/trading/config';
 import { balances } from './commands/balances';
 import { BOT_TOKEN, ENVIRONMENT, HISTORY_TABLE, WELCOME_BONUS_AMOUNT } from './config/bot.config';
@@ -21,6 +23,7 @@ import { timeoutMiddleware } from './middleware/timeoutMiddleware';
 import { addActiveConversation } from './migrations/addActiveConversation';
 import { addBoostedRefund } from './migrations/addBoostedRefund';
 import { addIndexToAssets } from './migrations/addIndexToAssets';
+import { addMultichainSupport } from './migrations/addMultichainSupport';
 import { addPriceDifferenceThreshold } from './migrations/addPriceDifferenceThreshold';
 import { addRefundFields } from './migrations/addRefundFields';
 import { addSuiAssetField } from './migrations/addSuiAssetField';
@@ -55,9 +58,10 @@ async function startBot(): Promise<void> {
 
   bot.lazy((ctx) => {
     return session({
-      initial: (): SessionData => {
-        const { privateKey, publicKey } = generateWallet();
-        const boostedRefundAccount = generateWallet();
+      initial: async (): Promise<SessionData> => {
+        // Generate SUI wallet
+        const suiWallet = await generateWalletForChain(ChainType.SUI);
+        const boostedRefundAccount = await generateWalletForChain(ChainType.SUI);
 
         documentClient
           .put({
@@ -65,8 +69,8 @@ async function startBot(): Promise<void> {
             Item: {
               pk: `${ctx.from?.id}#CREATED_ACCOUNT`,
               sk: new Date().getTime(),
-              privateKey,
-              publicKey,
+              privateKey: suiWallet.privateKey,
+              publicKey: suiWallet.publicKey,
             },
           })
           .catch((e) => console.error('ERROR storing created account', e));
@@ -84,8 +88,20 @@ async function startBot(): Promise<void> {
           .catch((e) => console.error('ERROR storing boosted account', e));
 
         return {
-          privateKey,
-          publicKey,
+          selectedChain: 'sui',
+          wallets: {
+            sui: {
+              privateKey: suiWallet.privateKey,
+              publicKey: suiWallet.publicKey
+            },
+            solana: null, // Will be initialized when user selects Solana chain
+            'sonic-svm': null,
+            'soon-svm': null,
+            'eclipse-svm': null
+          },
+          // Keep these for backward compatibility
+          privateKey: suiWallet.privateKey,
+          publicKey: suiWallet.publicKey,
           suiAsset: {
             type: LONG_SUI_COIN_TYPE,
             symbol: 'SUI',
@@ -99,8 +115,10 @@ async function startBot(): Promise<void> {
             priceDifferenceThreshold: DEFAULT_PRICE_DIFFERENCE_THRESHOLD_PERCENTAGE,
           },
           assets: {
-            currentIndex: 0,
-            data: [],
+            sui: {
+              currentIndex: 0,
+              data: [],
+            }
           },
           welcomeBonus: {
             amount: WELCOME_BONUS_AMOUNT,
@@ -125,6 +143,11 @@ async function startBot(): Promise<void> {
           activeConversation: null,
         };
       },
+      getSessionKey: (ctx) => {
+        // Use the user ID as the session key
+        return ctx.from?.id.toString();
+      },
+      
       storage: enhanceStorage({
         storage,
         migrations: {
@@ -142,6 +165,7 @@ async function startBot(): Promise<void> {
           12: addPriceDifferenceThreshold,
           13: addIndexToAssets,
           14: addActiveConversation,
+          15: addMultichainSupport,
         },
       }),
     });

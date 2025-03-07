@@ -11,7 +11,8 @@ import { showPriceDifferenceThresholdPage } from '../chains/settings/price-diffe
 import { slippagePercentages } from '../chains/settings/slippage/percentages';
 import { showSlippageConfiguration } from '../chains/settings/slippage/showSlippageConfiguration';
 import { showSwapConfirmationPage } from '../chains/settings/swap-confirmation/show-swap-confirmation-page';
-import { assets, home } from '../chains/sui.functions';
+import { assets } from '../chains/sui.functions';
+import { home } from '../chains/home';
 import { retryAndGoHomeButtonsData } from '../inline-keyboards/retryConversationButtonsFactory';
 import { BotContext } from '../types';
 import { CallbackQueryData } from '../types/callback-queries-data';
@@ -46,6 +47,7 @@ export function useCallbackQueries(bot: Bot<BotContext>) {
   useSwapConfirmationCallbackQueries(bot);
   usePriceDifferenceThresholdCallbackQueries(bot);
   useMemechanLiveCoinsCallbackQueries(bot);
+  useChainSelectionCallbackQueries(bot);
 
   Object.keys(retryAndGoHomeButtonsData).forEach((conversationId) => {
     bot.callbackQuery(`retry-${conversationId}`, async (ctx) => {
@@ -156,5 +158,41 @@ function useSwapConfirmationCallbackQueries(bot: Bot<BotContext>) {
     ctx.session.settings.swapWithConfirmation = false;
     await ctx.answerCallbackQuery();
     await showSwapConfirmationPage(ctx);
+  });
+}
+
+function useChainSelectionCallbackQueries(bot: Bot<BotContext>) {
+  // Handle chain selection callbacks
+  bot.callbackQuery(/^select-chain-(.+)$/, async (ctx) => {
+    const chainMatch = ctx.callbackQuery.data.match(/^select-chain-(\w+)$/);
+    if (chainMatch) {
+      const selectedChain = chainMatch[1];
+
+      // Only update if it's a valid chain
+      if (['sui', 'solana', 'ethereum'].includes(selectedChain)) {
+        ctx.session.selectedChain = selectedChain;
+
+        // For backward compatibility, update the legacy fields if wallet exists
+        if (ctx.session.wallets?.[selectedChain]) {
+          ctx.session.privateKey = ctx.session.wallets[selectedChain].privateKey;
+          ctx.session.publicKey = ctx.session.wallets[selectedChain].publicKey;
+        }
+
+        await ctx.answerCallbackQuery(`Selected ${selectedChain.toUpperCase()}`);
+
+        // Return to settings menu
+        await ctx.menu.nav('settings');
+      } else {
+        await ctx.answerCallbackQuery('Invalid chain selection');
+      }
+    } else {
+      await ctx.answerCallbackQuery('Invalid selection');
+    }
+  });
+
+  // Handle back button
+  bot.callbackQuery('back-to-settings', async (ctx) => {
+    await ctx.answerCallbackQuery();
+    await ctx.menu.nav('settings');
   });
 }

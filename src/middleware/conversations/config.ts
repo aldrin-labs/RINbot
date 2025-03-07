@@ -2,6 +2,7 @@ import { CommonConversationId } from '../../chains/conversations.config';
 import { buySurfdogTickets } from '../../chains/launchpad/surfdog/conversations/conversations';
 import { SurfdogConversationId } from '../../chains/launchpad/surfdog/conversations/conversations.config';
 import { checkProvidedAddress } from '../../chains/refunds/conversations/checkProvidedAddress';
+import { chainSelectionConversation } from '../../chains/settings/chain/conversations';
 import { createAftermathPool, createCoin, withdraw } from '../../chains/sui.functions';
 import { buy, instantBuy } from '../../chains/trading/buy/buy';
 import { sell } from '../../chains/trading/sell';
@@ -21,6 +22,7 @@ export const conversations: ConversationData[] = [
   { id: CommonConversationId.CheckProvidedAddressForRefund, method: checkProvidedAddress, version: 1 },
   { id: CommonConversationId.InstantBuy, method: instantBuy, version: 1 },
   { id: SurfdogConversationId.BuySurfdogTickets, method: buySurfdogTickets, version: 1 },
+  { id: CommonConversationId.ChainSelection, method: chainSelectionConversation, version: 1 },
 ];
 
 export const conversationsMap: Record<ConversationId, ConversationData> = conversations.reduce(

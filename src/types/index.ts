@@ -54,14 +54,27 @@ export interface CoinAssetDataExtended extends CoinAssetData {
   priceChange24h?: number;
 }
 
-export interface SessionData {
+export type ChainType = 'sui' | 'solana' | 'ethereum';
+
+export interface ChainWallet {
   privateKey: string;
   publicKey: string;
+}
+
+export interface SessionData {
+  selectedChain: ChainType;
+  wallets: {
+    [chain in ChainType]?: ChainWallet;
+  };
+  privateKey: string; // Legacy field for backward compatibility
+  publicKey: string; // Legacy field for backward compatibility
   settings: { slippagePercentage: number; swapWithConfirmation: boolean; priceDifferenceThreshold: number };
   suiAsset: CoinAssetDataExtended;
   assets: {
-    currentIndex: number;
-    data: CoinAssetDataExtended[];
+    [chain in ChainType]?: {
+      currentIndex: number;
+      data: CoinAssetDataExtended[];
+    };
   };
   welcomeBonus: {
     amount: number;
