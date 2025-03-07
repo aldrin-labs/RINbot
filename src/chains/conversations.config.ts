@@ -13,4 +13,5 @@ export enum CommonConversationId {
   ImportNewWallet = 'importNewWallet',
   CheckCurrentWalletForRefund = 'checkCurrentWalletForRefund',
   CheckProvidedAddressForRefund = 'checkProvidedAddressForRefund',
+  ChainSelection = 'chainSelection',
 }

@@ -572,12 +572,28 @@ export async function refreshAssets(ctx: BotContext) {
   } catch (error) {
     console.error('ERROR during postPriceApi', error);
   } finally {
-    ctx.session.assets.data = allCoinsAssets;
+    // Ensure the assets structure exists for the selected chain
+    if (!ctx.session.assets) {
+      ctx.session.assets = {};
+    }
+
+    // Initialize the chain's assets if not already present
+    const selectedChain = ctx.session.selectedChain || 'sui';
+    if (!ctx.session.assets[selectedChain]) {
+      ctx.session.assets[selectedChain] = {
+        currentIndex: 0,
+        data: [],
+      };
+    }
+
+    // Update the assets data for the selected chain
+    ctx.session.assets[selectedChain].data = allCoinsAssets;
   }
   return { suiAsset, allCoinsAssets };
 }
 
-export async function home(ctx: BotContext, refresh: boolean = false) {
+// Function renamed to suiHome to avoid duplicate exports
+async function suiHome(ctx: BotContext, refresh: boolean = false) {
   const userBalance = await balance(ctx);
   const avlBalance = await availableBalance(ctx);
   let price;
@@ -676,6 +692,9 @@ export async function home(ctx: BotContext, refresh: boolean = false) {
     });
   }
 }
+
+// Export the suiHome function to make it accessible from other files
+export { suiHome as home };
 
 export async function nftHome(ctx: BotContext) {
   await ctx.reply('<b>Welcome to NFT menu!</b>\n\nPlease check the options below.', {

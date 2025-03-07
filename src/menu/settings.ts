@@ -1,6 +1,7 @@
 import { Menu } from '@grammyjs/menu';
 import { showCoinWhitelist } from '../chains/coin-whitelist/showCoinWhitelist';
 import { showFeesPage } from '../chains/fees/showFeesPage';
+import { showChainSelectionPage } from '../chains/settings/chain/show-chain-selection-page';
 import { showSlippageConfiguration } from '../chains/settings/slippage/showSlippageConfiguration';
 import { showSwapConfirmationPage } from '../chains/settings/swap-confirmation/show-swap-confirmation-page';
 import { userMustUseCoinWhitelist } from '../chains/utils';
@@ -11,20 +12,23 @@ import { BotContext } from '../types';
 import { showPriceDifferenceThresholdPage } from '../chains/settings/price-difference-threshold/show-price-difference-page';
 
 const settingsMenu = new Menu<BotContext>('settings')
+  .text('Chain Selection', async (ctx) => {
+    await showChainSelectionPage(ctx);
+  })
   .text('Slippage', async (ctx) => {
     await showSlippageConfiguration(ctx);
   })
+  .row()
   .text('Fees', async (ctx) => {
     await showFeesPage(ctx);
   })
-  .row()
   .text('Swap Confirmation', async (ctx) => {
     await showSwapConfirmationPage(ctx);
   })
+  .row()
   .text('Price Difference Threshold', async (ctx) => {
     await showPriceDifferenceThresholdPage(ctx);
   })
-  .row()
   .dynamic((ctx, range) => {
     if (userMustUseCoinWhitelist(ctx)) {
       range.text('Coin Whitelist', async (ctx) => {
@@ -32,6 +36,7 @@ const settingsMenu = new Menu<BotContext>('settings')
       });
     }
   })
+  .row()
   .text('User Agreement', async (ctx) => {
     await ctx.reply(userAgreement, { parse_mode: 'HTML', reply_markup: goHome });
   })
